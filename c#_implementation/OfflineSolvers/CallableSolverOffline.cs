@@ -8,9 +8,11 @@ namespace implementation
     class CallableSolverOffline : ISolverOffline
     {
         public String callable;
+        public String[] argPref;
 
-        public CallableSolverOffline(String callable) {
+        public CallableSolverOffline(String callable, String[] argPref) {
             this.callable = callable;
+            this.argPref = argPref;
         }
 
         public IEnumerable<String> marshalProblem(OfflineProblem problem) {
@@ -27,27 +29,27 @@ namespace implementation
             return values;
         } 
 
-        public List<Registration> unmarshalRegs(List<int> values) {
-            if (values.Count % 2 != 0)
+        public IEnumerable<Registration> unmarshalRegs(int[] values) {
+            if (values.Length % 2 != 0)
             {
-                throw new Exception($"callable returned uneven number of datapoints: {values.Count}");
+                throw new Exception($"callable returned uneven number of datapoints: {values.Length}");
             }
 
-            List<Registration> regs = new List<Registration>();
-            for (int i = 0; i < values.Count - 1; i += 2)
+            IEnumerable<Registration> regs = new List<Registration>();
+            for (int i = 0; i < values.Length - 1; i += 2)
             {
-                regs.Append<Registration>(new Registration(values[i], values[i + 1]));
+                regs = regs.Append<Registration>(new Registration(values[i], values[i + 1]));
             }
 
             return regs;
         }
 
         public Solution unmarshalSolution(String res) {
-            var values = res.Split(' ').ToList<String>().Select<String, int>(Int32.Parse).ToList<int>();
+            var values = res.Split(' ').Select<String, int>(Int32.Parse).ToArray();
             int machines = values[0];
-            values.RemoveAt(0);
+            int[] regsM = values.Skip(1).ToArray();
             
-            List<Registration> regs = unmarshalRegs(values);
+            List<Registration> regs = unmarshalRegs(regsM).ToList();
 
             return new Solution(machines, regs);
         } 
@@ -61,7 +63,7 @@ namespace implementation
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.FileName = this.callable;
-            p.StartInfo.Arguments = String.Join(' ', args);
+            p.StartInfo.Arguments = String.Join(' ', this.argPref.Concat<String>(args));
             p.Start();
             // Do not wait for the child process to exit before
             // reading to the end of its redirected stream.
