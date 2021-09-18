@@ -4,19 +4,20 @@ namespace implementation
 {
     class OfflineProblem
     {
-        int processing_time_first_dose;
-        int processing_time_second_dose;
-        int gap;
-        int number_of_patients;
-        List<Patient> patient_data;
+        public int processing_time_first_dose;
+        public int processing_time_second_dose;
+        public int gap;
+        public int number_of_patients;
+        public List<Patient> patient_data;
         public OfflineProblem(int processing_time_first_dose, int processing_time_second_dose, int gap, int number_of_patients, List<Patient> patient_data)
         {
             this.processing_time_first_dose = processing_time_first_dose;
             this.processing_time_second_dose = processing_time_second_dose;
             this.gap = gap;
-            this.number_of_patients = number_of_patients;
+            this.number_of_patients = number_of_patients; // why is this not patient_data.Length?
             this.patient_data = patient_data;
         }
+        
         public override string ToString()
         {
             string part1 = "processing_time_first_dose: " + this.processing_time_first_dose + "\n";

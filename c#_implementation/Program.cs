@@ -9,8 +9,8 @@ namespace implementation
         {
             OfflineProblem offline_problem = Parse_problem_offline("../data/offline/from_assignment.txt");
             ExampleSolverOffline offline_solver = new ExampleSolverOffline();
-            offline_solver.solve(offline_problem);
-
+            var solution = offline_solver.solve(offline_problem);
+            new OfflineValidator().validate(offline_problem, solution);
 
 
             OnlineProblem online_problem = Parse_problem_online("../data/online/from_assignment.txt");

@@ -3,6 +3,6 @@ namespace implementation
     interface ISolverOffline
     {
         ///Print the solution
-        void solve(OfflineProblem problem);
+        Solution solve(OfflineProblem problem);
     }
 }
