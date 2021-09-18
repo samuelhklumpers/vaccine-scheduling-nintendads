@@ -1,8 +1,31 @@
 :- use_module(library(clpfd)).
-
+:- initialization main.
 
 % See bottom of file if unfamiliar with predicate logic or Prolog
 
+main :-
+    current_prolog_flag(argv, Argv),
+    %X = Argv,
+    maplist(term_to_atom, X, Argv),
+    [P1, P2, G|T] = X,
+    unmarshal_jobs(T, J),
+    solve(P1, P2, G, J, Sol, M),
+    marshal_solution(M, Sol, Out),
+    write(Out),
+    halt(0).
+
+
+unmarshal_jobs([], []).
+unmarshal_jobs(JM, J) :-
+    JM = [R1, D1, X, L|JMT],
+    unjob(H, R1, D1, X, L),
+    J = [H|JT],
+    unmarshal_jobs(JMT, JT).
+
+marshal_solution(M, Sol, S) :-
+    flatten(Sol, FSol),
+    Out = [M|FSol],
+    atomic_list_concat(Out, ' ', S).
 
 % state the offline test_case, variables as in assignment (but capitalized).
 % J is a list of tuples ((R1, D1), X, L).
@@ -65,8 +88,15 @@ machines3([[P1, T1]|Tail], [P2, T2], M) :-
     M #= M2 + V.                        % sum 1 for all appointments that hit T2
     
 % if T2 is in [T1..T1 + P1] then 1 else 0
-machines4([P1, T1], [P2, T2], V) :-
+machines4([P1, T1], [_, T2], V) :-
     V #<==> T1 #=< T2 #/\ T2 #=< T1 + P1.
+
+% solver
+solve(P1, P2, G, J, Sol, M) :-
+    offline_problem(G, J, Sol),
+    machines(P1, P2, Sol, M),
+    append(Sol, Vs),
+    labeling([bisect, min(M)], Vs).
 
 % "pretty" print the solution to test case N
 pretty(N, M) :-
