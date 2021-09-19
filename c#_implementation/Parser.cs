@@ -16,7 +16,7 @@ namespace implementation
             for (int i = 4; i < data.Length; i++)
             {
                 string[] patient_data = data[i].Split(", ");
-                Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3], processing_time_first_dose, processing_time_second_dose, gap));
+                Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]), processing_time_first_dose, processing_time_second_dose, gap);
                 patients_data.Add(patient);
             }
 
@@ -34,7 +34,7 @@ namespace implementation
             for (int i = 3; i < data.Length; i++)
             {
                 string[] patient_data = data[i].Split(", ");
-                Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]));
+                Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]), processing_time_first_dose, processing_time_second_dose, gap);
                 patients_data.Add(patient);
             }
 

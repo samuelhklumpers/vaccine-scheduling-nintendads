@@ -14,7 +14,7 @@ namespace implementation
 
             BruteforceSolverOffline brute = new BruteforceSolverOffline();
             var solution = brute.solve(offline_problem);
-            new OfflineValidator.validate(offline_problem, solution);
+            new OfflineValidator().validate(offline_problem, solution);
 
 
 

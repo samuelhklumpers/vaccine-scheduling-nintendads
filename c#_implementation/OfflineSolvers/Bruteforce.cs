@@ -22,7 +22,6 @@ namespace implementation
         public Solution solve(OfflineProblem problem)
         {
             //First, dumb bruteforce attempt: Without any heuristics, initiate a hospital and try to fit in patients. If infeasable, retry with another hospital. Repeat until A(!) solution is found
-            bool solved = false;
             List<Hospital> hospitals = new List<Hospital>();
 
             hospitals.Add(new Hospital(hospitals.Count + 1));
@@ -42,13 +41,13 @@ namespace implementation
                 bool planned = false;
                 while (!planned)
                 {
-                    planned = tryStartTimes(hospitals, p, p.start_times_first_dose, false, true);
+                    planned = tryStartTimes(problem, hospitals, p, p.start_times_first_dose, false, true);
 
                     if (planned)
                     {
                         p.start_times_second_dose = Enumerable.Range(p.temp_first_start_time + problem.gap + p.delay_between_doses + problem.processing_time_first_dose,
                                                                      p.temp_first_start_time + problem.gap + p.delay_between_doses + problem.processing_time_first_dose + p.second_dose_interval - problem.processing_time_second_dose).ToArray();
-                        planned = tryStartTimes(hospitals, p, p.start_times_second_dose, false, false);
+                        planned = tryStartTimes(problem, hospitals, p, p.start_times_second_dose, false, false);
                         // patient is planned in, continue with next patient
                     }
 
@@ -67,7 +66,7 @@ namespace implementation
 
         }
 
-        private bool tryStartTimes(List<Hospital> hospitals, Patient p, int[] start_times, bool planned, bool firstDose)
+        private bool tryStartTimes(OfflineProblem problem, List<Hospital> hospitals, Patient p, int[] start_times, bool planned, bool firstDose)
         {
             foreach (Hospital h in hospitals)
             {
@@ -85,7 +84,7 @@ namespace implementation
                         {
                             p.hospital_second_dose = h.id;
                             p.temp_second_start_time = start_time;
-                            h.times_busy(AddRange(Enumerable.Range(start_time, start_time + problem.processing_time_second_dose)));
+                            h.times_busy.AddRange(Enumerable.Range(start_time, start_time + problem.processing_time_second_dose));
                         }
 
                         planned = true;
