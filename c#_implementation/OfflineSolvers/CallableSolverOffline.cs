@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using System.IO;
 
 namespace implementation
 {
@@ -63,7 +64,7 @@ namespace implementation
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.FileName = this.callable;
-            p.StartInfo.Arguments = String.Join(' ', this.argPref.Concat<String>(args));
+            p.StartInfo.Arguments = String.Join(" ", this.argPref.Concat<String>(args));
             p.Start();
             // Do not wait for the child process to exit before
             // reading to the end of its redirected stream.

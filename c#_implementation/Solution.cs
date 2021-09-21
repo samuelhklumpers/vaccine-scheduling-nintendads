@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class Solution
+    public class Solution
     {
         public int machines;
         public List<Registration> regs;
