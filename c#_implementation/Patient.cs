@@ -22,7 +22,8 @@ namespace implementation
             this.second_dose_interval = second_dose_interval;
 
             // Haal de lengte van de gehele prikprodecude van (beide) intervals af per patient zodat je alleen maar naar de starttijden hoeft te kijken voor planning
-            this.start_times_first_dose = Enumerable.Range(first_timeslot_first_dose, last_timeslot_first_dose - processing_time_first_dose).ToArray();
+            // this.start_times_first_dose = Enumerable.Range(first_timeslot_first_dose, last_timeslot_first_dose - processing_time_first_dose).ToArray();
+            this.start_times_first_dose = Enumerable.Range(first_timeslot_first_dose, last_timeslot_first_dose - first_timeslot_first_dose + 1).ToArray();
             // this.start_times_second_dose filled during planning
         }
         public override string ToString()
