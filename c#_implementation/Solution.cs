@@ -10,16 +10,23 @@ namespace implementation
         public int timeslot;
         public int index;
         public Registration parent;
+        public int hospital;
 
-        public Appointment(int timeslot, int index, Registration parent)
+        public Appointment(int timeslot, int hospital)
         {
             this.timeslot = timeslot;
-            this.index = index;
-            this.parent = parent;
+            this.hospital = hospital;
         }
 
         public static (Appointment, Appointment) Split(Registration r) {
-            return (new Appointment(r.timeslot_first_dose, 0, r), new Appointment(r.timeslot_second_dose, 1, r));
+            return (new Appointment(r.timeslot_first_dose, 0), new Appointment(r.timeslot_second_dose, 0));
+        }
+
+        public static RegistrationWithHospital WithHospital((Appointment, Appointment) apps) {
+            var a = apps.Item1;
+            var b = apps.Item2;
+
+            return new RegistrationWithHospital(a.timeslot, a.hospital, b.timeslot, b.hospital);
         }
     }
 
@@ -45,7 +52,7 @@ namespace implementation
             return part1 + part2;
         }
 
-        public HospitalSolution addHospitals(IProblem problem) {
+        public HospitalSolution AddHospitals(IProblem problem) {
             int[] hospitals = new int[this.machines];
 
             var regs2 = this.regs.Select<Registration, (Appointment, Appointment)>(Appointment.Split);
@@ -55,21 +62,19 @@ namespace implementation
 
             foreach (var app in appointments)
             {
-
                 for (int j = 0; j < hospitals.Count(); ++j) // TODO right now N * H, could probably be N * log(H) if we sort hospitals
                 {
-                    var t = reg.timeslot_first_dose;
-
-                    if (hospitals[j] < t)
+                    if (hospitals[j] < app.timeslot)
                     {
-                        reg2.timeslot_first_dose = t;
-                        reg2.hospital_first_dose = j;
-                        hospitals[j] = t + problem.processing_time_first_dose;
+                        app.hospital = j;
+                        hospitals[j] = app.timeslot + problem.processing_time_first_dose;
                     }
                 }
             }
 
-            return null;
+            var regs3 = regs2.Select<(Appointment, Appointment), RegistrationWithHospital>(Appointment.WithHospital);
+
+            return new HospitalSolution(this.machines, regs3.ToList());
         }
     }
 
@@ -104,20 +109,19 @@ namespace implementation
         }
     }
 
-    class HospitalSolution
+    class HospitalSolution : Solution
     {
-        public int machines;
-        public List<RegistrationWithHospital> sol;
+        public List<RegistrationWithHospital> hospitals;
 
-        public HospitalSolution(int machines, List<RegistrationWithHospital> sol)
+        public HospitalSolution(int machines, List<RegistrationWithHospital> hospitals) : base(machines, null)
         {
-            this.machines = machines;
-            this.sol = sol;
+            this.hospitals = hospitals;
+            // could fix this.sol
         }
 
         public override string ToString()
         {
-            var ret = String.Join('\n', this.sol.Select<RegistrationWithHospital, string>(x => x.ConformToString()));
+            var ret = String.Join('\n', this.hospitals.Select<RegistrationWithHospital, string>(x => x.ConformToString()));
             ret += "\n" + this.machines.ToString();
             return ret;
         }
