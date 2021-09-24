@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace implementation
@@ -38,8 +39,8 @@ namespace implementation
 
     class Registration
     {
-        int timeslot_first_dose;
-        int timeslot_second_dose;
+        public int timeslot_first_dose;
+        public int timeslot_second_dose;
         public Registration(int timeslot_first_dose, int timeslot_second_dose)
         {
             this.timeslot_first_dose = timeslot_first_dose;
@@ -50,29 +51,6 @@ namespace implementation
             string part1 = "timeslot_first_dose: " + this.timeslot_first_dose + " ";
             string part2 = "timeslot_second_dose: " + this.timeslot_second_dose;
             return part1 + part2;
-        }
-    }
-
-    class RegistrationWithHospital
-    {
-        int timeslot_first_dose;
-        int hospital_first_dose;
-        int timeslot_second_dose;
-        int hospital_second_dose;
-        public RegistrationWithHospital(int timeslot_first_dose, int hospital_first_dose, int timeslot_second_dose, int hospital_second_dose)
-        {
-            this.timeslot_first_dose = timeslot_first_dose;
-            this.hospital_first_dose = hospital_first_dose;
-            this.timeslot_second_dose = timeslot_second_dose;
-            this.hospital_second_dose = hospital_second_dose;
-        }
-        public override string ToString()
-        {
-            string part1 = "timeslot_first_dose: " + this.timeslot_first_dose + " ";
-            string part2 = "hospital_first_dose: " + this.hospital_first_dose + " ";
-            string part3 = "timeslot_second_dose: " + this.timeslot_second_dose + " ";
-            string part4 = "hospital_second_dose: " + this.hospital_second_dose;
-            return part1 + part2 + part3 + part4;
         }
     }
 }
