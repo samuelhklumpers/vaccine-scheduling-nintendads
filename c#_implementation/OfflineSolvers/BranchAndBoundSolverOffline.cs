@@ -5,6 +5,19 @@ using System.Diagnostics;
 
 namespace implementation
 {
+    class Job {
+        public int t1;
+        public int t2;
+        public int p;
+
+        public Job(int t1, int t2, int p)
+        {
+            this.t1 = t1;
+            this.t2 = t2;
+            this.p = p;
+        }
+    }
+
     class BranchAndBoundSolverOffline : ISolverOffline
     {
 
@@ -17,12 +30,32 @@ namespace implementation
             return new Solution(0, new List<Registration>());
         }
 
+        public int PigeonHole(Job[] jobs, int limit)
+        {
+            jobs = jobs.OrderBy(x => x.t1).ToArray();
 
+            int highest = 0;
 
+            for (int i = 0; i < jobs.Count(); ++i)
+            {
+                var lookahead = new List<Job>();
+                var t1 = jobs[i].t1;
+                var t2 = jobs[i].t2;
+                double s = jobs[i].p;
 
-        
+                highest = Math.Max(highest, 1);
 
+                for (int j = 1; j < limit && j < jobs.Count() - i; ++j)
+                {
+                    t2 = Math.Max(t2, jobs[j].t2);
+                    s += jobs[j].p;
 
+                    int highest2 = (int)Math.Ceiling(s / (t2 - t1));
+                    highest = Math.Max(highest, highest2);
+                }
+            }
 
+            return highest;
+        }
     }
 }
