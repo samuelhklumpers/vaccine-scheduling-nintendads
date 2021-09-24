@@ -5,5 +5,10 @@
     <TargetFramework>net4.7.2</TargetFramework>
     <RootNamespace>implementation</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Google.OrTools.LinearSolver">
+      <HintPath>libs/Google.OrTools.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>
