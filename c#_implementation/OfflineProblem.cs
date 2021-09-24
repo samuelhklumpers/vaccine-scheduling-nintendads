@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class OfflineProblem
+    public class OfflineProblem
     {
         public int processing_time_first_dose;
         public int processing_time_second_dose;

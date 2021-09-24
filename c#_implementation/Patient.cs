@@ -1,6 +1,6 @@
 namespace implementation
 {
-    class Patient
+    public class Patient
     {
         public int first_timeslot_first_dose;
         public int last_timeslot_first_dose;
@@ -23,7 +23,7 @@ namespace implementation
         }
     }
 
-    class Registration
+    public class Registration
     {
         int timeslot_first_dose;
         int timeslot_second_dose;

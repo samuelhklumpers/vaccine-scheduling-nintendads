@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 
 namespace implementation
 {
@@ -15,7 +16,7 @@ namespace implementation
             List<Patient> patients_data = new List<Patient>();
             for (int i = 4; i < data.Length; i++)
             {
-                string[] patient_data = data[i].Split(", ");
+                string[] patient_data = data[i].Split(new String[] { ", " }, StringSplitOptions.None);
                 Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]));
                 patients_data.Add(patient);
             }
@@ -33,7 +34,7 @@ namespace implementation
             List<Patient> patients_data = new List<Patient>();
             for (int i = 3; i < data.Length; i++)
             {
-                string[] patient_data = data[i].Split(", ");
+                string[] patient_data = data[i].Split(new String[] { ", " }, StringSplitOptions.None);
                 Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]));
                 patients_data.Add(patient);
             }
