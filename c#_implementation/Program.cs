@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using static implementation.Parser;
+using Google.OrTools.LinearSolver;
 
 namespace implementation
 {
@@ -18,7 +19,7 @@ namespace implementation
                 Console.WriteLine("Running offline solver");
                 OfflineProblem offline_problem = Parse_problem_offline("../data/offline/from_assignment.txt");
                 CallableSolverOffline offline_solver = new CallableSolverOffline("C:\\Program Files\\swipl\\bin\\swipl.exe", new String[] { "constraint_programming.pl" });
-                
+
                 // can't seem to convince C# to start an executable from path
                 var solution = offline_solver.solve(offline_problem);
                 OfflineValidator.validate(offline_problem, solution);
@@ -36,7 +37,7 @@ namespace implementation
             if (benchmark)
             {
                 var solver = new CallableSolverOffline("C:\\Program Files\\swipl\\bin\\swipl.exe", new String[] { "constraint_programming.pl" });
-                ISolverOffline[] solvers = new ISolverOffline[]{solver};
+                ISolverOffline[] solvers = new ISolverOffline[] { solver };
 
                 var bench = Benchmarker.benchmark(solvers, 5.0);
 
