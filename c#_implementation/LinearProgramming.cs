@@ -18,9 +18,9 @@ namespace implementation
             Variable numHospitals = solver.MakeNumVar(0.0, int.MaxValue, "numHospitals"); 
             
             //Create variable lists as each patient has that variable
-            Variable[] t1 = new Variable[problem.number_of_patients];
-            Variable[] t2 = new Variable[problem.number_of_patients];
-            Variable[] h1 = new Variable[problem.number_of_patients];
+            Variable[] t1 = new Variable[problem.number_of_patients]; // t1,j starting time of vaccine 1 of patient j
+            Variable[] t2 = new Variable[problem.number_of_patients]; // t2,j starting time of vaccine 2 of patient j
+            Variable[][][] x = new Variable[problem.number_of_patients][numHospitals][int.MaxValue]; //Xjit is one if patient j is in hospital i at time t
             Variable[] h2 = new Variable[problem.number_of_patients];
 
             //Create constraint lists as each patient has that constraint
@@ -55,6 +55,8 @@ namespace implementation
                 //constraints voor waarden van variabelen toevoegen
                 i++;
             }
+
+            constraint c3 = solver.Add(IEnumerable.sum(t1[j] => t1[j] + problem.processing_time_first_dose, x[j][i][t] for all j, t there is an i));
 
             
 
