@@ -9,7 +9,6 @@ namespace implementation
     {
         public Solution solve(OfflineProblem problem)
         {
-            Console.WriteLine(problem.ToString());
             return new Solution(0, new List<Registration>());
         }
     }

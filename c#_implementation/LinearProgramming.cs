@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using Google.OrTools.LinearSolver;
-
+/*
 namespace implementation
 {
     class LinearProgramming
@@ -12,7 +12,7 @@ namespace implementation
         {
             //TOEVOEGEN: partial filled solution meegeven voor verder in de boom.
 
-            Solver solver = new Solver("vaccine_scheduling", Solver.CLP_LINEAR_PROGRAMMING);
+            Solver solver = new Solver("vaccine_scheduling", Solver.OptimizationProblemType.CLP_LINEAR_PROGRAMMING);
 
             //Create variable for number of hospitals.
             Variable numHospitals = solver.MakeNumVar(0.0, int.MaxValue, "numHospitals"); 
@@ -82,4 +82,4 @@ namespace implementation
 
 
     }
-}
+}*/

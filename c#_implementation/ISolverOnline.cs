@@ -3,6 +3,6 @@ namespace implementation
     interface ISolverOnline
     {
         ///Print the solution
-        void solve(OnlineProblem problem);
+        Solution solve(OnlineProblem problem);
     }
 }
