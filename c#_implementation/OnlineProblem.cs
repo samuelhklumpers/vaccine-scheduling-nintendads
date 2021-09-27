@@ -4,10 +4,10 @@ namespace implementation
 {
     class OnlineProblem
     {
-        int processing_time_first_dose;
-        int processing_time_second_dose;
-        int gap;
-        List<Patient> patient_data;
+        public int processing_time_first_dose;
+        public int processing_time_second_dose;
+        public int gap;
+        public List<Patient> patient_data;
         public OnlineProblem(int processing_time_first_dose, int processing_time_second_dose, int gap, List<Patient> patient_data)
         {
             this.processing_time_first_dose = processing_time_first_dose;

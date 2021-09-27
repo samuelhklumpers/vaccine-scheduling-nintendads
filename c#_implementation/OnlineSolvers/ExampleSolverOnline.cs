@@ -1,12 +1,13 @@
 using System;
+using System.Collections.Generic;
 
 namespace implementation
 {
     class ExampleSolverOnline : ISolverOnline
     {
-        public void solve(OnlineProblem problem)
+        public Solution solve(OnlineProblem problem)
         {
-            Console.WriteLine(problem.ToString());
+            return new Solution(0, new List<Registration>());
         }
     }
 }
