@@ -1,62 +1,6 @@
 from random import randrange
-
-
-class Problem:
-    def __init__(self, processing_time_first_dose, processing_time_second_dose, gap_between_doses):
-        # assert that all input is valid
-        assert processing_time_first_dose >= 0
-        assert processing_time_second_dose >= 0
-        assert gap_between_doses >= 0
-
-        self.processing_time_first_dose = processing_time_first_dose
-        self.processing_time_second_dose = processing_time_second_dose
-        self.gap_between_doses = gap_between_doses
-        self.patient_list = []
-
-    def add_patient(self, patient):
-        # assert that the given patient details are valid within this problem
-        assert patient.last_timeslot_first_dose - \
-            patient.first_timeslot_first_dose + 1 >= self.processing_time_first_dose
-        assert patient.length_second_dose_interval >= self.processing_time_second_dose
-
-        self.patient_list.append(patient)
-
-    def write_to_file_as_offline_problem(self, filename):
-        # write the problem as an offline problem to a given file
-        with open(filename, "w") as file1:
-            file1.write(str(self.processing_time_first_dose) + "\n")
-            file1.write(str(self.processing_time_second_dose) + "\n")
-            file1.write(str(self.gap_between_doses) + "\n")
-            file1.write(str(len(self.patient_list)))
-            for patient in self.patient_list:
-                file1.write("\n" + str(patient))
-
-    def write_to_file_as_online_problem(self, filename):
-        # write the problem as an online problem to a given file
-        with open(filename, "w") as file1:
-            file1.write(str(self.processing_time_first_dose) + "\n")
-            file1.write(str(self.processing_time_second_dose) + "\n")
-            file1.write(str(self.gap_between_doses))
-            for patient in self.patient_list:
-                file1.write("\n" + str(patient))
-
-
-class Patient:
-    def __init__(self, first_timeslot_first_dose, last_timeslot_first_dose, delay_between_doses, length_second_dose_interval):
-        # assert that all patient details are valid
-        assert first_timeslot_first_dose >= 0
-        assert last_timeslot_first_dose >= 0
-        assert length_second_dose_interval >= 0
-        assert delay_between_doses >= 0
-
-        self.first_timeslot_first_dose = first_timeslot_first_dose
-        self.last_timeslot_first_dose = last_timeslot_first_dose
-        self.delay_between_doses = delay_between_doses
-        self.length_second_dose_interval = length_second_dose_interval
-
-    def __str__(self) -> str:
-        return str(str(self.first_timeslot_first_dose) + ', ' + str(self.last_timeslot_first_dose) +
-                   ', ' + str(self.delay_between_doses) + ', ' + str(self.length_second_dose_interval))
+from problem import Problem
+from patient import Patient
 
 
 def completely_random_n_patients(n):
@@ -79,6 +23,7 @@ def completely_random_n_patients(n):
 
 
 def example_test_case():
+    # this case is the example from the assignment
     p = Problem(2, 3, 1)
     p.add_patient(Patient(2, 7, 5, 4))
     p.add_patient(Patient(1, 2, 3, 3))
@@ -88,6 +33,7 @@ def example_test_case():
 
 
 def big_numbers():
+    # this test case is mostly meant to break programs that allocate based on the amount of timeslots
     p = Problem(100_000_000, 100_000_000, 100_000_000)
     p.add_patient(Patient(0, 99_999_999, 100_000_000, 100_000_000))
     p.add_patient(Patient(100_000_000, 199_999_999, 100_000_000, 100_000_000))
