@@ -41,7 +41,82 @@ def big_numbers():
     p.write_to_file_as_online_problem("../data/online/big_numbers.txt")
 
 
+def three_quarters(n=3, w=1):
+    # this test case is designed to break programs that pick use a static heuristic to allocate their timeslots
+
+    # for example, n=3, w=1
+    # t  1 2 3 4 5 6 7 8 9 . . .
+    # p1 - - . . . . - - . . . .
+    # p2 . . - - . . . . - - . .
+    # p3 . . . . - - . . . . - -
+    two = 2 * w
+    four = 4 * w
+
+    p1 = p2 = two
+    p = Problem(p1, p2, 0)
+
+    p.add_patient(Patient(0, p1, two * (n - 1), p2))
+
+    for i in range(1, n):
+        p.add_patient(Patient((i - 1) * two, (i - 1) * two + p1 + i * four, two * (n - 1), p2 + four))
+    p.write_to_file_as_offline_problem("../data/offline/three_quarters.txt")
+    p.write_to_file_as_online_problem("../data/online/three_quarters.txt")
+
+
+def backtracker(n=3, w=2):
+    # this test case is designed to make bruteforcers reach the last choice before uncovering the suboptimality
+    # and making them backtrack all the way to the first patient.
+    # note that this is almost three_quarters in reverse
+
+    # for example
+    # t  1 2 3 4 5 6 7 8 9
+    # p1 - - . . - - - . .
+    # p2 . . - - . . - - -
+
+    # oh no!
+
+    # p1 . . - - . . . - - -
+    # p2 - - . . - - - . . .
+
+    # larger
+    # constraints (+ 1st ok, x user gap, * 2nd ok, _ no):
+    # p1 + + + + + + * * * * * * * * *
+    # p2 + + + + + x * * * * * * * * _
+    # p3 + + + + + + * * * * * * * * _
+
+    # need the x to force backtrack to p1, not p2
+
+    # p1 - - . . . . - - - . . . . .
+    # p2 . . - - . . . . . - - - . .
+    # p3 . . . . - - . . . . . - - -
+
+    # p1 . . . . - - . . . . . . - - -
+    # p2 . . - - . . . . . - - - . . .
+    # p3 - - . . . . - - - . . . . . .
+    
+    p1 = w
+    p2 = w + 1
+    p = Problem(p1, p2, 0)
+
+    d = p1
+    d += p1 * (n - 1)
+
+    L = p2
+    L += p2 * (n - 1)
+
+    p.add_patient(Patient(0, d, 0, L))
+    for _ in range(1, n - 1):
+        p.add_patient(Patient(0, d - 1, 1, L))
+    p.add_patient(Patient(0, d, 0, L - 1))
+    
+    p.write_to_file_as_offline_problem("../data/offline/backtracker.txt")
+    p.write_to_file_as_online_problem("../data/online/backtracker.txt")
+
+
+
 example_test_case()
+three_quarters()
+backtracker()
 completely_random_n_patients(5)
 completely_random_n_patients(20)
 completely_random_n_patients(100)
