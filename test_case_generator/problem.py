@@ -4,8 +4,8 @@ import random
 class Problem:
     def __init__(self, processing_time_first_dose, processing_time_second_dose, gap_between_doses):
         # assert that all input is valid
-        assert processing_time_first_dose >= 0
-        assert processing_time_second_dose >= 0
+        assert processing_time_first_dose >= 1
+        assert processing_time_second_dose >= 1
         assert gap_between_doses >= 0
 
         self.processing_time_first_dose = processing_time_first_dose
