@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    class CallableSolverOffline : IHospitalSolverOffline
+    class CallableSolverOffline : ISolverOffline
     {
         public String callable;
 

@@ -1,13 +1,25 @@
+using System.Globalization;
 namespace implementation
 {
     interface ISolverOffline
     {
         Solution solve(OfflineProblem problem);
     }
-    interface IHospitalSolverOffline : ISolverOffline
+    interface IHospitalSolverOffline
     {
-        new HospitalSolution solve(OfflineProblem problem) { return ((ISolverOffline)this).solve(problem).AddHospitals(problem); }
-        // how do I do this without the ((ISolverOffline)this) hack
-        // base doesn't seem to work here
+        HospitalSolution solve(OfflineProblem problem);
+    }
+
+    class Hospitalizer : IHospitalSolverOffline
+    {
+        public ISolverOffline solver;
+
+        public Hospitalizer(ISolverOffline solver) {
+            this.solver = solver;
+        }
+
+        public HospitalSolution solve(OfflineProblem problem) {
+            return this.solver.solve(problem).AddHospitals(problem);
+        }
     }
 }
