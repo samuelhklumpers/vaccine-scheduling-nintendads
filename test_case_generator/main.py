@@ -60,7 +60,7 @@ def three_quarters(n=3, w=1):
     for i in range(1, n):
         p.add_patient(Patient((i - 1) * two, (i - 1) * two + p1 + i * four, two * (n - 1), p2 + four))
     p.write_to_file_as_offline_problem("../data/offline/three_quarters.txt")
-    p.write_to_file_as_online_problem("../data/online/three_quarters.txt")
+    p.write_to_file_as_online_problem("../data/online/three_quarters.txt", randomized=True)
 
 
 def backtracker(n=3, w=2):
