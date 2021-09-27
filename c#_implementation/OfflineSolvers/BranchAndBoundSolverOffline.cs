@@ -5,7 +5,8 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    class Job {
+    class Job
+    {
         public int t1;
         public int t2;
         public int p;
@@ -25,12 +26,13 @@ namespace implementation
         {
             //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            
-            
+            LinearProgramming lp = new LinearProgramming();
+            LinearProgramming.Solve(problem);
+
             return new Solution(0, new List<Registration>());
         }
 
-        public int PigeonHole(Job[] jobs, int limit)
+        static public int PigeonHole(Job[] jobs, int limit)
         {
             jobs = jobs.OrderBy(x => x.t1).ToArray();
 
