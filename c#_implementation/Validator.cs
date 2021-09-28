@@ -72,6 +72,10 @@ namespace implementation
                     sameHospitals[reg.hospital_second_dose].Add((reg.timeslot_second_dose, false));
                 }
 
+                for (int h = 0; h < this.solution.machines; h++){
+                    sameHospitals[h].Sort();
+                }
+
                 for (int h = 0; h < this.solution.machines; h++)
                 {
                     if (sameHospitals[h].Count > 1)
