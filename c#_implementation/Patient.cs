@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace implementation
 {
-    class Patient
+    public class Patient
     {
         public int first_timeslot_first_dose;
         public int last_timeslot_first_dose;

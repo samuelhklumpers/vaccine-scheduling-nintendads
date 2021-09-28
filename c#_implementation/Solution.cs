@@ -153,7 +153,7 @@ namespace implementation
     {
         public List<RegistrationWithHospital> hospitals;
 
-        public HospitalSolution(int machines, List<RegistrationWithHospital> hospitals) : base(machines, new List<Registration> {})
+        public HospitalSolution(int machines, List<RegistrationWithHospital> hospitals) : base(machines, hospitals)
         {
             this.hospitals = hospitals;
             // could fix this.sol
