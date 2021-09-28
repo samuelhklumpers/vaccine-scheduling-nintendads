@@ -2,16 +2,8 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-<<<<<<< HEAD
     class OnlineProblem : IProblem
     {
-=======
-    class OnlineProblem
-    {
-        int processing_time_first_dose;
-        int processing_time_second_dose;
-        int gap;
->>>>>>> test_solutions
         List<Patient> patient_data;
         public OnlineProblem(int processing_time_first_dose, int processing_time_second_dose, int gap, List<Patient> patient_data)
         {

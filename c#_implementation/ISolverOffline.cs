@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-using System.Globalization;
-=======
->>>>>>> test_solutions
 namespace implementation
 {
     interface ISolverOffline
     {
-<<<<<<< HEAD
         Solution solve(OfflineProblem problem);
     }
     interface IHospitalSolverOffline
@@ -27,9 +22,3 @@ namespace implementation
         }
     }
 }
-=======
-        ///Print the solution
-        Solution solve(OfflineProblem problem);
-    }
-}
->>>>>>> test_solutions
