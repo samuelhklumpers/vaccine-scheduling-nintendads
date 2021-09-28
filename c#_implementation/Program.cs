@@ -9,8 +9,6 @@ namespace implementation
     {
         static void Main(string[] args)
         {
-            OfflineProblem offline_problem = Parse_problem_offline("../data/offline/from_assignment.txt");
-            
             HospitalSolution testSolution = Parse_solution("../data/big_numbers.txt");
             Console.WriteLine(testSolution.ToString());
 
@@ -29,6 +27,7 @@ namespace implementation
             bool benchmark = false;
 
 
+            OfflineProblem offline_problem = Parse_problem_offline("../data/offline/from_assignment.txt");
             if (test)
             {
                 Console.WriteLine("Running offline solver");
@@ -36,8 +35,7 @@ namespace implementation
                 CallableSolverOffline offline_solver = new CallableSolverOffline("C:\\Program Files\\swipl\\bin\\swipl.exe", new String[] { "constraint_programming.pl" });
 
                 // can't seem to convince C# to start an executable from path
-                //var
-                solution = offline_solver.solve(offline_problem);
+                var solution = offline_solver.solve(offline_problem);
                 new OfflineValidator(offline_problem, solution).validate();
                 Console.WriteLine("Problem:");
                 Console.WriteLine(offline_problem.ToString());
