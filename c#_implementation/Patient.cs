@@ -29,6 +29,7 @@ namespace implementation
             int processing = processing_time_first_dose - 1;
             this.start_times_first_dose = Enumerable.Range(first_timeslot_first_dose, interval_range - processing).ToArray();
         }
+        
         public override string ToString()
         {
             string part1 = "first_timeslot_first_dose: " + this.first_timeslot_first_dose + " ";
