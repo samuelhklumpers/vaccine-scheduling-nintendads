@@ -87,11 +87,11 @@ namespace implementation
                             int gap = max - min;
                             if (first_dose && gap < problem.processing_time_first_dose)
                             {
-                                throw new Exception($"Patients first appointment start times planned too close together: patient 1's first start time = {min}, patient 2's first start time = {max}, gap = {gap}, minimal gap={this.problem.processing_time_first_dose}");
+                                throw new Exception($"Appointment start times planned too close together in same hospital: patient 1's first start time = {min}, patient 2's first start time = {max}, gap = {gap}, processing time first dose={this.problem.processing_time_first_dose}");
                             }
                             else if (!first_dose && gap < problem.processing_time_second_dose)
                             {
-                                throw new Exception($"Patients second appointment start times planned too close together: patient 1's first start time = {min}, patient 2's first start time = {max}, gap = {gap}, minimal gap={this.problem.processing_time_first_dose}");
+                                throw new Exception($"Appointment start times planned too close together in same hospital: patient 1's first start time = {min}, patient 2's first start time = {max}, gap = {gap}, processing time second dose={this.problem.processing_time_first_dose}");
                             }
                         }
                     }
@@ -116,6 +116,18 @@ namespace implementation
                     {
                         throw new Exception($"Patient appointment start times planned too close together: first start time = {first}, second start time = {second}, gap = {gap}, min. gap={min_gap}");
                     }
+
+                    if (first + this.problem.processing_time_first_dose > this.problem.patient_data[i].last_timeslot_first_dose) {
+                        throw new Exception($"Patient's first appointment is beyond their feasible first dose interval. start time = {first}, end time = {first + this.problem.processing_time_first_dose} last timeslot first dose = {this.problem.patient_data[i].last_timeslot_first_dose}");
+                    }
+
+                    int begin_second = first + this.problem.gap + this.problem.patient_data[i].delay_between_doses + problem.processing_time_first_dose;
+                    int end_second = begin_second + this.problem.patient_data[i].second_dose_interval;
+
+                    if (second + this.problem.processing_time_second_dose > end_second) {
+                        throw new Exception($"Patient's second appointment is beyond their feasible second dose interval. start time = {second}, end time = {second + this.problem.processing_time_second_dose}, last timeslot second dose = {end_second}");
+                    }
+
                 }
             }
             else
@@ -134,6 +146,5 @@ namespace implementation
                 }
             }
         }
-
     }
 }
