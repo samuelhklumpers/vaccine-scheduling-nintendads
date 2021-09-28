@@ -13,8 +13,9 @@ namespace implementation
             new OfflineValidator().validate(offline_problem, solution); */
 
             RecursiveBruteforce brute = new RecursiveBruteforce();
-            var solution = brute.solve(offline_problem);
-            new OfflineValidator().validate(offline_problem, solution);
+            Solution solution = brute.solve(offline_problem);
+            OfflineValidator validator = new OfflineValidator(offline_problem, solution);
+            validator.validate();
 
             Console.WriteLine(solution);
 

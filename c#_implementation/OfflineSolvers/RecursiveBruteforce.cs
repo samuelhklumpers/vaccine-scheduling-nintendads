@@ -13,7 +13,7 @@ namespace implementation
             List<Hospital> hospitals = new List<Hospital>();
             hospitals.Add(new Hospital(hospitals.Count));
 
-            Stack<Patient> patients = new Stack<Patient>(problem.patient_data);
+            Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patient_data));
 
             bool solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             while (!solved)
@@ -26,7 +26,7 @@ namespace implementation
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
-            return new Solution(hospitals.Count, regs.ToList());
+            return new Solution(hospitals.Count, deleteMeReverseStack(regs).ToList());
         }
         private bool solveR(OfflineProblem problem, List<Hospital> hospitals, Stack<RegistrationWithHospital> regs, Stack<Patient> patients, Patient p)
         {
@@ -114,6 +114,17 @@ namespace implementation
             foreach ((int t, int h) in changelog) {
                 hospitals[h].busy_dict[t] = false;
             }
+        }
+
+        // Temporary for testing purposes
+        private Stack<T> deleteMeReverseStack<T>(Stack<T> input)
+        {
+            Stack<T> tmp = new Stack<T>();
+            while (input.Count > 0)
+            {
+                tmp.Push(input.Pop());
+            }
+            return tmp;
         }
     }
 }
