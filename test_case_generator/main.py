@@ -46,14 +46,16 @@ def three_quarters(n=10, w=2):
     # this test case is designed to break programs that use a static heuristic to allocate their timeslots
 
     # for example, n=3, w=1
-    # t  0 1 2 3 4 5 6 7 8 9 . .
-    # p1 - - . . . . - - . . . .
-    # p2 . . - - . . . . - - . .
-    # p3 . . . . - - . . . . - -
+    # t  0 1 2 3 4 5 6 7 8 9 . . . . . .
+    # p1 - - . . . . . . - - . . . . . .
+    # p2 . . - - . . . . . . - - . . . .
+    # p3 . . . . - - . . . . . . - - . .
+    # p4 . . . . . . - - . . . . . . - -
 
-    # p1 + + _ _ _ _ * * _ _ _ _ _
-    # p2 + + + + + + * * * * * _ _ 
-    # p3 _ _ + + + + + + * * * * *
+    # p1 + + _ _ _ _ _ _ _ * * _ _ _ _ _ _ _
+    # p2 + + + + + _ _ _ _ * * * * * _ _ _ _
+    # p3 _ _ + + + + + _ _ _ _ * * * * * _ _
+    # p4 _ _ _ _ + + + + + _ _ _ _ * * * * * 
     two = 2 * w
     four = 4 * w
 
@@ -62,10 +64,10 @@ def three_quarters(n=10, w=2):
     s = Solution(1)
 
     p.add_patient(Patient(0, p1 - 1, two * (n - 1), p2))
-    s.add_patient(0, 0, p1 - 1 + two * (n - 1), 0)
+    s.add_patient(0, 0, p1 + two * (n - 1), 0)
 
     for i in range(1, n):
-        p.add_patient(Patient((i - 1) * two, (i - 1) * two + p1 - 1 + i * four, 0, p2 + four - 1))
+        p.add_patient(Patient((i - 1) * two, (i - 1) * two + p1 - 1 + i * four, (n - 1) * two, p2 + four - 1))
         s.add_patient((i - 1) * two + two, 0, p1 + (i - 1) * two + two * (n - 1) + two, 0)
 
     p.write_to_file_as_offline_problem("../data/offline/three_quarters.txt")
