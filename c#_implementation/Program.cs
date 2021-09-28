@@ -12,9 +12,11 @@ namespace implementation
             var solution = offline_solver.solve(offline_problem);
             new OfflineValidator().validate(offline_problem, solution); */
 
-            BruteforceSolverOffline brute = new BruteforceSolverOffline();
+            RecursiveBruteforce brute = new RecursiveBruteforce();
             var solution = brute.solve(offline_problem);
             new OfflineValidator().validate(offline_problem, solution);
+
+            Console.WriteLine(solution);
 
             OnlineProblem online_problem = Parse_problem_online("../data/online/from_assignment.txt");
             ExampleSolverOnline online_solver = new ExampleSolverOnline();
