@@ -36,33 +36,42 @@ namespace implementation
             //TODO same vaccine in same hospital
 
             //Create variable lists as each patient has that variable
-            Variable[] t1 = init_variables_vector(solver, max_i, max_t); // t1,j starting time of vaccine 1 of patient i
-            Variable[] e1 = init_variables_vector(solver, max_i, max_t); // e1,j ending time of vaccine 1 of patient i
-            Variable[] t2 = init_variables_vector(solver, max_i, max_t); // t2,j starting time of vaccine 2 of patient i
-            Variable[] e2 = init_variables_vector(solver, max_i, max_t); // e2,j ending time of vaccine 2 of patient i
+            Variable[] t1 = init_variables_vector(solver, max_i, max_t-problem.processing_time_first_dose+1); // t1,j starting time of vaccine 1 of patient i
+            Variable[] t2 = init_variables_vector(solver, max_i, max_t-problem.processing_time_second_dose+1); // t2,j starting time of vaccine 2 of patient i
 
 
-            /*for (int i = 0; i < max_i; i++)
+            for (int i = 0; i < max_i; i++)
             {
                 Patient p = problem.patient_data[i];
                 Constraint ct_t1_in_timeslot = solver.MakeConstraint(p.first_timeslot_first_dose, p.last_timeslot_first_dose - problem.processing_time_first_dose + 1);
-                Constraint ct_e1_in_timeslot = solver.MakeConstraint(p.first_timeslot_first_dose + problem.processing_time_first_dose - 1, p.last_timeslot_first_dose);
                 ct_t1_in_timeslot.SetCoefficient(t1[i], 1);
-                ct_e1_in_timeslot.SetCoefficient(e1[i], 1);
 
                 //every patients gets their vaccination planned
-                Constraint ct_fill_1st_vaccine_slot = solver.MakeConstraint(problem.processing_time_first_dose, problem.processing_time_first_dose);
 
                 for (int j = 0; j < max_j; j++)
                 {
+                    Constraint ct_fill_1st_vaccine_slot = solver.MakeConstraint(problem.processing_time_first_dose, problem.processing_time_first_dose);
                     for (int t = 0; t < max_t; t++)
                     {
                         ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t], 1);
                     }
                 }
 
+                Constraint ct_t2_in_timeslot = solver.MakeConstraint(/*t1[i] +*/ problem.processing_time_first_dose-1 + problem.gap + p.delay_between_doses, /*t1[i] +*/ problem.processing_time_first_dose-1 + problem.gap + p.delay_between_doses + p.second_dose_interval);
+                ct_t2_in_timeslot.SetCoefficient(t2[i], 1);
 
-            }*/
+                //every patients gets their vaccination planned
+                Constraint ct_fill_2nd_vaccine_slot = solver.MakeConstraint(problem.processing_time_second_dose, problem.processing_time_second_dose);
+
+                for (int j = 0; j < max_j; j++)
+                {
+                    for (int t = 0; t < max_t; t++)
+                    {
+                        ct_fill_2nd_vaccine_slot.SetCoefficient(x[i, j, t], 1);
+                    }
+                }
+
+            }
 
             //Constraint ct = solver.MakeConstraint(x[])
 
