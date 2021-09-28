@@ -385,8 +385,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 .idea/
-<<<<<<< HEAD
 *.sln.iml
-=======
-*.sln.iml
->>>>>>> test_solutions
