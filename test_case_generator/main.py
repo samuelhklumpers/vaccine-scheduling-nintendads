@@ -61,11 +61,11 @@ def three_quarters(n=10, w=2):
     p = Problem(p1, p2, 0)
     s = Solution(1)
 
-    p.add_patient(Patient(0, p1, two * (n - 1), p2))
-    s.add_patient(0, 0, p1 + two * (n - 1), 0)
+    p.add_patient(Patient(0, p1 - 1, two * (n - 1), p2))
+    s.add_patient(0, 0, p1 - 1 + two * (n - 1), 0)
 
     for i in range(1, n):
-        p.add_patient(Patient((i - 1) * two, (i - 1) * two + p1 + i * four, 0, p2 + four - 1))
+        p.add_patient(Patient((i - 1) * two, (i - 1) * two + p1 - 1 + i * four, 0, p2 + four - 1))
         s.add_patient((i - 1) * two + two, 0, p1 + (i - 1) * two + two * (n - 1) + two, 0)
 
     p.write_to_file_as_offline_problem("../data/offline/three_quarters.txt")
@@ -112,7 +112,7 @@ def backtracker(n=10, w=4):
     p2 = w + 1
     p = Problem(p1, p2, 0)
 
-    d = p1
+    d = p1 - 1
     d += p1 * (n - 1)
 
     L = p2
