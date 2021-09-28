@@ -65,7 +65,7 @@ namespace implementation
             {
                 List<string> problems = new List<string>
                 {
-                    //"../data/offline/backtracker.txt",
+                    "../data/offline/backtracker.txt",
                     "../data/offline/big_numbers.txt",
                     "../data/offline/three_quarters.txt",
                     "../data/online/Problem1.txt",
@@ -74,7 +74,7 @@ namespace implementation
 
                 List<string> solutions = new List<string> 
                 {
-                    //"../data/solutions/offline/backtracker.txt",
+                    "../data/solutions/offline/backtracker.txt",
                     "../data/solutions/offline/big_numbers.txt",
                     "../data/solutions/offline/three_quarters.txt",
                     "../data/solutions/online/Solution1.txt",

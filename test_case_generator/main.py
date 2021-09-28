@@ -127,9 +127,9 @@ def backtracker(n=10, w=4):
 
     for i in range(1, n - 1):
         p.add_patient(Patient(0, d - 1, 1, L))
-        s.add_patient(p1 * (n - 1 - i), 0, d + p2 * (n - 1 - i), 0)
+        s.add_patient(p1 * (n - 1 - i), 0, d + p2 * (n - 1 - i) + 1, 0)
     p.add_patient(Patient(0, d, 0, L - 1))
-    s.add_patient(0, 0, d, 0)
+    s.add_patient(0, 0, d + 1, 0)
     
     p.write_to_file_as_offline_problem("../data/offline/backtracker.txt")
     p.write_to_file_as_online_problem("../data/online/backtracker.txt")
