@@ -11,6 +11,8 @@ namespace implementation
             /*ExampleSolverOffline offline_solver = new ExampleSolverOffline();
             var solution = offline_solver.solve(offline_problem);
             new OfflineValidator().validate(offline_problem, solution); */
+            HospitalSolution testSolution = Parse_solution("../data/big_numbers.txt");
+            Console.WriteLine(testSolution.ToString());
 
             RecursiveBruteforce brute = new RecursiveBruteforce();
             Solution solution = brute.solve(offline_problem);

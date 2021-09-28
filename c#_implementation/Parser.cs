@@ -4,6 +4,27 @@ namespace implementation
 {
     class Parser
     {
+        public static HospitalSolution Parse_solution(string file)
+        {
+            string[] lines = System.IO.File.ReadAllLines(file);
+            for (int i = 0; i < lines.Length; ++i)
+            {
+                lines[i] = lines[i].Replace(" ", "");
+            }
+
+            List<RegistrationWithHospital> registrations = new List<RegistrationWithHospital>();
+            for (int i = 0; i < lines.Length - 1; i++)
+            {
+                string[] patient = lines[i].Split(",");
+                var registration = new RegistrationWithHospital(int.Parse(patient[0]), int.Parse(patient[1]), int.Parse(patient[2]), int.Parse(patient[3]));
+                registrations.Add(registration);
+            }
+
+            int machines = int.Parse(lines[lines.Length - 1]);
+
+            return new HospitalSolution(machines, registrations);
+        }
+
         public static OfflineProblem Parse_problem_offline(string file)
         {
             string[] data = System.IO.File.ReadAllLines(file);
