@@ -24,7 +24,9 @@ namespace implementation
 
         public Solution solve(OfflineProblem problem)
         {
-            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing
+            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing --> of numPatients, stuk sneller
+            // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
+            //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
             LinearProgramming lp = new LinearProgramming();
             LinearProgramming.Solve(problem);

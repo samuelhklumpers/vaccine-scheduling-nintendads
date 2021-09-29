@@ -59,7 +59,7 @@ namespace implementation
                 {
                     for (int t = 0; t < problem.processing_time_first_dose - 1; t++) //over goeie tijd loopen
                     {
-                        ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t+t1[i]], 1);
+                        ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t+(int)t1[i].SolutionValue()], 1); //DIT CHECKEN!!!
                     }
                 }
 
@@ -93,11 +93,17 @@ namespace implementation
 
             }
 
+            //weet niet of dit kan werken, maar dan zou je objective op minimalize numhospitals kunnen laten
+            solver.Add(numHospitals.SolutionValue() <= calculate_num_hospitals(x, max_i, max_j, max_t));
+            solver.Add(numHospitals.SolutionValue() >= calculate_num_hospitals(x, max_i, max_j, max_t));
+
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
 
             // Create the objective function, minimizing the number of hospitals.
             solver.Minimize(numHospitals);
+
+            //solver.Minimize(max(sum(x[i,j,t])));
 
             solver.Solve();
 
@@ -192,6 +198,28 @@ namespace implementation
                     }
                 }
             }
+        }
+
+        static private double calculate_num_hospitals(Variable[,,] x, int i_max, int j_max, int t_max)
+        {
+            //calculate the number of hospitals used
+            double max_hospitals = 0;
+            for (int t = 0; t < t_max; t++)
+            {
+                double num_hospital = 0;
+                for (int i = 0; i < i_max; i++)
+                {
+                   
+                    for (int j = 0; j < j_max; j++)
+                    {
+                        num_hospital += x[i,j,t].SolutionValue();
+                    }
+                }
+                max_hospitals = max(max_hospitals, num_hospital);
+            }
+
+            return max_hospitals;
+
         }
     }
 }
