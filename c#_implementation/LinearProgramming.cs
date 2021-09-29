@@ -59,7 +59,7 @@ namespace implementation
                 {
                     for (int t = 0; t < problem.processing_time_first_dose - 1; t++) //over goeie tijd loopen
                     {
-                        ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t+(int)t1[i].SolutionValue()], 1); //DIT CHECKEN!!!
+                        ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t], 1); //(int)t1[i].SolutionValue()
                     }
                 }
 
