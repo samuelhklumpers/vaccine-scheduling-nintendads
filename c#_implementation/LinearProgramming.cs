@@ -39,6 +39,13 @@ namespace implementation
             Variable[] t1 = init_variables_vector(solver, max_i, max_t-problem.processing_time_first_dose+1); // t1,j starting time of vaccine 1 of patient i
             Variable[] t2 = init_variables_vector(solver, max_i, max_t-problem.processing_time_second_dose+1); // t2,j starting time of vaccine 2 of patient i
 
+            // nog verder geimplementeerd worden. constraints toevoegen: per patient, per ziekenhuis constraint, sommen over tijd vaccinatie
+            // als de som >= aan processing_time_1 * y[i,j,1] en constraint <= aan dat. dan als y =1 moet het processing time zijn, anders moet het 0 zijn.
+            // dan nog constraint op y toevoegen dat per patient, per hospital en prik er maar 1 op 1 kan staan. en dat die overeen moet komen met x (dan andere constraints 
+            // miss wel niet nodig, als het overeenkomt met x kan je y al gebruiken dat er maar 1 hospital mag zijn per patient per prik)
+            Variable[,,] y =  init_3d_boolean_variable_vector(solver, max_i, max_j, 2);//y_ijt is one if patient j is in hospital i for vaccine t
+
+            //of je gaat over tijd van 1 prik heen, telt het aantal hospitals die gebruikt worden, dit mag 1 zijn.
 
             for (int i = 0; i < max_i; i++)
             {
@@ -47,15 +54,28 @@ namespace implementation
                 ct_t1_in_timeslot.SetCoefficient(t1[i], 1);
 
                 //every patients gets their vaccination planned
-
+                Constraint ct_fill_1st_vaccine_slot = solver.MakeConstraint(problem.processing_time_first_dose, problem.processing_time_first_dose);
                 for (int j = 0; j < max_j; j++)
                 {
-                    Constraint ct_fill_1st_vaccine_slot = solver.MakeConstraint(problem.processing_time_first_dose, problem.processing_time_first_dose);
-                    for (int t = 0; t < max_t; t++)
+                    for (int t = 0; t < problem.processing_time_first_dose - 1; t++) //over goeie tijd loopen
                     {
-                        ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t], 1);
+                        ct_fill_1st_vaccine_slot.SetCoefficient(x[i, j, t+t1[i]], 1);
                     }
                 }
+
+               
+                for (int j = 0; j < max_j; j++)
+                {
+                    Constraint ct_1st_vaccine_slot_one_hospital = solver.MakeConstraint(0, problem.processing_time_first_dose);
+                    Constraint ct_1st_vaccine_slot_one_hospital_2 = solver.MakeConstraint(1, problem.processing_time_first_dose-1); //juist niet in dit interval
+
+                    for (int t = 0; t < max_t; t++)
+                    {
+                        ct_1st_vaccine_slot_one_hospital.SetCoefficient(x[i, j, t], 1);
+                        ct_1st_vaccine_slot_one_hospital_2.SetCoefficient(x[i, j, t], 1);
+                    }
+                }
+
 
                 Constraint ct_t2_in_timeslot = solver.MakeConstraint(/*t1[i] +*/ problem.processing_time_first_dose-1 + problem.gap + p.delay_between_doses, /*t1[i] +*/ problem.processing_time_first_dose-1 + problem.gap + p.delay_between_doses + p.second_dose_interval);
                 ct_t2_in_timeslot.SetCoefficient(t2[i], 1);
@@ -72,45 +92,6 @@ namespace implementation
                 }
 
             }
-
-            //Constraint ct = solver.MakeConstraint(x[])
-
-            /*
-
-            //Create constraint lists as each patient has that constraint
-            Constraint[] c1 = new Constraint[problem.number_of_patients];
-            Constraint[] c2 = new Constraint[problem.number_of_patients];
-            Constraint[] c3 = new Constraint[problem.number_of_patients];
-            Constraint[] c4 = new Constraint[problem.number_of_patients];
-            Constraint[] c5 = new Constraint[problem.number_of_patients];
-            Constraint[] c6 = new Constraint[problem.number_of_patients];
-
-            int i = 0;
-            foreach (Patient pat in problem.patient_data)
-            {
-
-                // Create the variables for the vaccine times and hospitals.
-                t1[i] = solver.MakeNumVar(0.0, int.maxValue, t1[i]);
-                t2[i] = solver.MakeNumVar(0.0, int.maxValue, t2[i]);
-                h1[i] = solver.MakeNumVar(0.0, int.maxValue, h1[i]);
-                h2[i] = solver.MakeNumVar(0.0, int.maxValue, h2[i]);
-
-
-                // Create two constraint, indicting in which intervals the times can fall.
-                c1[i] = solver.Add(pat.first_timeslot_first_dose <= t1[i] <= pat.last_timeslot_first_dose - problem.processing_time_first_dose + 1);
-                c2[i] = solver.Add(t1[i] + problem.processing_time_first_dose + problem.gap + pat.delay_between_doses <= t2[i] <= t1[i] + problem.processing_time_first_dose + problem.gap + pat.delay_between_doses + pat.second_dose_interval);
-                //Create 4 constraints to ensure that the
-                constraint c3 = solver.Add(h1[i] in range(numHospitals));//h1 moet in beschikbare hospitals zitten (binnen range van numHospitals)
-                constraint c4 = solver.Add(h2[i] in range(numHospitals));//h2 moet in beschikbare hospitals zitten (binnen range van numHospitals)
-                constraint c5 = solver.Add();//t1 moet beschikbare tijd van h1 hebben--> niet twee patienten op zelfde tijd in zelfde hospital
-                constraint c6 = solver.Add();//t2 moet beschikbare tijd van h2 hebben
-
-                //constraints voor waarden van variabelen toevoegen
-                i++;
-            }
-
-            Constraint c3 = solver.Add(IEnumerable.sum(t1[j] => t1[j] + problem.processing_time_first_dose, x[j][i][t] for all j, t there is an i));
-*/
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
@@ -157,6 +138,7 @@ namespace implementation
             }
             return x;
         }
+
         static private Variable[] init_variables_vector(Solver solver, int length, int ub)
         {
             Variable[] vector = new Variable[length];
