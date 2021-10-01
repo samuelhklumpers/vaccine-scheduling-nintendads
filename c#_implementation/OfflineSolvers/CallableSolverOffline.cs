@@ -10,11 +10,13 @@ namespace implementation
         public String callable;
         public String[] args;
 
+        // make a solver from an executable $callable, called with $args, followed by the problem in the format of marshalProblem 
         public CallableSolver(String callable, String[] args) {
             this.callable = callable;
             this.args = args;
         }
 
+        // transform a OfflineProblem to a flat string representation
         public IEnumerable<String> marshalProblem(OfflineProblem problem) {
             int[] parameters = new int[] {problem.p1, problem.p2, problem.g} ;
             IEnumerable<String> values = parameters.ToList<int>().Select<int, String>(n => n.ToString());
@@ -29,6 +31,7 @@ namespace implementation
             return values;
         } 
 
+        // load list of doses in string representation into an enumerable
         public IEnumerable<Doses> unmarshalRegs(int[] values) {
             if (values.Length % 2 != 0)
             {
@@ -44,6 +47,7 @@ namespace implementation
             return doses;
         }
 
+        // transform a solution in string representation to a Solution
         public Solution unmarshalSolution(String res) {
             var values = res.Split(' ').Select<String, int>(Int32.Parse).ToArray();
             int machines = values[0];
@@ -54,6 +58,7 @@ namespace implementation
             return new Solution(machines, regs);
         } 
 
+        // call the executable with additional $args
         public String call(IEnumerable<String> args) {
             // from: https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.standardoutput?redirectedfrom=MSDN&view=net-5.0#System_Diagnostics_Process_StandardOutput
             Process p = new Process();

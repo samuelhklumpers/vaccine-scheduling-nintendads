@@ -8,6 +8,7 @@ namespace implementation
 {
     public class TroubleMaker // more commonly known as Arbitrary
     {
+        // generate a random problem, with $n patients, and parameters within the given bounds
         public static OfflineProblem randomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
             var rand = new Random();
             
@@ -15,22 +16,22 @@ namespace implementation
             var p2 = rand.Next(p2B.Item1, p2B.Item2);
             var g = rand.Next(gB.Item1, gB.Item2);
             
-            var r = 0;
+            var lastR = 0;
 
             var ps = new List<Patient>();
 
             for (int i = 0; i < n; ++i) {
-                var r1i = r;
-                // TODO remove + p1 here when all solvers are fixed to interpret [r1, d1] as the startable interval (not total interval)
-                var d1i = r1i + p1 + rand.Next(dd1B.Item1, dd1B.Item2);
+                var r1 = lastR;
+                var d1 = r1 + p1 + rand.Next(dd1B.Item1, dd1B.Item2);
                 
                 var xi = rand.Next(xB.Item1, xB.Item2);
 
-                var inter2 = p2 + rand.Next(dd2B.Item1, dd2B.Item2);
+                var L = p2 + rand.Next(dd2B.Item1, dd2B.Item2);
 
-                var patient = new Patient(r1i, d1i, xi, inter2, p1, p2, g);
+                var patient = new Patient(r1, d1, xi, L, p1, p2, g);
 
                 ps.Add(patient);
+                lastR += rand.Next(rShiftB.Item1, rShiftB.Item2);
             }
 
             OfflineProblem p = new OfflineProblem(p1, p2, g, n, ps);
