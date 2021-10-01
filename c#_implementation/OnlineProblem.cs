@@ -2,11 +2,8 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class OnlineProblem
+    class OnlineProblem : IProblem
     {
-        int processing_time_first_dose;
-        int processing_time_second_dose;
-        int gap;
         List<Patient> patient_data;
         public OnlineProblem(int processing_time_first_dose, int processing_time_second_dose, int gap, List<Patient> patient_data)
         {

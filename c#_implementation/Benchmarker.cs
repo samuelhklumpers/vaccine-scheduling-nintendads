@@ -28,7 +28,7 @@ namespace implementation
 
                 var inter2 = p2 + rand.Next(dd2B.Item1, dd2B.Item2);
 
-                var patient = new Patient(r1i, d1i, xi, inter2);
+                var patient = new Patient(r1i, d1i, xi, inter2, p1, p2, g);
 
                 ps.Add(patient);
             }
@@ -60,7 +60,7 @@ namespace implementation
             List<OfflineProblem> cases = new List<OfflineProblem>();
 
             int n = 2;
-            var validator = new OfflineValidator();
+            //var validator = new OfflineValidator();
             var timer = new Stopwatch();
 
             for (int i = 0; i < solvers.Count(); ++i)

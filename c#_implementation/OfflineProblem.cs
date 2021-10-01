@@ -2,11 +2,14 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    public class OfflineProblem
-    {
+    public class IProblem {
         public int processing_time_first_dose;
         public int processing_time_second_dose;
         public int gap;
+    }
+
+    public class OfflineProblem : IProblem
+    {
         public int number_of_patients;
         public List<Patient> patient_data;
         public OfflineProblem(int processing_time_first_dose, int processing_time_second_dose, int gap, int number_of_patients, List<Patient> patient_data)
