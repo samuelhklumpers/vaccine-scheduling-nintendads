@@ -28,38 +28,38 @@ namespace implementation
             // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
             //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            LinearProgramming lp = new LinearProgramming2();
+            LinearProgramming2 lp = new LinearProgramming2();
             LinearProgramming.Solve(problem);
 
             return new Solution(0, new List<Registration>());
         }
 
-/*        static public int PigeonHole(Job[] jobs, int limit)
-        {
-            jobs = jobs.OrderBy(x => x.t1).ToArray();
-
-            int highest = 0;
-
-            for (int i = 0; i < jobs.Count(); ++i)
-            {
-                var lookahead = new List<Job>();
-                var t1 = jobs[i].t1;
-                var t2 = jobs[i].t2;
-                double s = jobs[i].p;
-
-                highest = Math.Max(highest, 1);
-
-                for (int j = 1; j < limit && j < jobs.Count() - i; ++j)
+        /*        static public int PigeonHole(Job[] jobs, int limit)
                 {
-                    t2 = Math.Max(t2, jobs[j].t2);
-                    s += jobs[j].p;
+                    jobs = jobs.OrderBy(x => x.t1).ToArray();
 
-                    int highest2 = (int)Math.Ceiling(s / (t2 - t1));
-                    highest = Math.Max(highest, highest2);
-                }
-            }
+                    int highest = 0;
 
-            return highest;
-        }*/
+                    for (int i = 0; i < jobs.Count(); ++i)
+                    {
+                        var lookahead = new List<Job>();
+                        var t1 = jobs[i].t1;
+                        var t2 = jobs[i].t2;
+                        double s = jobs[i].p;
+
+                        highest = Math.Max(highest, 1);
+
+                        for (int j = 1; j < limit && j < jobs.Count() - i; ++j)
+                        {
+                            t2 = Math.Max(t2, jobs[j].t2);
+                            s += jobs[j].p;
+
+                            int highest2 = (int)Math.Ceiling(s / (t2 - t1));
+                            highest = Math.Max(highest, highest2);
+                        }
+                    }
+
+                    return highest;
+                }*/
     }
 }

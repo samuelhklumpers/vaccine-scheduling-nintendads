@@ -14,6 +14,8 @@ namespace implementation
 
         public Appointment(int timeslot, int hospital)
         {
+            this.index = 0;
+            this.parent = null;
             this.timeslot = timeslot;
             this.hospital = hospital;
         }

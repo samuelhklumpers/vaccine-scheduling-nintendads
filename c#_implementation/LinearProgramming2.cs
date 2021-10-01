@@ -18,7 +18,7 @@ namespace implementation
             {
                 Patient patient = problem.patient_data[i];
                 Job job1 = new Job(patient, 1, i);
-                Job job2 = new Job(patient, 2, i+1);
+                Job job2 = new Job(patient, 2, i + 1);
 
                 jobs.Add(job1);
                 jobs.Add(job2);
@@ -39,8 +39,8 @@ namespace implementation
             //Create variable lists as each patient has that variable
             Variable[] t = init_variables_vector(solver, max_j, max_t); // tj starting time of job j
 
-            Variable [,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
-            Variable [,] y = init_2d_boolean_variable_y(solver, max_j, max_h);
+            Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
+            Variable[,] y = init_2d_boolean_variable_y(solver, max_j, max_h);
 
 
             //weet niet of dit kan werken, maar dan zou je objective op minimalize numhospitals kunnen laten
@@ -51,7 +51,7 @@ namespace implementation
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
 
             // Create the objective function, minimizing the number of hospitals.
-            solver.Minimize(0);
+            solver.Minimize(new LinearExpr());
 
             //solver.Minimize(max(sum(x[i,j,t])));
 
@@ -95,7 +95,7 @@ namespace implementation
             return x;
         }
 
-         static private Variable[,] init_2d_boolean_variable_z(Solver solver, int j_max)
+        static private Variable[,] init_2d_boolean_variable_z(Solver solver, int j_max)
         {
             //z_j,j' is one if job j is before job j'
             Variable[,] z = new Variable[j_max, j_max];
@@ -107,7 +107,7 @@ namespace implementation
                     z[i, j] = solver.MakeBoolVar("z: " + i.ToString() + " " + j.ToString());
                     //IS DIT AL INTEGER CONSTRAINT OF TUSSEN 0 EN 1
                     Constraint z_constraint = solver.MakeConstraint(0, 1);
-                    z_constraint.SetCoefficient(x[i, j], 1);     
+                    z_constraint.SetCoefficient(z[i, j], 1);
                 }
             }
             return z;
@@ -125,7 +125,7 @@ namespace implementation
                     y[j, h] = solver.MakeBoolVar("y: " + j.ToString() + " " + h.ToString());
                     //IS DIT AL INTEGER CONSTRAINT OF TUSSEN 0 EN 1
                     Constraint y_constraint = solver.MakeConstraint(0, 1);
-                    y_constraint.SetCoefficient(y[j, h], 1);     
+                    y_constraint.SetCoefficient(y[j, h], 1);
                 }
             }
             return y;
@@ -143,21 +143,21 @@ namespace implementation
 
         static private void add_constraints_z(Solver solver, Variable[,] z, Variable[] t, List<Job> jobs, int max_t)
         {
-            
-            for(int j = 0; j < jobs.Count; j++)
+
+            for (int j = 0; j < jobs.Count; j++)
             {
-                for(int k = 0; k < jobs.Count; k++)
+                for (int k = 0; k < jobs.Count; k++)
                 {
-                    
-                    if(jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
+
+                    if (jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
                     {
                         break;
                     }
 
-                    solver.Add(z[j,k] + z[k,j] == 1); //Only 1 job can be before the other
+                    solver.Add(z[j, k] + z[k, j] == 1); //Only 1 job can be before the other
 
-                    solver.Add(t[j] >= t[k] + 1 - (max_t + 1)*(z[j,k]));
-                    solver.Add(t[k] >= t[j] + 1 - (max_t + 1)*(1-z[j,k]));
+                    solver.Add(t[j] >= t[k] + 1 - (max_t + 1) * (z[j, k]));
+                    solver.Add(t[k] >= t[j] + 1 - (max_t + 1) * (1 - z[j, k]));
                 }
             }
 
@@ -165,12 +165,12 @@ namespace implementation
 
         static private void add_constraints_y(Solver solver, Variable[,] y, List<Job> jobs, int max_h)
         {
-            
-            for(int j = 0; j < jobs.Count; j++)
+
+            for (int j = 0; j < jobs.Count; j++)
             {
                 Constraint ct_one_hospital_per_job = solver.MakeConstraint(1, 1);
 
-                for(int h = 0; h < max_h; h++)
+                for (int h = 0; h < max_h; h++)
                 {
                     ct_one_hospital_per_job.SetCoefficient(y[j, h], 1);
                 }
@@ -179,18 +179,18 @@ namespace implementation
 
         static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job> jobs)
         {
-            foreach(Job j in jobs)
+            foreach (Job j in jobs)
             {
-                if(j.vaccine == 1)
+                if (j.vaccine == 1)
                 {
-                    solver.Add(t[j] >= j.patient.first_timeslot_first_dose);
-                    solver.Add(t[j] <= j.patient.last_timeslot_first_dose - problem.processing_time_first_dose + 1);
+                    solver.Add(t[j.id] >= j.patient.first_timeslot_first_dose);
+                    solver.Add(t[j.id] <= j.patient.last_timeslot_first_dose - problem.processing_time_first_dose + 1);
                 }
 
                 else if (j.vaccine == 2)
                 {
-                    solver.Add(t[j] >= t[jobs[j.id-1]] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap);
-                    solver.Add(t[j] <= t[jobs[j.id-1]] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap + (j.patient.second_dose_interval - problem.processing_time_second_dose + 1));
+                    solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap);
+                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap + (j.patient.second_dose_interval - problem.processing_time_second_dose + 1));
                 }
             }
         }
@@ -198,11 +198,11 @@ namespace implementation
 
         static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[,] y, List<Job> jobs, int h_max, int t_max)
         {
-             for(int j = 0; j < jobs.Count; j++)
+            for (int j = 0; j < jobs.Count; j++)
             {
-                for(int k = 0; k < jobs.Count; k++)
+                for (int k = 0; k < jobs.Count; k++)
                 {
-                      if(jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
+                    if (jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
                     {
                         break;
                     }
@@ -210,14 +210,14 @@ namespace implementation
                     int hospital_j = 0;
                     int hospital_k = 0;
 
-                    for(int h = 0; h < h_max; h++)
+                    for (int h = 0; h < h_max; h++)
                     {
-                        if (y[j,h] == 1)
+                        if (y[j, h] == 1)
                         {
                             hospital_j = h;
-                        } 
+                        }
 
-                        if(y[k,h] == 1)
+                        if (y[k, h] == 1)
                         {
                             hospital_k = h;
                         }
@@ -226,24 +226,24 @@ namespace implementation
 
                     int same_hospital = 1;
 
-                    if(hospital_j == hospital_k)
+                    if (hospital_j == hospital_k)
                     {
                         same_hospital = 0;
                     }
 
 
 
-                    if(jobs[j].vaccine == 1)
+                    if (jobs[j].vaccine == 1)
                     {
                         //CONTROLEREN GOEIE Z
-                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k,j] - (t_max + 1) * same_hospital <= - 1 - problem.processing_time_first_dose + 1); 
+                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * same_hospital <= -1 - problem.processing_time_first_dose + 1);
 
                     }
 
-                    else if(jobs[j].vaccine == 2)
+                    else if (jobs[j].vaccine == 2)
                     {
                         //CONTROLEREN GOEIE Z
-                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k,j] - (t_max + 1) * same_hospital <= - 1 - problem.processing_time_second_dose + 1); 
+                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * same_hospital <= -1 - problem.processing_time_second_dose + 1);
 
                     }
                 }
@@ -255,7 +255,7 @@ namespace implementation
 
     public class Job
     {
-        public Patient patient; 
+        public Patient patient;
         public int vaccine;
         public int id;
 
