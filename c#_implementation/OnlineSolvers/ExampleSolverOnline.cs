@@ -2,7 +2,7 @@ using System;
 
 namespace implementation
 {
-    class ExampleSolverOnline : ISolverOnline
+    class ExampleSolverOnline : IOnlineSolver
     {
         public void solve(OnlineProblem problem)
         {

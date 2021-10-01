@@ -5,30 +5,30 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    class RecursiveBruteforce : ISolverOffline
+    class RecursiveBruteforce : IOfflineSolver
     {
         public Solution solve(OfflineProblem problem)
         {
-            Stack<RegistrationWithHospital> regs = new Stack<RegistrationWithHospital>();
+            Stack<Doses2D> regs = new Stack<Doses2D>();
             List<Hospital> hospitals = new List<Hospital>();
             hospitals.Add(new Hospital(hospitals.Count));
 
-            Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patient_data));
+            Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patients));
 
             bool solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             while (!solved)
             {
                 hospitals.Add(new Hospital(hospitals.Count));
-                if (hospitals.Count > problem.number_of_patients)
+                if (hospitals.Count > problem.nPatients)
                 {
-                    throw new Exception($"More hospitals ({hospitals.Count}) than patients ({problem.number_of_patients}) generated.");
+                    throw new Exception($"More hospitals ({hospitals.Count}) than patients ({problem.nPatients}) generated.");
                 }
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
-            return new HospitalSolution(hospitals.Count, deleteMeReverseStack(regs).ToList());
+            return new Solution2D(hospitals.Count, deleteMeReverseStack(regs).ToList());
         }
-        private bool solveR(OfflineProblem problem, List<Hospital> hospitals, Stack<RegistrationWithHospital> regs, Stack<Patient> patients, Patient p)
+        private bool solveR(OfflineProblem problem, List<Hospital> hospitals, Stack<Doses2D> regs, Stack<Patient> patients, Patient p)
         {
             // After each successful try of first- and second appointment, recurse to the next patient.
             // If that doesn't work out, recurse back and try another second appointment combination and recurse.
@@ -38,27 +38,27 @@ namespace implementation
             {
                 // Naively set an appointment and fill a changelog of times marked as unavailable by planning this specific appointment.
                 // The changelog helps seperating what appointments marked which hours as unavaliable in case of overlap.
-                (List<(int, int)> first_changelog, int[] first_appointment) = tryStartTime(hospitals, first_start_time, problem.processing_time_first_dose);
+                (List<(int, int)> first_changelog, int[] first_appointment) = tryStartTime(hospitals, first_start_time, problem.p1);
                 if (first_appointment is null) { continue; }
 
                 // Calculate the start and end of the second appointment interval by adding the various delays
-                int begin_second = first_appointment[0] + problem.gap + p.delay_between_doses + problem.processing_time_first_dose;
-                int end_second = begin_second + p.second_dose_interval;
+                int begin_second = first_appointment[0] + problem.g + p.x + problem.p1;
+                int end_second = begin_second + p.L;
 
                 // The interval range including the starting hour itself (Enumerable.Range(start,count) will return an empty range if count is 0)
                 // The required processing time for the second dose -1 as the starting hour itself is also used
                 int interval_range = end_second - begin_second + 1; 
-                int processing = problem.processing_time_second_dose - 1; 
+                int processing = problem.p2 - 1; 
                 int[] start_times_second_dose = Enumerable.Range(begin_second, interval_range - processing).ToArray();
 
                 foreach (int second_start_time in start_times_second_dose)
                 {
-                    (List<(int, int)> second_changelog, int[] second_appointment) = tryStartTime(hospitals, second_start_time, problem.processing_time_second_dose);
+                    (List<(int, int)> second_changelog, int[] second_appointment) = tryStartTime(hospitals, second_start_time, problem.p2);
                     if (second_appointment is null) { continue; }
 
                     // With a second appointment set, a registration can be generated and added to the list.
                     // Stack used for more efficient adding and removing.
-                    regs.Push(new RegistrationWithHospital(first_appointment[0], first_appointment[1], second_appointment[0], second_appointment[1]));
+                    regs.Push(new Doses2D(first_appointment[0], first_appointment[1], second_appointment[0], second_appointment[1]));
 
                     // The success of this appointment depends on the success of subsequent appointments, so recurse if there are any left to plan
                     if (patients.Count > 0) { solved = solveR(problem, hospitals, regs, patients, patients.Pop()); }

@@ -8,7 +8,7 @@ namespace implementation
 {
     public class TroubleMaker // more commonly known as Arbitrary
     {
-        public static OfflineProblem generate(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
+        public static OfflineProblem randomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
             var rand = new Random();
             
             var p1 = rand.Next(p1B.Item1, p1B.Item2);
@@ -38,7 +38,7 @@ namespace implementation
             return p;
         }
 
-        public static OfflineProblem generateSimple(int n) {
+        public static OfflineProblem randomProblemPreset(int n) {
             var p1B = (1, 6);
             var p2B = (1, 6);
             var gB = (1, 6);
@@ -47,15 +47,15 @@ namespace implementation
             var dd2B = (1, 10);
             var xB = (0, 10);
 
-            return generate(n, p1B, p2B, gB, rShiftB, dd1B, dd2B, xB);
+            return randomProblem(n, p1B, p2B, gB, rShiftB, dd1B, dd2B, xB);
         }
     }
 
     class Benchmarker
     {
-        public static double dryRun(ISolverOffline solver, int n) {
+        public static double BenchmarkInit(IOfflineSolver solver, int n) {
             var timer = new Stopwatch();
-            var p = TroubleMaker.generateSimple(1);
+            var p = TroubleMaker.randomProblemPreset(1);
 
             timer.Start();
             for (int i = 0; i < n; ++i)
@@ -67,11 +67,11 @@ namespace implementation
             return timer.Elapsed.TotalSeconds / n;
         }
 
-        public static void test(ISolverOffline[] solvers, int n, int m) {
+        public static void RandomTest(IOfflineSolver[] solvers, int n, int m) {
 
             for (int i = 0; i < n; ++i)
             {
-                var p = TroubleMaker.generateSimple(m);
+                var p = TroubleMaker.randomProblemPreset(m);
                 var validator =  new OfflineValidator(p);
 
                 foreach (var solver in solvers) {
@@ -81,7 +81,7 @@ namespace implementation
             }
         }
 
-        public static Benchmark benchmark(ISolverOffline[] solvers, double tMin)
+        public static Benchmark BenchmarkAll(IOfflineSolver[] solvers, double tMin)
         {   // benchmark, until any solver uses at least tMin seconds
             double[] ts = new double[solvers.Count()];
             double[] dry = new double[solvers.Count()];
@@ -95,12 +95,12 @@ namespace implementation
             for (int i = 0; i < solvers.Count(); ++i)
             {
                 result[i] = new List<double>();
-                dry[i] = Benchmarker.dryRun(solvers[i], 10);
+                dry[i] = Benchmarker.BenchmarkInit(solvers[i], 10);
             }
 
             while (ts.All<double>(t => t < tMin))
             {
-                var p = TroubleMaker.generateSimple(n);
+                var p = TroubleMaker.randomProblemPreset(n);
                 var validator = new OfflineValidator(p);
 
                 cases.Add(p);
@@ -135,21 +135,21 @@ namespace implementation
 
         public class Benchmark
         {
-            public ISolverOffline[] solvers;
+            public IOfflineSolver[] solvers;
             public List<double>[] result;
-            public List<OfflineProblem> cases;
+            public List<OfflineProblem> testcases;
 
 
-            public Benchmark(ISolverOffline[] solvers, List<double>[] result, List<OfflineProblem> cases)
+            public Benchmark(IOfflineSolver[] solvers, List<double>[] result, List<OfflineProblem> testcases)
             {
                 this.solvers = solvers;
                 this.result = result;
-                this.cases = cases;
+                this.testcases = testcases;
             }
 
             public override string ToString()
             {
-                var str = $"number: " + String.Join(" ", cases.Select(c => c.number_of_patients)) + "\n";
+                var str = $"number: " + String.Join(" ", testcases.Select(c => c.nPatients)) + "\n";
 
                 for (int i = 0; i < this.result.Count(); ++i)
                 {

@@ -25,7 +25,7 @@ namespace implementation
 
         public void assertSameShape(Solution sol) {
             // assert that the solution forgets no patients
-            Debug.Assert(this.problem.number_of_patients == sol.regs.Count);
+            Debug.Assert(this.problem.nPatients == sol.regs.Count);
         }
 
         public void assertMachines(Solution sol)
@@ -38,10 +38,10 @@ namespace implementation
 
             for (int i = 0; i < r.Count; ++i)
             {
-                starts[2 * i] = r[i].timeslot_first_dose;
-                starts[2 * i + 1] = r[i].timeslot_second_dose;
-                ends[2 * i] = r[i].timeslot_first_dose + this.problem.processing_time_first_dose;
-                ends[2 * i + 1] = r[i].timeslot_second_dose + this.problem.processing_time_second_dose;
+                starts[2 * i] = r[i].t1;
+                starts[2 * i + 1] = r[i].t2;
+                ends[2 * i] = r[i].t1 + this.problem.p1;
+                ends[2 * i + 1] = r[i].t2 + this.problem.p2;
             }
 
             var s2 = new List<int>(starts);
@@ -80,19 +80,19 @@ namespace implementation
 
         public void assertFeasible(Solution sol) {
             // assert that the solution is feasible
-            var p1 = problem.processing_time_first_dose;
-            var p2 = problem.processing_time_second_dose;
-            var g = problem.gap;
+            var p1 = problem.p1;
+            var p2 = problem.p2;
+            var g = problem.g;
 
-            foreach (var (p, r) in Enumerable.Zip(problem.patient_data, sol.regs))
+            foreach (var (p, r) in Enumerable.Zip(problem.patients, sol.regs))
             {
-                var r1 = p.first_timeslot_first_dose;
-                var d1 = p.last_timeslot_first_dose;
-                var x = p.delay_between_doses;
-                var L = p.second_dose_interval;
+                var r1 = p.r1;
+                var d1 = p.d1;
+                var x = p.x;
+                var L = p.L;
 
-                var t1 = r.timeslot_first_dose;
-                var t2 = r.timeslot_second_dose;
+                var t1 = r.t1;
+                var t2 = r.t2;
 
                 Debug.Assert(r1 <= t1);
                 Debug.Assert(t1 <= d1 - p1 + 1);
@@ -103,23 +103,23 @@ namespace implementation
             }
         }
 
-        private void appointmentIntervals(HospitalSolution sol)
+        private void appointmentIntervals(Solution2D sol)
         {
-            List<RegistrationWithHospital> regs = sol.hospitals;
+            List<Doses2D> regs = sol.hospitals;
             Dictionary<int, List<(int, bool)>> sameHospitals = new Dictionary<int, List<(int, bool)>>();
 
             // Accumulate all appointments a certain hospital has into dict buckets
             // Iterate over dict buckets. If any appointments overlap, exception                
-            foreach (RegistrationWithHospital reg in regs)
+            foreach (Doses2D reg in regs)
             {
-                sameHospitals.TryGetValue(reg.hospital_first_dose, out List<(int, bool)> exists);
-                if (exists is null) { sameHospitals[reg.hospital_first_dose] = new List<(int, bool)>(); }
+                sameHospitals.TryGetValue(reg.h1, out List<(int, bool)> exists);
+                if (exists is null) { sameHospitals[reg.h1] = new List<(int, bool)>(); }
 
-                sameHospitals.TryGetValue(reg.hospital_second_dose, out List<(int, bool)> existsToo);
-                if (existsToo is null) { sameHospitals[reg.hospital_second_dose] = new List<(int, bool)>(); }
+                sameHospitals.TryGetValue(reg.h2, out List<(int, bool)> existsToo);
+                if (existsToo is null) { sameHospitals[reg.h2] = new List<(int, bool)>(); }
 
-                sameHospitals[reg.hospital_first_dose].Add((reg.timeslot_first_dose, true));
-                sameHospitals[reg.hospital_second_dose].Add((reg.timeslot_second_dose, false));
+                sameHospitals[reg.h1].Add((reg.t1, true));
+                sameHospitals[reg.h2].Add((reg.t2, false));
             }
 
             for (int h = 0; h < this.solution.machines; h++){
@@ -141,13 +141,13 @@ namespace implementation
                             int min = Math.Min(first_start_time, second_start_time);
 
                             int gap = max - min;
-                            if (first_dose && gap < this.problem.processing_time_first_dose)
+                            if (first_dose && gap < this.problem.p1)
                             {
-                                throw new Exception($"Appointment start times planned too close together in same hospital: first start time = {min}, second start time = {max}, gap = {gap}, processing time first dose={this.problem.processing_time_first_dose}");
+                                throw new Exception($"Appointment start times planned too close together in same hospital: first start time = {min}, second start time = {max}, gap = {gap}, processing time first dose={this.problem.p1}");
                             }
-                            else if (!first_dose && gap < this.problem.processing_time_second_dose)
+                            else if (!first_dose && gap < this.problem.p2)
                             {
-                                throw new Exception($"Appointment start times planned too close together in same hospital: first start time = {min}, second start time = {max}, gap = {gap}, processing time second dose={this.problem.processing_time_second_dose}");
+                                throw new Exception($"Appointment start times planned too close together in same hospital: first start time = {min}, second start time = {max}, gap = {gap}, processing time second dose={this.problem.p2}");
                             }
                         }
                     }

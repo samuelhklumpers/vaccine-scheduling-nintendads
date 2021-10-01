@@ -5,39 +5,37 @@ using System.Linq;
 
 namespace implementation
 {
-    class Appointment
+    class Dose
     {
-        public int timeslot;
-        public int index;
-        public Registration parent;
-        public int hospital;
+        public int t;
+        public int h;
 
-        public Appointment(int timeslot, int hospital)
+        public Dose(int t, int h)
         {
-            this.timeslot = timeslot;
-            this.hospital = hospital;
+            this.t = t;
+            this.h = h;
         }
 
-        public static (Appointment, Appointment) Split(Registration r)
+        public static (Dose, Dose) Split(Doses r)
         {
-            return (new Appointment(r.timeslot_first_dose, 0), new Appointment(r.timeslot_second_dose, 0));
+            return (new Dose(r.t1, 0), new Dose(r.t2, 0));
         }
 
-        public static RegistrationWithHospital WithHospital((Appointment, Appointment) apps)
+        public static Doses2D WithHospital((Dose, Dose) apps)
         {
             var a = apps.Item1;
             var b = apps.Item2;
 
-            return new RegistrationWithHospital(a.timeslot, a.hospital, b.timeslot, b.hospital);
+            return new Doses2D(a.t, a.h, b.t, b.h);
         }
     }
 
     class Solution
     {
         public int machines;
-        public List<Registration> regs;
+        public List<Doses> regs;
 
-        public Solution(int machines, List<Registration> sol)
+        public Solution(int machines, List<Doses> sol)
         {
             this.machines = machines;
             this.regs = sol;
@@ -56,96 +54,87 @@ namespace implementation
             return part1 + part2;
         }
 
-        public HospitalSolution AddHospitals(IProblem problem)
+        public Solution2D AddHospitals(IProblem problem)
         {
             int[] hospitals = new int[this.machines];
 
-            var regs2 = this.regs.Select<Registration, (Appointment, Appointment)>(Appointment.Split);
+            var regs2 = this.regs.Select<Doses, (Dose, Dose)>(Dose.Split);
 
-            var appointments = regs2.SelectMany<(Appointment, Appointment), Appointment>(x => new Appointment[] { x.Item1, x.Item2 });
-            appointments = appointments.OrderBy(x => x.timeslot);
+            var appointments = regs2.SelectMany<(Dose, Dose), Dose>(x => new Dose[] { x.Item1, x.Item2 });
+            appointments = appointments.OrderBy(x => x.t);
 
             foreach (var app in appointments)
             {
                 for (int j = 0; j < hospitals.Count(); ++j) // TODO right now N * H, could probably be N * log(H) if we sort hospitals
                 {
-                    if (hospitals[j] < app.timeslot)
+                    if (hospitals[j] < app.t)
                     {
-                        app.hospital = j;
-                        hospitals[j] = app.timeslot + problem.processing_time_first_dose;
+                        app.h = j;
+                        hospitals[j] = app.t + problem.p1;
                     }
                 }
             }
 
-            var regs3 = regs2.Select<(Appointment, Appointment), RegistrationWithHospital>(Appointment.WithHospital);
+            var regs3 = regs2.Select<(Dose, Dose), Doses2D>(Dose.WithHospital);
 
-            return new HospitalSolution(this.machines, regs3.ToList());
+            return new Solution2D(this.machines, regs3.ToList());
         }
     }
 
-    class Registration
+    class Doses
     {
-        public int timeslot_first_dose;
-        public int timeslot_second_dose;
-        public Registration(int timeslot_first_dose, int timeslot_second_dose)
+        public int t1;
+        public int t2;
+        public Doses(int t1, int t2)
         {
-            this.timeslot_first_dose = timeslot_first_dose;
-            this.timeslot_second_dose = timeslot_second_dose;
+            this.t1 = t1;
+            this.t2 = t2;
         }
         public override string ToString()
         {
-            string part1 = "timeslot_first_dose: " + this.timeslot_first_dose + " ";
-            string part2 = "timeslot_second_dose: " + this.timeslot_second_dose;
+            string part1 = "timeslot_first_dose: " + this.t1 + " ";
+            string part2 = "timeslot_second_dose: " + this.t2;
             return part1 + part2;
         }
     }
-    class RegistrationWithHospital
+    class Doses2D
     {
-        public int timeslot_first_dose;
-        public int hospital_first_dose;
-        public int timeslot_second_dose;
-        public int hospital_second_dose;
-        public RegistrationWithHospital(int timeslot_first_dose, int hospital_first_dose, int timeslot_second_dose, int hospital_second_dose)
+        public int t1;
+        public int h1;
+        public int t2;
+        public int h2;
+        public Doses2D(int t1, int h1, int t2, int h2)
         {
-            this.timeslot_first_dose = timeslot_first_dose;
-            this.hospital_first_dose = hospital_first_dose;
-            this.timeslot_second_dose = timeslot_second_dose;
-            this.hospital_second_dose = hospital_second_dose;
+            this.t1 = t1;
+            this.h1 = h1;
+            this.t2 = t2;
+            this.h2 = h2;
         }
 
-        public override string ToString()
+        override public string ToString()
         {
-            string part1 = "timeslot_first_dose: " + this.timeslot_first_dose + " ";
-            string part2 = "hospital_first_dose: " + this.hospital_first_dose + " ";
-            string part3 = "timeslot_second_dose: " + this.timeslot_second_dose + " ";
-            string part4 = "hospital_second_dose: " + this.hospital_second_dose;
-            return part1 + part2 + part3 + part4;
-        }
-
-        public string ConformToString()
-        {
-            var tuple = new int[] { this.timeslot_first_dose, this.hospital_first_dose, this.timeslot_second_dose, this.hospital_second_dose };
+            var tuple = new int[] { this.t1, this.h1, this.t2, this.h2 };
 
             return String.Join(", ", tuple.Select<int, string>(x => x.ToString()));
         }
 
-        public Registration Forget() {
-            return new Registration(this.timeslot_first_dose, this.timeslot_second_dose);
+        public Doses Forget() {
+            return new Doses(this.t1, this.t2);
         }
     }
 
-    class HospitalSolution : Solution
+    class Solution2D : Solution
     {
-        public List<RegistrationWithHospital> hospitals;
+        public List<Doses2D> hospitals;
 
-        public HospitalSolution(int machines, List<RegistrationWithHospital> hospitals) : base(machines, hospitals.Select(x => x.Forget()).ToList())
+        public Solution2D(int machines, List<Doses2D> hospitals) : base(machines, hospitals.Select(x => x.Forget()).ToList())
         {
             this.hospitals = hospitals;
         }
 
         public override string ToString()
         {
-            var ret = String.Join('\n', this.hospitals.Select<RegistrationWithHospital, string>(x => x.ConformToString()));
+            var ret = String.Join('\n', this.hospitals.Select<Doses2D, string>(x => x.ToString()));
             ret += "\n" + this.machines.ToString();
             return ret;
         }
