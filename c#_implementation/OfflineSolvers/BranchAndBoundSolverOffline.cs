@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    class Job
+    /*class Job
     {
         public int t1;
         public int t2;
@@ -17,24 +17,24 @@ namespace implementation
             this.t2 = t2;
             this.p = p;
         }
-    }
+    }*/
 
     class BranchAndBoundSolverOffline : ISolverOffline
     {
 
         public Solution solve(OfflineProblem problem)
         {
-            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing --> of numPatients, stuk sneller
+            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing/ heuristic --> of numPatients, stuk sneller
             // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
             //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            LinearProgramming lp = new LinearProgramming();
+            LinearProgramming lp = new LinearProgramming2();
             LinearProgramming.Solve(problem);
 
             return new Solution(0, new List<Registration>());
         }
 
-        static public int PigeonHole(Job[] jobs, int limit)
+/*        static public int PigeonHole(Job[] jobs, int limit)
         {
             jobs = jobs.OrderBy(x => x.t1).ToArray();
 
@@ -60,6 +60,6 @@ namespace implementation
             }
 
             return highest;
-        }
+        }*/
     }
 }

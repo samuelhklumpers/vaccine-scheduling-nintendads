@@ -94,8 +94,8 @@ namespace implementation
             }
 
             //weet niet of dit kan werken, maar dan zou je objective op minimalize numhospitals kunnen laten
-            //solver.Add(numHospitals.SolutionValue() <= calculate_num_hospitals(x, max_i, max_j, max_t));
-            //solver.Add(numHospitals.SolutionValue() >= calculate_num_hospitals(x, max_i, max_j, max_t));
+            //solver.Add(numHospitals <= calculate_num_hospitals(x, max_i, max_j, max_t));
+            //solver.Add(numHospitals >= calculate_num_hospitals(x, max_i, max_j, max_t));
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
