@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net4.7.2</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>implementation</RootNamespace>
   </PropertyGroup>
   <ItemGroup>

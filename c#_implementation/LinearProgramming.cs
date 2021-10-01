@@ -36,14 +36,14 @@ namespace implementation
             //TODO same vaccine in same hospital
 
             //Create variable lists as each patient has that variable
-            Variable[] t1 = init_variables_vector(solver, max_i, max_t-problem.processing_time_first_dose+1); // t1,j starting time of vaccine 1 of patient i
-            Variable[] t2 = init_variables_vector(solver, max_i, max_t-problem.processing_time_second_dose+1); // t2,j starting time of vaccine 2 of patient i
+            Variable[] t1 = init_variables_vector(solver, max_i, max_t - problem.processing_time_first_dose + 1); // t1,j starting time of vaccine 1 of patient i
+            Variable[] t2 = init_variables_vector(solver, max_i, max_t - problem.processing_time_second_dose + 1); // t2,j starting time of vaccine 2 of patient i
 
             // nog verder geimplementeerd worden. constraints toevoegen: per patient, per ziekenhuis constraint, sommen over tijd vaccinatie
             // als de som >= aan processing_time_1 * y[i,j,1] en constraint <= aan dat. dan als y =1 moet het processing time zijn, anders moet het 0 zijn.
             // dan nog constraint op y toevoegen dat per patient, per hospital en prik er maar 1 op 1 kan staan. en dat die overeen moet komen met x (dan andere constraints 
             // miss wel niet nodig, als het overeenkomt met x kan je y al gebruiken dat er maar 1 hospital mag zijn per patient per prik)
-            Variable[,,] y =  init_3d_boolean_variable_vector(solver, max_i, max_j, 2);//y_ijt is one if patient j is in hospital i for vaccine t
+            Variable[,,] y = init_3d_boolean_variable_vector(solver, max_i, max_j, 2);//y_ijt is one if patient j is in hospital i for vaccine t
 
             //of je gaat over tijd van 1 prik heen, telt het aantal hospitals die gebruikt worden, dit mag 1 zijn.
 
@@ -63,11 +63,11 @@ namespace implementation
                     }
                 }
 
-               
+
                 for (int j = 0; j < max_j; j++)
                 {
                     Constraint ct_1st_vaccine_slot_one_hospital = solver.MakeConstraint(0, problem.processing_time_first_dose);
-                    Constraint ct_1st_vaccine_slot_one_hospital_2 = solver.MakeConstraint(1, problem.processing_time_first_dose-1); //juist niet in dit interval
+                    Constraint ct_1st_vaccine_slot_one_hospital_2 = solver.MakeConstraint(1, problem.processing_time_first_dose - 1); //juist niet in dit interval
 
                     for (int t = 0; t < max_t; t++)
                     {
@@ -77,7 +77,7 @@ namespace implementation
                 }
 
 
-                Constraint ct_t2_in_timeslot = solver.MakeConstraint(/*t1[i] +*/ problem.processing_time_first_dose-1 + problem.gap + p.delay_between_doses, /*t1[i] +*/ problem.processing_time_first_dose-1 + problem.gap + p.delay_between_doses + p.second_dose_interval);
+                Constraint ct_t2_in_timeslot = solver.MakeConstraint(/*t1[i] +*/ problem.processing_time_first_dose - 1 + problem.gap + p.delay_between_doses, /*t1[i] +*/ problem.processing_time_first_dose - 1 + problem.gap + p.delay_between_doses + p.second_dose_interval);
                 ct_t2_in_timeslot.SetCoefficient(t2[i], 1);
 
                 //every patients gets their vaccination planned
@@ -94,8 +94,8 @@ namespace implementation
             }
 
             //weet niet of dit kan werken, maar dan zou je objective op minimalize numhospitals kunnen laten
-            solver.Add(numHospitals.SolutionValue() <= calculate_num_hospitals(x, max_i, max_j, max_t));
-            solver.Add(numHospitals.SolutionValue() >= calculate_num_hospitals(x, max_i, max_j, max_t));
+            //solver.Add(numHospitals.SolutionValue() <= calculate_num_hospitals(x, max_i, max_j, max_t));
+            //solver.Add(numHospitals.SolutionValue() >= calculate_num_hospitals(x, max_i, max_j, max_t));
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
@@ -209,13 +209,13 @@ namespace implementation
                 double num_hospital = 0;
                 for (int i = 0; i < i_max; i++)
                 {
-                   
+
                     for (int j = 0; j < j_max; j++)
                     {
-                        num_hospital += x[i,j,t].SolutionValue();
+                        num_hospital += x[i, j, t].SolutionValue();
                     }
                 }
-                max_hospitals = max(max_hospitals, num_hospital);
+                max_hospitals = Math.Max(max_hospitals, num_hospital);
             }
 
             return max_hospitals;
