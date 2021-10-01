@@ -36,21 +36,11 @@ namespace implementation
     {
         public int machines;
         public List<Registration> regs;
-        public List<RegistrationWithHospital> registrationWithHospitals;
-        public bool withHospital;
 
         public Solution(int machines, List<Registration> sol)
         {
             this.machines = machines;
             this.regs = sol;
-            this.withHospital = false;
-        }
-
-        public Solution(int machines, List<RegistrationWithHospital> sol) // Hacky override because I don't understand how this new code fits together
-        {
-            this.machines = machines;
-            this.registrationWithHospitals = sol;
-            this.withHospital = true;
         }
 
         public override string ToString()
@@ -58,20 +48,11 @@ namespace implementation
             string part1 = "machines: " + this.machines + "\n";
             string part2 = "";
 
-            if (withHospital)
+            for (int i = 0; i < this.regs.Count; i++)
             {
-                for (int i = 0; i < this.registrationWithHospitals.Count; i++)
-                {
-                    part2 += this.registrationWithHospitals[i].ToString() + "\n";
-                }
-            }
-            else
-            {
-                for (int i = 0; i < this.regs.Count; i++)
-                {
                     part2 += this.regs[i].ToString() + "\n";
-                }
             }
+            
             return part1 + part2;
         }
 
@@ -147,16 +128,19 @@ namespace implementation
 
             return String.Join(", ", tuple.Select<int, string>(x => x.ToString()));
         }
+
+        public Registration Forget() {
+            return new Registration(this.timeslot_first_dose, this.timeslot_second_dose);
+        }
     }
 
     class HospitalSolution : Solution
     {
         public List<RegistrationWithHospital> hospitals;
 
-        public HospitalSolution(int machines, List<RegistrationWithHospital> hospitals) : base(machines, hospitals)
+        public HospitalSolution(int machines, List<RegistrationWithHospital> hospitals) : base(machines, hospitals.Select(x => x.Forget()).ToList())
         {
             this.hospitals = hospitals;
-            // could fix this.sol
         }
 
         public override string ToString()

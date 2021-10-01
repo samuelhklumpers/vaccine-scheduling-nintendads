@@ -26,7 +26,7 @@ namespace implementation
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
-            return new Solution(hospitals.Count, deleteMeReverseStack(regs).ToList());
+            return new HospitalSolution(hospitals.Count, deleteMeReverseStack(regs).ToList());
         }
         private bool solveR(OfflineProblem problem, List<Hospital> hospitals, Stack<RegistrationWithHospital> regs, Stack<Patient> patients, Patient p)
         {

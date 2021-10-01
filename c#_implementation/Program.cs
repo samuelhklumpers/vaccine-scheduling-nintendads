@@ -56,9 +56,9 @@ namespace implementation
             for (int i = 0; i < problem_filenames.Count; i++){
                 OfflineProblem prob = Parse_problem_offline(problem_filenames[i]);
                 HospitalSolution sol = Parse_solution(solution_filenames[i]);
-                OfflineValidator val = new OfflineValidator(prob,sol);
+                OfflineValidator val = new OfflineValidator(prob);
                 Console.WriteLine($"Validating {problem_filenames[i]} and {solution_filenames[i]}...");
-                val.validate();
+                val.validate(sol);
             }
         }
     }

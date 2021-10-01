@@ -72,9 +72,11 @@ namespace implementation
             for (int i = 0; i < n; ++i)
             {
                 var p = TroubleMaker.generateSimple(m);
+                var validator =  new OfflineValidator(p);
+
                 foreach (var solver in solvers) {
                     var sol = solver.solve(p);
-                    new OfflineValidator(p, sol).validate();
+                    validator.validate(sol);
                 }
             }
         }
@@ -99,6 +101,8 @@ namespace implementation
             while (ts.All<double>(t => t < tMin))
             {
                 var p = TroubleMaker.generateSimple(n);
+                var validator = new OfflineValidator(p);
+
                 cases.Add(p);
 
                 for (int i = 0; i < ts.Count(); ++i)
@@ -107,10 +111,8 @@ namespace implementation
                     var sol = solvers[i].solve(p);
                     timer.Stop();
 
-                    var validator = new OfflineValidator(p, sol);
-
                     try {
-                        validator.validate();
+                        validator.validate(sol);
                     }
                     catch (Exception e) {
                         Console.WriteLine("exception in " + solvers[i].GetType().ToString());
