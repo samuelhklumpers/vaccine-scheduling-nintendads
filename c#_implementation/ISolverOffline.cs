@@ -18,7 +18,7 @@ namespace implementation
         }
 
         public Solution2D solve(OfflineProblem problem) {
-            return this.solver.solve(problem).AddHospitals(problem);
+            return this.solver.solve(problem).To2D(problem);
         }
     }
 }

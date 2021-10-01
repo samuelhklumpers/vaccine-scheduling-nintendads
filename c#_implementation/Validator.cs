@@ -25,13 +25,13 @@ namespace implementation
 
         public void assertSameShape(Solution sol) {
             // assert that the solution forgets no patients
-            Debug.Assert(this.problem.nPatients == sol.regs.Count);
+            Debug.Assert(this.problem.nPatients == sol.doses.Count);
         }
 
         public void assertMachines(Solution sol)
         {
             // assert that the solution uses as machines as it claims to
-            var r = sol.regs;
+            var r = sol.doses;
 
             var starts = new int[2 * r.Count];
             var ends = new int[2 * r.Count];
@@ -44,16 +44,16 @@ namespace implementation
                 ends[2 * i + 1] = r[i].t2 + this.problem.p2;
             }
 
-            var s2 = new List<int>(starts);
-            var e2 = new List<int>(ends);
-            s2.Sort();
-            e2.Sort();
+            var starts2 = new List<int>(starts);
+            var ends2 = new List<int>(ends);
+            starts2.Sort();
+            ends2.Sort();
 
-            var s = new LinkedList<int>(s2);
-            var e = new LinkedList<int>(e2);
+            var s = new LinkedList<int>(starts2);
+            var e = new LinkedList<int>(ends2);
 
-            int m = 0;
-            int c = 0;
+            int max = 0;
+            int curr = 0;
             while (s.Count > 0)
             {
                 var t = s.First.Value;
@@ -61,21 +61,21 @@ namespace implementation
                 while (s.Count > 0 && s.First.Value <= t)
                 {
                     s.RemoveFirst();
-                    ++c;
+                    ++curr;
                 }
 
                 while (e.Count > 0 && e.First.Value <= t)
                 {
                     e.RemoveFirst();
-                    --c;
+                    --curr;
                 }
 
-                if (c > m) {
-                    m = c;
+                if (curr > max) {
+                    max = curr;
                 }
             }
 
-            Debug.Assert(m == sol.machines);
+            Debug.Assert(max == sol.machines);
         }
 
         public void assertFeasible(Solution sol) {
@@ -84,15 +84,9 @@ namespace implementation
             var p2 = problem.p2;
             var g = problem.g;
 
-            foreach (var (p, r) in Enumerable.Zip(problem.patients, sol.regs))
+            foreach (var (p, r) in Enumerable.Zip(problem.patients, sol.doses))
             {
-                var r1 = p.r1;
-                var d1 = p.d1;
-                var x = p.x;
-                var L = p.L;
-
-                var t1 = r.t1;
-                var t2 = r.t2;
+                var (r1, d1, x, L, t1, t2) = (p.r1, p.d1, p.x, p.L, r.t1, r.t2);
 
                 Debug.Assert(r1 <= t1);
                 Debug.Assert(t1 <= d1 - p1 + 1);

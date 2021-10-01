@@ -5,40 +5,15 @@ using System.Linq;
 
 namespace implementation
 {
-    class Dose
-    {
-        public int t;
-        public int h;
-
-        public Dose(int t, int h)
-        {
-            this.t = t;
-            this.h = h;
-        }
-
-        public static (Dose, Dose) Split(Doses r)
-        {
-            return (new Dose(r.t1, 0), new Dose(r.t2, 0));
-        }
-
-        public static Doses2D WithHospital((Dose, Dose) apps)
-        {
-            var a = apps.Item1;
-            var b = apps.Item2;
-
-            return new Doses2D(a.t, a.h, b.t, b.h);
-        }
-    }
-
     class Solution
     {
         public int machines;
-        public List<Doses> regs;
+        public List<Doses> doses;
 
         public Solution(int machines, List<Doses> sol)
         {
             this.machines = machines;
-            this.regs = sol;
+            this.doses = sol;
         }
 
         public override string ToString()
@@ -46,21 +21,21 @@ namespace implementation
             string part1 = "machines: " + this.machines + "\n";
             string part2 = "";
 
-            for (int i = 0; i < this.regs.Count; i++)
+            for (int i = 0; i < this.doses.Count; i++)
             {
-                    part2 += this.regs[i].ToString() + "\n";
+                    part2 += this.doses[i].ToString() + "\n";
             }
             
             return part1 + part2;
         }
 
-        public Solution2D AddHospitals(IProblem problem)
+        public Solution2D To2D(IProblem problem)
         {
             int[] hospitals = new int[this.machines];
 
-            var regs2 = this.regs.Select<Doses, (Dose, Dose)>(Dose.Split);
+            var regs2 = this.doses.Select<Doses, (Dose2D, Dose2D)>(Dose2D.Split);
 
-            var appointments = regs2.SelectMany<(Dose, Dose), Dose>(x => new Dose[] { x.Item1, x.Item2 });
+            var appointments = regs2.SelectMany<(Dose2D, Dose2D), Dose2D>(x => new Dose2D[] { x.Item1, x.Item2 });
             appointments = appointments.OrderBy(x => x.t);
 
             foreach (var app in appointments)
@@ -75,12 +50,13 @@ namespace implementation
                 }
             }
 
-            var regs3 = regs2.Select<(Dose, Dose), Doses2D>(Dose.WithHospital);
+            var regs3 = regs2.Select<(Dose2D, Dose2D), Doses2D>(Dose2D.To2D);
 
             return new Solution2D(this.machines, regs3.ToList());
         }
     }
 
+    // wrapper class for tuple of two timeslots
     class Doses
     {
         public int t1;
@@ -97,6 +73,34 @@ namespace implementation
             return part1 + part2;
         }
     }
+
+    // wrapper class for tuple of timeslot and hospital id
+    class Dose2D
+    {
+        public int t;
+        public int h;
+
+        public Dose2D(int t, int h)
+        {
+            this.t = t;
+            this.h = h;
+        }
+
+        public static (Dose2D, Dose2D) Split(Doses r)
+        {
+            return (new Dose2D(r.t1, 0), new Dose2D(r.t2, 0));
+        }
+
+        public static Doses2D To2D((Dose2D, Dose2D) doses)
+        {
+            var a = doses.Item1;
+            var b = doses.Item2;
+
+            return new Doses2D(a.t, a.h, b.t, b.h);
+        }
+    }
+
+    // wrapper class for tuple of timeslot1, hospital1, timeslot2, hospital2
     class Doses2D
     {
         public int t1;
@@ -118,6 +122,7 @@ namespace implementation
             return String.Join(", ", tuple.Select<int, string>(x => x.ToString()));
         }
 
+        // forget the hospitals
         public Doses Forget() {
             return new Doses(this.t1, this.t2);
         }

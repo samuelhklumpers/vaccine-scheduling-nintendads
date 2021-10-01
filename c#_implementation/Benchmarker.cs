@@ -9,7 +9,7 @@ namespace implementation
     public class TroubleMaker // more commonly known as Arbitrary
     {
         // generate a random problem, with $n patients, and parameters within the given bounds
-        public static OfflineProblem randomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
+        public static OfflineProblem RandomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
             var rand = new Random();
             
             var p1 = rand.Next(p1B.Item1, p1B.Item2);
@@ -39,7 +39,8 @@ namespace implementation
             return p;
         }
 
-        public static OfflineProblem randomProblemPreset(int n) {
+        // generate a sane random problem with $n patients
+        public static OfflineProblem RandomProblemPreset(int n) {
             var p1B = (1, 6);
             var p2B = (1, 6);
             var gB = (1, 6);
@@ -48,31 +49,18 @@ namespace implementation
             var dd2B = (1, 10);
             var xB = (0, 10);
 
-            return randomProblem(n, p1B, p2B, gB, rShiftB, dd1B, dd2B, xB);
+            return RandomProblem(n, p1B, p2B, gB, rShiftB, dd1B, dd2B, xB);
         }
     }
 
     class Benchmarker
     {
-        public static double BenchmarkInit(IOfflineSolver solver, int n) {
-            var timer = new Stopwatch();
-            var p = TroubleMaker.randomProblemPreset(1);
-
-            timer.Start();
-            for (int i = 0; i < n; ++i)
-            {
-                solver.solve(p);
-            }
-            timer.Stop();
-
-            return timer.Elapsed.TotalSeconds / n;
-        }
-
+        // test the $solvers $n times on problems of $m patients
         public static void RandomTest(IOfflineSolver[] solvers, int n, int m) {
 
             for (int i = 0; i < n; ++i)
             {
-                var p = TroubleMaker.randomProblemPreset(m);
+                var p = TroubleMaker.RandomProblemPreset(m);
                 var validator =  new OfflineValidator(p);
 
                 foreach (var solver in solvers) {
@@ -82,13 +70,14 @@ namespace implementation
             }
         }
 
-        public static Benchmark BenchmarkAll(IOfflineSolver[] solvers, double tMin)
-        {   // benchmark, until any solver uses at least tMin seconds
+        // run a benchmark on the $solvers, stopping when the first solver has run for more than $stop seconds in total 
+        public static Benchmark BenchmarkAll(IOfflineSolver[] solvers, double stop)
+        {
             double[] ts = new double[solvers.Count()];
-            double[] dry = new double[solvers.Count()];
+            double[] tInit = new double[solvers.Count()];
 
             List<double>[] result = new List<double>[solvers.Count()];
-            List<OfflineProblem> cases = new List<OfflineProblem>();
+            List<OfflineProblem> testcases = new List<OfflineProblem>();
 
             int n = 2;
             var timer = new Stopwatch();
@@ -96,15 +85,16 @@ namespace implementation
             for (int i = 0; i < solvers.Count(); ++i)
             {
                 result[i] = new List<double>();
-                dry[i] = Benchmarker.BenchmarkInit(solvers[i], 10);
+                // estimate the initialization time of the solver, to subtract from the running total
+                tInit[i] = Benchmarker.BenchmarkInit(solvers[i], 3);
             }
 
-            while (ts.All<double>(t => t < tMin))
+            while (ts.All<double>(t => t < stop))
             {
-                var p = TroubleMaker.randomProblemPreset(n);
+                var p = TroubleMaker.RandomProblemPreset(n);
                 var validator = new OfflineValidator(p);
 
-                cases.Add(p);
+                testcases.Add(p);
 
                 for (int i = 0; i < ts.Count(); ++i)
                 {
@@ -115,13 +105,13 @@ namespace implementation
                     try {
                         validator.validate(sol);
                     }
-                    catch (Exception e) {
+                    catch {
                         Console.WriteLine("exception in " + solvers[i].GetType().ToString());
-                        throw e;
+                        throw;
                     }
 
                     double dt = timer.Elapsed.TotalSeconds;
-                    dt -= dry[i];
+                    dt -= tInit[i];
 
                     timer.Reset();
                     ts[i] += dt;
@@ -131,7 +121,22 @@ namespace implementation
                 n += 1; // or *= 2 if you're daring
             }
 
-            return new Benchmark(solvers, result, cases);
+            return new Benchmark(solvers, result, testcases);
+        }
+
+        // estimate the initialization time of $solver, averaged over $n runs
+        public static double BenchmarkInit(IOfflineSolver solver, int n) {
+            var timer = new Stopwatch();
+            var p = TroubleMaker.RandomProblemPreset(1);
+
+            timer.Start();
+            for (int i = 0; i < n; ++i)
+            {
+                solver.solve(p);
+            }
+            timer.Stop();
+
+            return timer.Elapsed.TotalSeconds / n;
         }
 
         public class Benchmark
