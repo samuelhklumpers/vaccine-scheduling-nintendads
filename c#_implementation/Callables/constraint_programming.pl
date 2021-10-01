@@ -49,7 +49,7 @@ single_job(P1, P2, G, Ji, Soli) :-
     unjob(Ji, R1, D0, X, L),    % Ji is a tuple ((R1, D1), X, L)
     unsol(Soli, T1, T2),        % Soli is a tuple (T1, T2)
     R2 #= T1 + G + X + P1,
-    D2 #= R2 + L + - P2,
+    D2 #= R2 + L - P2 + 1,
     D1 #= D0 - P1 + 1,
     my_in(T1, R1, D1),          % R1 <= T1 <= D1
     my_in(T2, R2, D2).          % T1 + G + X <= T2 <= T1 + G + X + L        

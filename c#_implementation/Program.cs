@@ -10,6 +10,8 @@ namespace implementation
     {
         static void Main(string[] args)
         {
+            ValidateTestcases(new List<string>{"../data/offline/amicrazy.txt"}, new List<string>{"../data/solutions/offline/amicrazy.txt"});
+
             Test();
         }
 
