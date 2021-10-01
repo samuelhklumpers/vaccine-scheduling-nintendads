@@ -32,10 +32,10 @@ marshal_solution(M, Sol, S) :-
 % Sol is a list of tuples (T1, T2), so that the feasability conditions hold:
 % R1[i] <= Sol[i][0] <= D1[i],
 % Sol[i][0] + G + X[i] <= Sol[i][1] <= Sol[i][0] + G + X[i] + L[i].
-offline_problem(G, J, Sol) :-
+offline_problem(P1, P2, G, J, Sol) :-
     same_length(J, Sol),                    % as many allocations as patients
     maplist(length_flip(2), Sol),           % 2 appointments per patient
-    maplist(single_job(G), J, Sol).  % solve all appointments for each patient  
+    maplist(single_job(P1, P2, G), J, Sol).  % solve all appointments for each patient  
 
 length_flip(L, Xs) :-
     length(Xs, L).
@@ -45,11 +45,12 @@ my_in(Var, Lower, Upper) :-
     Lower #=< Var, Var #=< Upper.
 
 % state the test_case for a single job.
-single_job(G, Ji, Soli) :-
-    unjob(Ji, R1, D1, X, L),    % Ji is a tuple ((R1, D1), X, L)
+single_job(P1, P2, G, Ji, Soli) :-
+    unjob(Ji, R1, D0, X, L),    % Ji is a tuple ((R1, D1), X, L)
     unsol(Soli, T1, T2),        % Soli is a tuple (T1, T2)
-    R2 #= T1 + G + X,
-    D2 #= R2 + L,
+    R2 #= T1 + G + X + P1,
+    D2 #= R2 + L + P1 - P2,
+    D1 #= D0 - P1 + 1,
     my_in(T1, R1, D1),          % R1 <= T1 <= D1
     my_in(T2, R2, D2).          % T1 + G + X <= T2 <= T1 + G + X + L        
 
@@ -93,7 +94,7 @@ machines4([P1, T1], [_, T2], V) :-
 
 % solver
 solve(P1, P2, G, J, Sol, M) :-
-    offline_problem(G, J, Sol),
+    offline_problem(P1, P2, G, J, Sol),
     machines(P1, P2, Sol, M),
     append(Sol, Vs),
     labeling([bisect, min(M)], Vs).
@@ -108,7 +109,7 @@ pretty(N, M) :-
 % state test case N
 test(N, Sol, M) :-
     test_case(N, P1, P2, G, J),
-    offline_problem(G, J, Sol),
+    offline_problem(P1, P2, G, J, Sol),
     machines(P1, P2, Sol, M).
 
 % test cases

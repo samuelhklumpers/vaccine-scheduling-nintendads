@@ -53,19 +53,47 @@ namespace implementation
 
     class Benchmarker
     {
+        public static double dryRun(ISolverOffline solver, int n) {
+            var timer = new Stopwatch();
+            var p = TroubleMaker.generateSimple(1);
+
+            timer.Start();
+            for (int i = 0; i < n; ++i)
+            {
+                solver.solve(p);
+            }
+            timer.Stop();
+
+            return timer.Elapsed.TotalSeconds / n;
+        }
+
+        public static void test(ISolverOffline[] solvers, int n, int m) {
+
+            for (int i = 0; i < n; ++i)
+            {
+                var p = TroubleMaker.generateSimple(m);
+                foreach (var solver in solvers) {
+                    var sol = solver.solve(p);
+                    new OfflineValidator(p, sol).validate();
+                }
+            }
+        }
+
         public static Benchmark benchmark(ISolverOffline[] solvers, double tMin)
         {   // benchmark, until any solver uses at least tMin seconds
             double[] ts = new double[solvers.Count()];
+            double[] dry = new double[solvers.Count()];
+
             List<double>[] result = new List<double>[solvers.Count()];
             List<OfflineProblem> cases = new List<OfflineProblem>();
 
             int n = 2;
-            //var validator = new OfflineValidator();
             var timer = new Stopwatch();
 
             for (int i = 0; i < solvers.Count(); ++i)
             {
                 result[i] = new List<double>();
+                dry[i] = Benchmarker.dryRun(solvers[i], 10);
             }
 
             while (ts.All<double>(t => t < tMin))
@@ -77,9 +105,21 @@ namespace implementation
                 {
                     timer.Start();
                     var sol = solvers[i].solve(p);
-                    //validator.validate(p, sol);
                     timer.Stop();
+
+                    var validator = new OfflineValidator(p, sol);
+
+                    try {
+                        validator.validate();
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine("exception in " + solvers[i].GetType().ToString());
+                        throw e;
+                    }
+
                     double dt = timer.Elapsed.TotalSeconds;
+                    dt -= dry[i];
+
                     timer.Reset();
                     ts[i] += dt;
                     result[i].Add(dt);
@@ -113,6 +153,13 @@ namespace implementation
                 {
                     var r = this.result[i];
                     str += $"solver {i + 1}: " + String.Join(" ", r.Select<double, String>(v => v.ToString("F2"))) + "\n";
+                }
+
+                str += "\n\n";
+
+                for (int i = 0; i < this.solvers.Count(); ++i)
+                {
+                    str += $"solver {i + 1} = " + this.solvers[i].GetType().ToString() + "\n";
                 }
 
                 return str;
