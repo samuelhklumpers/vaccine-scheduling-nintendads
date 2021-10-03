@@ -236,6 +236,7 @@ namespace implementation
                     if (jobs[j].vaccine == 1)
                     {
                         //CONTROLEREN GOEIE Z
+                        //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
                         solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * same_hospital <= -1 - problem.processing_time_first_dose + 1);
 
                     }
