@@ -30,7 +30,7 @@ namespace implementation
             int max_time_upperbound = calculate_upperbound_time(problem); //time upperbound is from 0 until the end of the last 2nd dose interval
 
             //Create variable for number of hospitals.
-            Variable numHospitals = solver.MakeNumVar(0.0, max_hospitals_upperbound, "numHospitals");
+            //Variable numHospitals = solver.MakeNumVar(0.0, max_hospitals_upperbound, "numHospitals");
 
             int max_j = jobs.Count;
             int max_h = max_hospitals_upperbound;
@@ -41,6 +41,12 @@ namespace implementation
 
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
             Variable[,] y = init_2d_boolean_variable_y(solver, max_j, max_h);
+
+            //Add the constraints to the solver
+            add_constraints_z(solver, z, t, jobs, max_t);
+            add_constraints_y(solver, y, jobs, max_h);
+            add_constraint_interval_vaccines(solver, problem, t, jobs);
+            add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, jobs, max_h, max_t);
 
 
             //weet niet of dit kan werken, maar dan zou je objective op minimalize numhospitals kunnen laten
@@ -71,28 +77,9 @@ namespace implementation
             int max_time_upperbound = 0;
             foreach (Patient p in problem.patient_data)
             {
-                max_time_upperbound = Math.Max(p.delay_between_doses + p.last_timeslot_first_dose + p.second_dose_interval + problem.gap, max_time_upperbound);
+                max_time_upperbound = Math.Max(p.delay_between_doses + p.last_timeslot_first_dose + p.second_dose_interval + problem.gap + 1, max_time_upperbound);
             }
             return max_time_upperbound;
-        }
-        static private Variable[,,] init_3d_boolean_variable_vector(Solver solver, int i_max, int j_max, int t_max)
-        {
-            //x_ijt is one if patient j is in hospital i at time t
-            Variable[,,] x = new Variable[i_max, j_max, t_max];
-            //fill x with valid variables inside the solvers context
-            for (int i = 0; i < i_max; i++)
-            {
-                for (int j = 0; j < j_max; j++)
-                {
-                    for (int t = 0; t < t_max; t++)
-                    {
-                        x[i, j, t] = solver.MakeBoolVar("x: " + i.ToString() + " " + j.ToString() + " " + t.ToString());
-                        Constraint x_constraint = solver.MakeConstraint(0, 1);
-                        x_constraint.SetCoefficient(x[i, j, t], 1);
-                    }
-                }
-            }
-            return x;
         }
 
         static private Variable[,] init_2d_boolean_variable_z(Solver solver, int j_max)
