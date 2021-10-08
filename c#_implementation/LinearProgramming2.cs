@@ -44,7 +44,7 @@ namespace implementation
 
             //Add the constraints to the solver
             add_constraints_z(solver, z, t, jobs, max_t);
-            add_constraints_y(solver, y, jobs, max_h);
+            //add_constraints_y(solver, y, jobs, max_h);
             add_constraint_interval_vaccines(solver, problem, t, jobs);
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, jobs, max_h, max_t);
 
