@@ -10,49 +10,57 @@ namespace implementation
     {
         static void Main(string[] args)
         {
-            ValidateTestcases(new List<string>{"../data/offline/amicrazy.txt"}, new List<string>{"../data/solutions/offline/amicrazy.txt"});
+            //Test();
+            Benchmark();
+        }
 
-            Test();
+        static void Benchmark()
+        {
+            var solvers = new List<IOfflineSolver>(new IOfflineSolver[] {
+                //new RecursiveBruteforce(),
+                new IntSatSolver(),
+            });
+
+            var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 7.0);
+            Console.WriteLine(res.ToString());
         }
 
         static void Test()
         {
-            // solver tests
             var solvers = new List<IOfflineSolver>(new IOfflineSolver[] {
-                new RecursiveBruteforce()
+                new RecursiveBruteforce(), // TODO this one fails
+                new IntSatSolver(),
             });
 
-            String prologPath = "C:\\Program Files\\swipl\\bin\\swipl.exe";
-            if (File.Exists(prologPath))
-            {
-                var clpfd = new CallableSolver(prologPath, new String[] { ".\\Callables\\constraint_programming.pl" });
-                solvers.Add(clpfd);
-            }
-
-            Benchmarker.RandomTest(solvers.ToArray(), 5, 5);
-            //var res = Benchmarker.benchmark(solvers.ToArray(), 2.0);
-            //Console.WriteLine(res.ToString());
+            Benchmarker.RandomTest(solvers.ToArray(), 10, 10);
 
             // validator test
-            List<string> problems = new List<string>
+            if (File.Exists("../data/offline/"))
             {
-                "../data/offline/backtracker.txt",
-                "../data/offline/big_numbers.txt",
-                "../data/offline/three_quarters.txt",
-                "../data/online/Problem1.txt",
-                "../data/online/Problem2.txt"
-            };
+                List<string> problems = new List<string>
+                {
+                    "../data/offline/backtracker.txt",
+                    "../data/offline/big_numbers.txt",
+                    "../data/offline/three_quarters.txt",
+                    "../data/online/Problem1.txt",
+                    "../data/online/Problem2.txt"
+                };
 
-            List<string> solutions = new List<string> 
+                List<string> solutions = new List<string>
+                {
+                    "../data/solutions/offline/backtracker.txt",
+                    "../data/solutions/offline/big_numbers.txt",
+                    "../data/solutions/offline/three_quarters.txt",
+                    "../data/solutions/online/Solution1.txt",
+                    "../data/solutions/online/Solution2.txt"
+                };
+
+                ValidateTestcases(problems, solutions);
+            }
+            else
             {
-                "../data/solutions/offline/backtracker.txt",
-                "../data/solutions/offline/big_numbers.txt",
-                "../data/solutions/offline/three_quarters.txt",
-                "../data/solutions/online/Solution1.txt",
-                "../data/solutions/online/Solution2.txt"
-            };
-
-            ValidateTestcases(problems, solutions);
+                Console.WriteLine("warning: can't find unit test path");
+            }
         }
 
         static private void ValidateTestcases(List<string> problem_filenames, List<string> solution_filenames) {

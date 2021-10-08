@@ -55,6 +55,15 @@ namespace implementation
 
     class Benchmarker
     {
+        public bool silent;
+        public bool init;
+
+        public Benchmarker(bool silent, bool init)
+        {
+            this.silent = silent;
+            this.init = init;
+        }
+
         // test the $solvers $n times on problems of $m patients
         public static void RandomTest(IOfflineSolver[] solvers, int n, int m) {
 
@@ -71,7 +80,7 @@ namespace implementation
         }
 
         // run a benchmark on the $solvers, stopping when the first solver has run for more than $stop seconds in total 
-        public static Benchmark BenchmarkAll(IOfflineSolver[] solvers, double stop)
+        public Benchmark BenchmarkAll(IOfflineSolver[] solvers, double stop)
         {
             double[] ts = new double[solvers.Count()];
             double[] tInit = new double[solvers.Count()];
@@ -82,11 +91,19 @@ namespace implementation
             int n = 2;
             var timer = new Stopwatch();
 
+
             for (int i = 0; i < solvers.Count(); ++i)
             {
                 result[i] = new List<double>();
-                // estimate the initialization time of the solver, to subtract from the running total
-                tInit[i] = Benchmarker.BenchmarkInit(solvers[i], 3);
+            }
+
+            if (this.init)
+            {
+                for (int i = 0; i < solvers.Count(); ++i)
+                {
+                    // estimate the initialization time of the solver, to subtract from the running total
+                    tInit[i] = Benchmarker.BenchmarkInit(solvers[i], 3);
+                }
             }
 
             while (ts.All<double>(t => t < stop))
@@ -96,22 +113,32 @@ namespace implementation
 
                 testcases.Add(p);
 
+                Console.WriteLine($"benchmarking n = {n}");
+
                 for (int i = 0; i < ts.Count(); ++i)
                 {
+                    Console.WriteLine("running " + solvers[i].GetType().ToString());
                     timer.Start();
                     var sol = solvers[i].solve(p);
                     timer.Stop();
 
-                    try {
-                        validator.validate(sol);
-                    }
-                    catch {
-                        Console.WriteLine("exception in " + solvers[i].GetType().ToString());
-                        throw;
+                    if (!this.silent)
+                    {
+                        try
+                        {
+                            validator.validate(sol);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("exception in " + solvers[i].GetType().ToString());
+                            throw;
+                        }
                     }
 
                     double dt = timer.Elapsed.TotalSeconds;
                     dt -= tInit[i];
+
+                    Console.WriteLine($"passed {dt}s");
 
                     timer.Reset();
                     ts[i] += dt;
