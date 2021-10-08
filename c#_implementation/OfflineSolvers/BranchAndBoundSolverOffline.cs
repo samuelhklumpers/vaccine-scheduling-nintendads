@@ -28,8 +28,8 @@ namespace implementation
             // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
             //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            LinearProgramming2 lp = new LinearProgramming2();
-            LinearProgramming.Solve(problem);
+            //LinearProgramming2 lp = new LinearProgramming2();
+            LinearProgramming2.Solve(problem);
 
             return new Solution(0, new List<Registration>());
         }
