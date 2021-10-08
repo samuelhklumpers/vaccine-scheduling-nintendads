@@ -15,18 +15,28 @@ namespace implementation
             var (p1, p2, g) = (p.p1, p.p2, p.g);
             var ps = p.patients;
 
-            Solution res = null;
-            for (int m = 0; m <= ps.Count; ++m)
+            Solution success = null;
+
+            int low = 0;
+            int high = ps.Count + 1;
+            while (low != high)
             {
-                res = Satisfy(m, p1, p2, g, ps);
+                int m = (low + high) / 2;
+                var res = Satisfy(m, p1, p2, g, ps);
+
                 if (res != null) {
-                    break;
+                    success = res;
+                    high = m;
+                }
+                else
+                {
+                    low = m + 1;
                 }
             }
 
-            Debug.Assert(res != null); // please don't insert invalid problems
+            Debug.Assert(success != null); // please don't insert invalid problems
 
-            return res;
+            return success;
         }
 
         public Solution Satisfy(int m, int p1, int p2, int g, List<Patient> ps)

@@ -21,7 +21,16 @@ namespace implementation
                 new IntSatSolver(),
             });
 
-            var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 7.0);
+            /*String prologPath = "C:\\Program Files\\swipl\\bin\\swipl.exe";
+            if (File.Exists(prologPath))
+            {
+                Console.WriteLine(Directory.GetCurrentDirectory());
+                var clpfd = new CallableSolver(prologPath, new String[] { "..\\..\\..\\Callables\\constraint_programming.pl" });
+                solvers.Add(clpfd);
+            }*/
+
+
+            var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 10.0);
             Console.WriteLine(res.ToString());
         }
 
