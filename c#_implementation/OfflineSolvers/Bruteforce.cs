@@ -17,7 +17,7 @@ namespace implementation
         }
     }
 
-    class BruteforceSolverOffline : ISolverOffline
+    class BruteforceSolverOffline : IOfflineSolver
     {
         public Solution solve(OfflineProblem problem)
         {
@@ -26,7 +26,7 @@ namespace implementation
 
             hospitals.Add(new Hospital(hospitals.Count));
 
-            foreach (Patient p in problem.patient_data)
+            foreach (Patient p in problem.patients)
             {
                 // Kies een hospital
                 // Neem een starttijd die in start_times_first_dose zit en niet in de times_busy zit van die hospital, herhaal voor elke starttjid
@@ -44,8 +44,8 @@ namespace implementation
 
                     if (planned)
                     {
-                        int begin_second = p.temp_first_start_time + problem.gap + p.delay_between_doses + problem.processing_time_first_dose;
-                        int end_second   = p.temp_first_start_time + problem.gap + p.delay_between_doses + problem.processing_time_first_dose + p.second_dose_interval - problem.processing_time_second_dose;
+                        int begin_second = p.temp_first_start_time + problem.g + p.x + problem.p1;
+                        int end_second   = p.temp_first_start_time + problem.g + p.x + problem.p1 + p.L - problem.p2;
                         //int second_range = end_second - begin_second + 1; // determine range by end time - begin time + 1 (if same number, 0 + 1 = range of 1 number [10]. if two numbers: 11-10 +1 = range of 2 numbers [10, 11]])
                         //Console.WriteLine($"Range of {begin_second} and {end_second}:");
                         
@@ -70,8 +70,8 @@ namespace implementation
 
 
                         if (p.temp_first_start_time != 0 && p.temp_second_start_time == 0){
-                            for (int i = p.temp_first_start_time - problem.processing_time_first_dose; i < p.temp_first_start_time + problem.processing_time_first_dose; i++){
-                                hospitals[p.hospital_first_dose].busy_dict[i] = false;
+                            for (int i = p.temp_first_start_time - problem.p1; i < p.temp_first_start_time + problem.p1; i++){
+                                hospitals[p.h1].busy_dict[i] = false;
                             }
                         }
 
@@ -82,10 +82,10 @@ namespace implementation
             }
 
             // pretend it's solved
-            List<Registration> regs = new List<Registration>(); //todo with hospital
-            foreach (Patient p in problem.patient_data)
+            List<Doses> regs = new List<Doses>(); //todo with hospital
+            foreach (Patient p in problem.patients)
             {
-                regs.Add(new Registration(p.temp_first_start_time, p.temp_second_start_time));
+                regs.Add(new Doses(p.temp_first_start_time, p.temp_second_start_time));
             }
             return new Solution(hospitals.Count, regs);
 
@@ -104,18 +104,18 @@ namespace implementation
                     {
                         if (firstDose)
                         {
-                            p.hospital_first_dose = h.id;
+                            p.h1 = h.id;
                             p.temp_first_start_time = start_time;
-                            for (int i = start_time - problem.processing_time_first_dose; i < start_time + problem.processing_time_first_dose; i++){
+                            for (int i = start_time - problem.p1; i < start_time + problem.p1; i++){
                                 h.busy_dict[i] = true;
                             }
                             //h.times_busy.AddRange(Enumerable.Range(start_time - problem.processing_time_first_dose, start_time + problem.processing_time_first_dose));
                         }
                         else
                         {
-                            p.hospital_second_dose = h.id;
+                            p.h2 = h.id;
                             p.temp_second_start_time = start_time;
-                            for (int i = start_time - problem.processing_time_second_dose; i < start_time + problem.processing_time_second_dose; i++){
+                            for (int i = start_time - problem.p2; i < start_time + problem.p2; i++){
                                 h.busy_dict[i] = true;
                             }
                             //h.times_busy.AddRange(Enumerable.Range(start_time - problem.processing_time_first_dose, start_time + problem.processing_time_second_dose));

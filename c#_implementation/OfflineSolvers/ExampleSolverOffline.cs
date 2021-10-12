@@ -5,12 +5,12 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    class ExampleSolverOffline : ISolverOffline
+    class ExampleSolverOffline : IOfflineSolver
     {
         public Solution solve(OfflineProblem problem)
         {
             Console.WriteLine(problem.ToString());
-            return new Solution(0, new List<Registration>());
+            return new Solution(0, new List<Doses>());
         }
     }
 }

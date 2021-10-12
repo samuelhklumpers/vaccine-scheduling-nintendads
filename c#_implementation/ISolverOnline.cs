@@ -1,6 +1,6 @@
 namespace implementation
 {
-    interface ISolverOnline
+    interface IOnlineSolver
     {
         ///Print the solution
         void solve(OnlineProblem problem);
