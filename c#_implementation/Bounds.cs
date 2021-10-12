@@ -18,8 +18,8 @@ namespace implementation
             {
                 var pat = ps[i];
 
-                var (left1, right1) = (pat.r1, pat.d1 - p1 + 1);
-                var (left2, right2) = (left1 + p1 + g + pat.x, right1 + p1 + g + pat.x + pat.L - p2 + 1);
+                var (left1, right1) = (pat.r1, pat.d1); // note: don't want the -p1 here
+                var (left2, right2) = (left1 + p1 + g + pat.x, right1 + p1 + g + pat.x + pat.L); // please don't be off by one
 
                 intervals.Add((left1, p1, right1));
                 intervals.Add((left2, p2, right2));
@@ -38,7 +38,7 @@ namespace implementation
 
                 for (int j = 1; j < jobs.Count() - i; ++j)
                 {
-                    var (t21, dt2, t22) = jobs[j];
+                    var (t21, dt2, t22) = jobs[i + j];
 
                     t12 = Math.Max(t12, t22);
                     s += dt2;

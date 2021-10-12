@@ -113,7 +113,11 @@ namespace implementation
 
                 testcases.Add(p);
 
+                var pigeons = Bounds.PigeonHole(p);
+
                 Console.WriteLine($"benchmarking n = {n}");
+                Console.WriteLine($"pigeonhole = {pigeons}");
+                Console.WriteLine("==========");
 
                 for (int i = 0; i < ts.Count(); ++i)
                 {
@@ -138,6 +142,7 @@ namespace implementation
                     double dt = timer.Elapsed.TotalSeconds;
                     dt -= tInit[i];
 
+                    Console.WriteLine($"machines {sol.machines}");
                     Console.WriteLine($"passed {dt}s");
 
                     timer.Reset();
@@ -146,6 +151,8 @@ namespace implementation
                 }
 
                 n += 1; // or *= 2 if you're daring
+
+                Console.WriteLine("---------");
             }
 
             return new Benchmark(solvers, result, testcases);
