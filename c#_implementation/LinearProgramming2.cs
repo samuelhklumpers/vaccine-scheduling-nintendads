@@ -156,17 +156,17 @@ namespace implementation
 
         static private Variable[,] init_2d_boolean_variable_samehospitals(Solver solver, int j_max)
         {
-            //y_j,h is one if job j is in hospital h
-            Variable[,] y = new Variable[j_max, j_max];
+            //y_j,h is zero if j and j' in same hospital, one otherwise
+            Variable[,] samehospitals = new Variable[j_max, j_max];
             //fill y with valid variables inside the solvers context
             for (int j = 0; j < j_max; j++)
             {
                 for (int h = 0; h < j_max; h++)
                 {
-                    y[j, h] = solver.MakeIntVar(0, 1, "samehospital: " + j.ToString() + " " + h.ToString());
+                    samehospitals[j, h] = solver.MakeIntVar(0, 1, "samehospital: " + j.ToString() + " " + h.ToString());
                 }
             }
-            return y;
+            return samehospitals;
         }
 
         static private Variable[] init_variables_vector(Solver solver, int length, int ub)
@@ -208,9 +208,12 @@ namespace implementation
                     }
                     for (int h = 0; h < max_h; h++)
                     {
-                        solver.Add((y[j, h] * -1) + 1 + (y[k, h] * -1) + 1 - 1 <= samehospitals[j, k]); //samehospitals must be 0 when y[j,h] and y[k,h] are both 1
-                        solver.Add(samehospitals[j, k] <= (y[j, h] * -1) + 1);
-                        solver.Add(samehospitals[j, k] <= (y[k, h] * -1) + 1);
+                        //bovenste: als allebei 0 dan 1, maar nog niet goed in andere gevallen.
+                        //solver.Add(y[j, h] + y[k, h] - 1 <= samehospitals[j, k]); //samehospitals must be 0 when y[j,h] and y[k,h] are both 1
+                        solver.Add(samehospitals[j, k] >= y[j, h]);
+                        solver.Add(samehospitals[j, k] >= y[k, h]);
+                        solver.Add(samehospitals[j, k] <= y[k, h] + y[j,h]);
+
                     }
                 }
             }
@@ -265,14 +268,14 @@ namespace implementation
                         //CONTROLEREN GOEIE Z
                         //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
 
-                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_first_dose + 1);
+                        //solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_first_dose + 1);
 
                     }
 
                     else if (jobs[j].vaccine == 2)
                     {
                         //CONTROLEREN GOEIE Z
-                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_second_dose + 1);
+                       // solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_second_dose + 1);
 
                     }
                 }
