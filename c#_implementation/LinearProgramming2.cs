@@ -40,13 +40,13 @@ namespace implementation
             Variable[] t = init_variables_vector(solver, max_j, max_t); // tj starting time of job j
 
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
-            Variable[,] y = init_2d_boolean_variable_y(solver, max_j, max_h); // y_j_h --> 1 when job j in hospital h
+            Variable[] y = init_variables_vector(solver, max_j, max_h); // y_j --> hospital number of job j
             Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j);
 
             //Add the constraints to the solver
             add_constraints_z(solver, z, t, jobs, max_t); // calculate which jobs are before other jobs
             add_constraints_samehospital(solver, samehospitals, y, jobs, max_h);
-            add_constraints_y(solver, y, jobs, max_h); //
+            //add_constraints_y(solver, y, jobs, max_h); //
             add_constraint_interval_vaccines(solver, problem, t, jobs);
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, samehospitals, jobs, max_h, max_t);
 
@@ -179,6 +179,7 @@ namespace implementation
             return vector;
         }
 
+
         static private void add_constraints_z(Solver solver, Variable[,] z, Variable[] t, List<Job> jobs, int max_t)
         {
             for (int j = 0; j < jobs.Count; j++)
@@ -206,19 +207,15 @@ namespace implementation
                     {
                         continue;
                     }
-                    for (int h = 0; h < max_h; h++)
-                    {
-                        //bovenste: als allebei 0 dan 1, maar nog niet goed in andere gevallen.
-                        //solver.Add(y[j, h] + y[k, h] - 1 <= samehospitals[j, k]); //samehospitals must be 0 when y[j,h] and y[k,h] are both 1
-                        solver.Add(samehospitals[j, k] >= y[j, h]);
-                        solver.Add(samehospitals[j, k] >= y[k, h]);
-                        solver.Add(samehospitals[j, k] <= y[k, h] + y[j,h]);
 
-                    }
+                    //sameHospitals moet 1 zijn als beide y's hetzelfde, anders 0 (of andersom)
+                    solver.Add(samehospitals[j, k] >= y[j] - y[k]);
+
                 }
             }
         }
 
+        /*
         static private void add_constraints_y(Solver solver, Variable[,] y, List<Job> jobs, int max_h)
         {
 
@@ -231,7 +228,7 @@ namespace implementation
                     ct_one_hospital_per_job.SetCoefficient(y[j, h], 1);
                 }
             }
-        }
+        }*/
 
         static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job> jobs)
         {
@@ -268,14 +265,14 @@ namespace implementation
                         //CONTROLEREN GOEIE Z
                         //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
 
-                        //solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_first_dose + 1);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * (1-samehospitals[j, k]) <= -1 - problem.processing_time_first_dose + 1);
 
                     }
 
                     else if (jobs[j].vaccine == 2)
                     {
                         //CONTROLEREN GOEIE Z
-                       // solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_second_dose + 1);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * (1-samehospitals[j, k]) <= -1 - problem.processing_time_second_dose + 1);
 
                     }
                 }
