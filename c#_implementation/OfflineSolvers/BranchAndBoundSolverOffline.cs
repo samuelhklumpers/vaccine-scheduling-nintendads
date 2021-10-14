@@ -29,9 +29,9 @@ namespace implementation
             //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
             //LinearProgramming2 lp = new LinearProgramming2();
-            LinearProgramming2.Solve(problem);
+            ;
 
-            return new Solution(0, new List<Registration>());
+            return LinearProgramming2.Solve(problem);
         }
 
         /*        static public int PigeonHole(Job[] jobs, int limit)

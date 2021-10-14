@@ -8,7 +8,7 @@ namespace implementation
 {
     class LinearProgramming2
     {
-        public static void Solve(OfflineProblem problem)
+        public static Solution Solve(OfflineProblem problem)
         {
             //TOEVOEGEN: partial filled solution meegeven voor verder in de boom.
 
@@ -64,17 +64,71 @@ namespace implementation
             //solver.Maximize(sameHospitalsSum);
 
             Objective objective = solver.Objective();
-            for(int i = 0; i < max_j; i++){
-                for(int j = 0; j < max_j; j++){
-                     objective.SetCoefficient(samehospitals[i,j], 1);
-                }   
+            for (int i = 0; i < max_j; i++)
+            {
+                for (int j = 0; j < max_j; j++)
+                {
+                    objective.SetCoefficient(samehospitals[i, j], 1);
+                }
             }
             objective.SetMaximization();
 
 
             solver.Solve();
-
             Console.WriteLine("Solution:");
+
+
+            int[] hospital_numbers = new int[max_j];
+            List<(int, int, int)> chronological_jobs = new List<(int, int, int)>();
+            for (int i = 0; i < solver.variables().Count; i++)
+            {
+                string[] data = solver.variables()[i].Name().Split(' ');
+                if (data[0][0] == 't')
+                {
+                    chronological_jobs.Add(((int)solver.variables()[i].SolutionValue(), i % 2, i)); //fill list with start times and 0 when first dose, 1 when second dose, and job id
+                }
+            }
+            List<(int, int, int)> chronological_jobs_copy = new List<(int, int, int)>(chronological_jobs);
+            chronological_jobs.Sort();
+            int[] hospital_available = new int[max_h];
+            int done_job_index = 0;
+            for (int i = 0; i < max_t; i++)
+            {
+                if (done_job_index >= chronological_jobs.Count) break;
+                if (chronological_jobs[done_job_index].Item1 == i)
+                {
+                    for (int j = 0; j < hospital_available.Length; j++)
+                    {
+                        if (hospital_available[j] == 0)
+                        {
+                            hospital_available[j] = chronological_jobs[done_job_index].Item2 == 0 ? problem.processing_time_first_dose : problem.processing_time_second_dose;
+                            hospital_numbers[chronological_jobs[done_job_index].Item3] = j;
+                            break;
+                        }
+                    }
+                    done_job_index++;
+                }
+                for (int j = 0; j < hospital_available.Length; j++)
+                {
+                    hospital_available[j] = Math.Max(0, hospital_available[j] - 1);
+                }
+            }
+            for (int i = 0; i < hospital_numbers.Length; i++)
+            {
+                Console.WriteLine("job " + i + " hospital_number: " + hospital_numbers[i]);
+            }
+            List<Registration> registrations = new List<Registration>();
+            for (int i = 0; i < hospital_numbers.Length / 2; i++)
+            {
+                Console.WriteLine(i + " " + chronological_jobs_copy[i * 2].Item1 + " " + chronological_jobs_copy[i * 2 + 1].Item1);
+                registrations.Add(new Registration(chronological_jobs_copy[i * 2].Item1, chronological_jobs_copy[i * 2 + 1].Item1));
+            }
+            Solution sol = new Solution(hospital_numbers.Max() + 1, registrations);
+            Console.WriteLine(sol);
+
+
+
+
 
             Console.WriteLine("Objective value = " + solver.Objective().Value());
             Console.WriteLine("mat z:");
@@ -103,7 +157,7 @@ namespace implementation
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 'y' )
+                if (data[0][0] == 'y')
                 {
                     Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
@@ -115,7 +169,7 @@ namespace implementation
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 't' )
+                if (data[0][0] == 't')
                 {
                     Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
@@ -127,7 +181,7 @@ namespace implementation
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] != 'z' && data[0][0] != 'y' && data[0][0] != 't' &&data[0][0] != 'H')
+                if (data[0][0] != 'z' && data[0][0] != 'y' && data[0][0] != 't' && data[0][0] != 'H')
                 {
                     resulting_matrix_sh[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
                 }
@@ -142,7 +196,7 @@ namespace implementation
 
             }
             Console.WriteLine();
-
+            return sol;
             //Console.WriteLine("same hospital sum: " + sameHospitalsSum.SolutionValue());
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
@@ -225,8 +279,8 @@ namespace implementation
                     }
 
                     //sameHospitals moet 1 zijn als beide y's hetzelfde, anders 0 (of andersom)
-                    solver.Add((y[j] - y[k]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
-                    solver.Add((y[k] - y[j]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
+                    //solver.Add((y[j] - y[k]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
+                    //solver.Add((y[k] - y[j]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
                     //solver.Add(-(y[j] - j[k]) + 1 <= samehospitals[j,k]);
                     //solver.Add((y[j] - j[k]) + 1 <= samehospitals[j,k]);
                     //solver.Add( -1 * (y[j] - y[k]) + (max_h + 1) <= (max_h + 1) * samehospitals[j, k]);
@@ -270,14 +324,14 @@ namespace implementation
                         //CONTROLEREN GOEIE Z
                         //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
 
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.processing_time_first_dose);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1 - z[j, k]) - (t_max + 1) * (1 - samehospitals[j, k]) <= -problem.processing_time_first_dose);
 
                     }
 
                     else if (jobs[j].vaccine == 2)
                     {
                         //CONTROLEREN GOEIE Z
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.processing_time_second_dose);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1 - z[j, k]) - (t_max + 1) * (1 - samehospitals[j, k]) <= -problem.processing_time_second_dose);
 
                     }
                 }
