@@ -12,25 +12,64 @@ namespace implementation
     {
         static void Main(string[] args)
         {
+            if (args.Count() == 0)
+            {
+                bool test = false;
+                bool benchmark = true;
+                bool validate = false;
 
-            bool test = false;
-            bool benchmark = true;
-            bool validate = false;
-
-            //Test();
-            if (test)
-            {
-                Test();
+                //Test();
+                if (test)
+                {
+                    Test();
+                }
+                if (benchmark)
+                {
+                    Benchmark();
+                }
+                if (validate)
+                {
+                    Validate();
+                }
             }
-            if (benchmark)
+            else
             {
-                Benchmark();
-            }
-            if (validate)
-            {
-                Validate();
+                switch (args[0])
+                {
+                    case "benchmark": Benchmark(); break;
+                    case "test": Test(); break;
+                    case "case": RunCase(args); break;
+                }
             }
         }
+
+        static void RunCase(String[] args)
+        {
+            if (args.Length < 3)
+                return;
+
+            var (solverName, testFile) = (args[1], args[2]);
+            var solver = makeSolver(solverName);
+
+            OfflineProblem problem = ParseOfflineProblem(testFile);
+
+            var sol = solver.solve(problem);
+            Console.WriteLine(sol.machines);
+            //new OfflineValidator(problem).validate(sol);
+            //i'll trust you I guess
+        }
+
+        static IOfflineSolver makeSolver(String name)
+        {
+            switch (name)
+            {
+                case "sat": return new IntSatSolver();
+                case "bf": return new RecursiveBruteforce();
+                case "ilp": return new BranchAndBoundSolverOffline();
+                default: throw new Exception($"invalid solver name: {name}");
+            }
+        }
+
         static void Benchmark()
         {
             var solvers = new List<IOfflineSolver>(new IOfflineSolver[] {

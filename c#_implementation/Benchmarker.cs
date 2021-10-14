@@ -9,23 +9,21 @@ namespace implementation
     public class TroubleMaker // more commonly known as Arbitrary
     {
         // generate a random problem, with $n patients, and parameters within the given bounds
-        public static OfflineProblem RandomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB)
-        {
+        public static OfflineProblem RandomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
             var rand = new Random();
-
+            
             var p1 = rand.Next(p1B.Item1, p1B.Item2);
             var p2 = rand.Next(p2B.Item1, p2B.Item2);
             var g = rand.Next(gB.Item1, gB.Item2);
-
+            
             var lastR = 0;
 
             var ps = new List<Patient>();
 
-            for (int i = 0; i < n; ++i)
-            {
+            for (int i = 0; i < n; ++i) {
                 var r1 = lastR;
                 var d1 = r1 + p1 + rand.Next(dd1B.Item1, dd1B.Item2);
-
+                
                 var xi = rand.Next(xB.Item1, xB.Item2);
 
                 var L = p2 + rand.Next(dd2B.Item1, dd2B.Item2);
@@ -42,8 +40,7 @@ namespace implementation
         }
 
         // generate a sane random problem with $n patients
-        public static OfflineProblem RandomProblemPreset(int n)
-        {
+        public static OfflineProblem RandomProblemPreset(int n) {
             var p1B = (1, 6);
             var p2B = (1, 6);
             var gB = (1, 6);
@@ -68,16 +65,14 @@ namespace implementation
         }
 
         // test the $solvers $n times on problems of $m patients
-        public static void RandomTest(IOfflineSolver[] solvers, int n, int m)
-        {
+        public static void RandomTest(IOfflineSolver[] solvers, int n, int m) {
 
             for (int i = 0; i < n; ++i)
             {
                 var p = TroubleMaker.RandomProblemPreset(m);
-                var validator = new OfflineValidator(p);
+                var validator =  new OfflineValidator(p);
 
-                foreach (var solver in solvers)
-                {
+                foreach (var solver in solvers) {
                     var sol = solver.solve(p);
                     validator.validate(sol);
                 }
@@ -119,6 +114,7 @@ namespace implementation
                 testcases.Add(p);
 
                 Console.WriteLine($"benchmarking n = {n}");
+                Console.WriteLine("==========");
 
                 for (int i = 0; i < ts.Count(); ++i)
                 {
@@ -143,7 +139,8 @@ namespace implementation
                     double dt = timer.Elapsed.TotalSeconds;
                     dt -= tInit[i];
 
-                    Console.WriteLine($"passed {dt}s with {sol.machines} machines");
+                    Console.WriteLine($"machines {sol.machines}");
+                    Console.WriteLine($"passed {dt}s");
 
                     timer.Reset();
                     ts[i] += dt;
@@ -151,14 +148,15 @@ namespace implementation
                 }
 
                 n += 1; // or *= 2 if you're daring
+
+                Console.WriteLine("---------");
             }
 
             return new Benchmark(solvers, result, testcases);
         }
 
         // estimate the initialization time of $solver, averaged over $n runs
-        public static double BenchmarkInit(IOfflineSolver solver, int n)
-        {
+        public static double BenchmarkInit(IOfflineSolver solver, int n) {
             var timer = new Stopwatch();
             var p = TroubleMaker.RandomProblemPreset(1);
 
