@@ -4,30 +4,30 @@ namespace implementation
 {
     class Parser
     {
-        public static HospitalSolution Parse_solution(string file)
+        public static Solution2D ParseSolution2D(string fn)
         {
-            string[] lines = System.IO.File.ReadAllLines(file);
+            string[] lines = System.IO.File.ReadAllLines(fn);
             for (int i = 0; i < lines.Length; ++i)
             {
                 lines[i] = lines[i].Replace(" ", "");
             }
 
-            List<RegistrationWithHospital> registrations = new List<RegistrationWithHospital>();
+            List<Doses2D> registrations = new List<Doses2D>();
             for (int i = 0; i < lines.Length - 1; i++)
             {
                 string[] patient = lines[i].Split(",");
-                var registration = new RegistrationWithHospital(int.Parse(patient[0]), int.Parse(patient[1]), int.Parse(patient[2]), int.Parse(patient[3]));
+                var registration = new Doses2D(int.Parse(patient[0]), int.Parse(patient[1]), int.Parse(patient[2]), int.Parse(patient[3]));
                 registrations.Add(registration);
             }
 
             int machines = int.Parse(lines[lines.Length - 1]);
 
-            return new HospitalSolution(machines, registrations);
+            return new Solution2D(machines, registrations);
         }
 
-        public static OfflineProblem Parse_problem_offline(string file)
+        public static OfflineProblem ParseOfflineProblem(string fn)
         {
-            string[] data = System.IO.File.ReadAllLines(file);
+            string[] data = System.IO.File.ReadAllLines(fn);
             int processing_time_first_dose = int.Parse(data[0]);
             int processing_time_second_dose = int.Parse(data[1]);
             int gap = int.Parse(data[2]);
@@ -44,9 +44,9 @@ namespace implementation
             OfflineProblem problem = new OfflineProblem(processing_time_first_dose, processing_time_second_dose, gap, number_of_patients, patients_data);
             return problem;
         }
-        public static OnlineProblem Parse_problem_online(string file)
+        public static OnlineProblem ParseOnlineProblem(string fn)
         {
-            string[] data = System.IO.File.ReadAllLines(file);
+            string[] data = System.IO.File.ReadAllLines(fn);
             int processing_time_first_dose = int.Parse(data[0]);
             int processing_time_second_dose = int.Parse(data[1]);
             int gap = int.Parse(data[2]);

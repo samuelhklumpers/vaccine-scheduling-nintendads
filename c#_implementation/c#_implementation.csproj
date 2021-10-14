@@ -5,10 +5,8 @@
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>implementation</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Google.OrTools.LinearSolver">
-      <HintPath>libs/Google.OrTools.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.OrTools" Version="9.1.9490" />
+  </ItemGroup>
 </Project>

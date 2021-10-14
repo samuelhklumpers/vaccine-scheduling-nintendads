@@ -5,21 +5,7 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    /*class Job
-    {
-        public int t1;
-        public int t2;
-        public int p;
-
-        public Job(int t1, int t2, int p)
-        {
-            this.t1 = t1;
-            this.t2 = t2;
-            this.p = p;
-        }
-    }*/
-
-    class BranchAndBoundSolverOffline : ISolverOffline
+    class BranchAndBoundSolverOffline : IOfflineSolver
     {
 
         public Solution solve(OfflineProblem problem)
@@ -28,10 +14,7 @@ namespace implementation
             // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
             //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            //LinearProgramming2 lp = new LinearProgramming2();
-            ;
-
-            return LinearProgramming2.Solve(problem);
+            return LinearProgramming.Solve(problem);
         }
 
         /*        static public int PigeonHole(Job[] jobs, int limit)

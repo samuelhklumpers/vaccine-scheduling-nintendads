@@ -8,29 +8,30 @@ namespace implementation
 {
     public class TroubleMaker // more commonly known as Arbitrary
     {
-        public static OfflineProblem generate(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
+        // generate a random problem, with $n patients, and parameters within the given bounds
+        public static OfflineProblem RandomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
             var rand = new Random();
             
             var p1 = rand.Next(p1B.Item1, p1B.Item2);
             var p2 = rand.Next(p2B.Item1, p2B.Item2);
             var g = rand.Next(gB.Item1, gB.Item2);
             
-            var r = 0;
+            var lastR = 0;
 
             var ps = new List<Patient>();
 
             for (int i = 0; i < n; ++i) {
-                var r1i = r;
-                // TODO remove + p1 here when all solvers are fixed to interpret [r1, d1] as the startable interval (not total interval)
-                var d1i = r1i + p1 + rand.Next(dd1B.Item1, dd1B.Item2);
+                var r1 = lastR;
+                var d1 = r1 + p1 + rand.Next(dd1B.Item1, dd1B.Item2);
                 
                 var xi = rand.Next(xB.Item1, xB.Item2);
 
-                var inter2 = p2 + rand.Next(dd2B.Item1, dd2B.Item2);
+                var L = p2 + rand.Next(dd2B.Item1, dd2B.Item2);
 
-                var patient = new Patient(r1i, d1i, xi, inter2, p1, p2, g);
+                var patient = new Patient(r1, d1, xi, L, p1, p2, g);
 
                 ps.Add(patient);
+                lastR += rand.Next(rShiftB.Item1, rShiftB.Item2);
             }
 
             OfflineProblem p = new OfflineProblem(p1, p2, g, n, ps);
@@ -38,7 +39,8 @@ namespace implementation
             return p;
         }
 
-        public static OfflineProblem generateSimple(int n) {
+        // generate a sane random problem with $n patients
+        public static OfflineProblem RandomProblemPreset(int n) {
             var p1B = (1, 6);
             var p2B = (1, 6);
             var gB = (1, 6);
@@ -47,39 +49,97 @@ namespace implementation
             var dd2B = (1, 10);
             var xB = (0, 10);
 
-            return generate(n, p1B, p2B, gB, rShiftB, dd1B, dd2B, xB);
+            return RandomProblem(n, p1B, p2B, gB, rShiftB, dd1B, dd2B, xB);
         }
     }
 
     class Benchmarker
     {
-        public static Benchmark benchmark(ISolverOffline[] solvers, double tMin)
-        {   // benchmark, until any solver uses at least tMin seconds
+        public bool silent;
+        public bool init;
+
+        public Benchmarker(bool silent, bool init)
+        {
+            this.silent = silent;
+            this.init = init;
+        }
+
+        // test the $solvers $n times on problems of $m patients
+        public static void RandomTest(IOfflineSolver[] solvers, int n, int m) {
+
+            for (int i = 0; i < n; ++i)
+            {
+                var p = TroubleMaker.RandomProblemPreset(m);
+                var validator =  new OfflineValidator(p);
+
+                foreach (var solver in solvers) {
+                    var sol = solver.solve(p);
+                    validator.validate(sol);
+                }
+            }
+        }
+
+        // run a benchmark on the $solvers, stopping when the first solver has run for more than $stop seconds in total 
+        public Benchmark BenchmarkAll(IOfflineSolver[] solvers, double stop)
+        {
             double[] ts = new double[solvers.Count()];
+            double[] tInit = new double[solvers.Count()];
+
             List<double>[] result = new List<double>[solvers.Count()];
-            List<OfflineProblem> cases = new List<OfflineProblem>();
+            List<OfflineProblem> testcases = new List<OfflineProblem>();
 
             int n = 2;
-            //var validator = new OfflineValidator();
             var timer = new Stopwatch();
+
 
             for (int i = 0; i < solvers.Count(); ++i)
             {
                 result[i] = new List<double>();
             }
 
-            while (ts.All<double>(t => t < tMin))
+            if (this.init)
             {
-                var p = TroubleMaker.generateSimple(n);
-                cases.Add(p);
+                for (int i = 0; i < solvers.Count(); ++i)
+                {
+                    // estimate the initialization time of the solver, to subtract from the running total
+                    tInit[i] = Benchmarker.BenchmarkInit(solvers[i], 3);
+                }
+            }
+
+            while (ts.All<double>(t => t < stop))
+            {
+                var p = TroubleMaker.RandomProblemPreset(n);
+                var validator = new OfflineValidator(p);
+
+                testcases.Add(p);
+
+                Console.WriteLine($"benchmarking n = {n}");
 
                 for (int i = 0; i < ts.Count(); ++i)
                 {
+                    Console.WriteLine("running " + solvers[i].GetType().ToString());
                     timer.Start();
                     var sol = solvers[i].solve(p);
-                    //validator.validate(p, sol);
                     timer.Stop();
+
+                    if (!this.silent)
+                    {
+                        try
+                        {
+                            validator.validate(sol);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("exception in " + solvers[i].GetType().ToString());
+                            throw;
+                        }
+                    }
+
                     double dt = timer.Elapsed.TotalSeconds;
+                    dt -= tInit[i];
+
+                    Console.WriteLine($"passed {dt}s");
+
                     timer.Reset();
                     ts[i] += dt;
                     result[i].Add(dt);
@@ -88,31 +148,53 @@ namespace implementation
                 n += 1; // or *= 2 if you're daring
             }
 
-            return new Benchmark(solvers, result, cases);
+            return new Benchmark(solvers, result, testcases);
+        }
+
+        // estimate the initialization time of $solver, averaged over $n runs
+        public static double BenchmarkInit(IOfflineSolver solver, int n) {
+            var timer = new Stopwatch();
+            var p = TroubleMaker.RandomProblemPreset(1);
+
+            timer.Start();
+            for (int i = 0; i < n; ++i)
+            {
+                solver.solve(p);
+            }
+            timer.Stop();
+
+            return timer.Elapsed.TotalSeconds / n;
         }
 
         public class Benchmark
         {
-            public ISolverOffline[] solvers;
+            public IOfflineSolver[] solvers;
             public List<double>[] result;
-            public List<OfflineProblem> cases;
+            public List<OfflineProblem> testcases;
 
 
-            public Benchmark(ISolverOffline[] solvers, List<double>[] result, List<OfflineProblem> cases)
+            public Benchmark(IOfflineSolver[] solvers, List<double>[] result, List<OfflineProblem> testcases)
             {
                 this.solvers = solvers;
                 this.result = result;
-                this.cases = cases;
+                this.testcases = testcases;
             }
 
             public override string ToString()
             {
-                var str = $"number: " + String.Join(" ", cases.Select(c => c.number_of_patients)) + "\n";
+                var str = $"number: " + String.Join(" ", testcases.Select(c => c.nPatients)) + "\n";
 
                 for (int i = 0; i < this.result.Count(); ++i)
                 {
                     var r = this.result[i];
                     str += $"solver {i + 1}: " + String.Join(" ", r.Select<double, String>(v => v.ToString("F2"))) + "\n";
+                }
+
+                str += "\n\n";
+
+                for (int i = 0; i < this.solvers.Count(); ++i)
+                {
+                    str += $"solver {i + 1} = " + this.solvers[i].GetType().ToString() + "\n";
                 }
 
                 return str;
