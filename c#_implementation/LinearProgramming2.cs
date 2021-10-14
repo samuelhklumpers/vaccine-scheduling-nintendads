@@ -37,11 +37,10 @@ namespace implementation
             int max_t = max_time_upperbound;
 
             //Create variable lists as each patient has that variable
-            Variable[] t = init_variables_vector(solver, max_j, max_t); // tj starting time of job j
-
+            Variable[] t = init_variables_vector(solver, max_j, max_t, "t"); // tj starting time of job j
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
-            Variable[] y = init_variables_vector(solver, max_j, max_h); // y_j --> hospital number of job j
-            Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j);
+            Variable[] y = init_variables_vector(solver, max_j, max_h, "y"); // y_j --> hospital number of job j
+            Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j); //one if jobs j,k in same hospital
 
             //Add the constraints to the solver
             add_constraints_z(solver, z, t, jobs, max_t); // calculate which jobs are before other jobs
@@ -84,22 +83,15 @@ namespace implementation
             Console.WriteLine();
 
             Console.WriteLine("mat y:");
-            int[,] resulting_matrix_y = new int[max_j, max_h];
+            int[] resulting_matrix_y = new int[max_j];
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 'y')
+                if (data[0][0] == 'y' )
                 {
-                    resulting_matrix_y[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
+                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
-            }
-            for (int i = 0; i < resulting_matrix_y.Length; i++)
-            {
-                if (i % max_h == 0)
-                {
-                    Console.WriteLine();
-                }
-                Console.Write(resulting_matrix_y[i / max_j, i % max_h] + " ");
+
             }
             Console.WriteLine();
             Console.WriteLine("mat t:");
@@ -107,12 +99,33 @@ namespace implementation
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] != 'y' && data[0][0] != 'z' && data[0] != "samehospital: ")
+                if (data[0][0] == 't' )
                 {
                     Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
 
             }
+
+            Console.WriteLine("mat samehospitals:");
+            int[,] resulting_matrix_sh = new int[max_j, max_j];
+            foreach (var variable in solver.variables())
+            {
+                string[] data = variable.Name().Split(' ');
+                if (data[0][0] != 'z' && data[0][0] != 'y' && data[0][0] != 't')
+                {
+                    resulting_matrix_sh[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
+                }
+            }
+            for (int i = 0; i < resulting_matrix_sh.Length; i++)
+            {
+                if (i % max_j == 0)
+                {
+                    Console.WriteLine();
+                }
+                Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
+
+            }
+            Console.WriteLine();
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
@@ -139,21 +152,6 @@ namespace implementation
             return z;
         }
 
-        static private Variable[,] init_2d_boolean_variable_y(Solver solver, int j_max, int h_max)
-        {
-            //y_j,h is one if job j is in hospital h
-            Variable[,] y = new Variable[j_max, h_max];
-            //fill y with valid variables inside the solvers context
-            for (int j = 0; j < j_max; j++)
-            {
-                for (int h = 0; h < h_max; h++)
-                {
-                    y[j, h] = solver.MakeIntVar(0, 1, "y: " + j.ToString() + " " + h.ToString());
-                }
-            }
-            return y;
-        }
-
         static private Variable[,] init_2d_boolean_variable_samehospitals(Solver solver, int j_max)
         {
             //y_j,h is zero if j and j' in same hospital, one otherwise
@@ -169,12 +167,12 @@ namespace implementation
             return samehospitals;
         }
 
-        static private Variable[] init_variables_vector(Solver solver, int length, int ub)
+        static private Variable[] init_variables_vector(Solver solver, int length, int ub, String name)
         {
             Variable[] vector = new Variable[length];
             for (int i = 0; i < length; i++)
             {
-                vector[i] = solver.MakeIntVar(0, ub, i.ToString()); //TODO check if this can be relaxed
+                vector[i] = solver.MakeIntVar(0, ub, name + i.ToString()); //TODO check if this can be relaxed
             }
             return vector;
         }
@@ -197,7 +195,7 @@ namespace implementation
                 }
             }
         }
-        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[,] y, List<Job> jobs, int max_h)
+        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, List<Job> jobs, int max_h)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -209,7 +207,9 @@ namespace implementation
                     }
 
                     //sameHospitals moet 1 zijn als beide y's hetzelfde, anders 0 (of andersom)
-                    solver.Add(samehospitals[j, k] >= y[j] - y[k]);
+                    solver.Add((y[j] - y[k]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
+                    solver.Add((y[k] - y[j]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
+                    solver.Add(-1 * (y[j] - y[k]) + (max_h + 1) <= (max_h + 1) * samehospitals[j, k]);
 
                 }
             }
@@ -248,7 +248,7 @@ namespace implementation
         }
 
 
-        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[,] y, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
+        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -265,14 +265,14 @@ namespace implementation
                         //CONTROLEREN GOEIE Z
                         //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
 
-                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * (1-samehospitals[j, k]) <= -1 - problem.processing_time_first_dose + 1);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_first_dose + 1);
 
                     }
 
                     else if (jobs[j].vaccine == 2)
                     {
                         //CONTROLEREN GOEIE Z
-                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * (1-samehospitals[j, k]) <= -1 - problem.processing_time_second_dose + 1);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * z[k, j] - (t_max + 1) * samehospitals[j, k] <= -1 - problem.processing_time_second_dose + 1);
 
                     }
                 }
