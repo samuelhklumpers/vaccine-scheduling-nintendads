@@ -25,7 +25,6 @@ namespace implementation
             }
 
             Solver solver = new Solver("vaccine_scheduling", Solver.OptimizationProblemType.SCIP_MIXED_INTEGER_PROGRAMMING);
-
             int max_hospitals_upperbound = problem.patients.Count; //hospitals upperbound is when every patient gets its own hospital
             int max_time_upperbound = calculate_upperbound_time(problem); //time upperbound is from 0 until the end of the last 2nd dose interval
 
@@ -39,7 +38,6 @@ namespace implementation
             //Create variable lists as each patient has that variable
             Variable[] t = init_variables_vector(solver, max_j, max_t, "t"); // tj starting time of job j
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
-            Variable[] y = init_variables_vector(solver, max_j, max_h, "y"); // y_j --> hospital number of job j
             Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j); //one if jobs j,k in same hospital
             //Variable sameHospitalsSum = solver.MakeIntVar(0, max_j*max_j, "Hospital_sum");
 
@@ -52,10 +50,9 @@ namespace implementation
 
             //Add the constraints to the solver
             add_constraints_z(solver, z, t, jobs, max_t); // calculate which jobs are before other jobs
-            add_constraints_samehospital(solver, samehospitals, y, jobs, max_h);
             //add_constraints_y(solver, y, jobs, max_h); //
             add_constraint_interval_vaccines(solver, problem, t, jobs);
-            add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, samehospitals, jobs, max_h, max_t);
+            add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, samehospitals, jobs, max_h, max_t);
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
@@ -72,7 +69,6 @@ namespace implementation
                 }
             }
             objective.SetMaximization();
-
 
             solver.Solve();
             //Console.WriteLine("Solution:");
@@ -147,17 +143,6 @@ namespace implementation
             }
             Console.WriteLine();
 
-            Console.WriteLine("mat y:");
-            int[] resulting_matrix_y = new int[max_j];
-            foreach (var variable in solver.variables())
-            {
-                string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 'y')
-                {
-                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
-                }
-
-            }
             Console.WriteLine();
             Console.WriteLine("mat t:");
             int[] resulting_vector_t = new int[max_j];
@@ -262,27 +247,6 @@ namespace implementation
                 }
             }
         }
-        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, List<Job> jobs, int max_h)
-        {
-            for (int j = 0; j < jobs.Count; j++)
-            {
-                for (int k = 0; k < jobs.Count; k++)
-                {
-                    if (jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
-                    {
-                        continue;
-                    }
-
-                    //sameHospitals moet 1 zijn als beide y's hetzelfde, anders 0 (of andersom)
-                    //solver.Add((y[j] - y[k]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
-                    //solver.Add((y[k] - y[j]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]);
-                    //solver.Add(-(y[j] - j[k]) + 1 <= samehospitals[j,k]);
-                    //solver.Add((y[j] - j[k]) + 1 <= samehospitals[j,k]);
-                    //solver.Add( -1 * (y[j] - y[k]) + (max_h + 1) <= (max_h + 1) * samehospitals[j, k]);
-
-                }
-            }
-        }
 
         static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job> jobs)
         {
@@ -302,7 +266,7 @@ namespace implementation
         }
 
 
-        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
+        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
         {
             for (int j = 0; j < jobs.Count; j++)
             {

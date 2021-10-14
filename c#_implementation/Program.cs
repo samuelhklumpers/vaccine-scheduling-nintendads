@@ -35,7 +35,7 @@ namespace implementation
         {
             var solvers = new List<IOfflineSolver>(new IOfflineSolver[] {
                 //new RecursiveBruteforce(),
-                //new IntSatSolver(),
+                new IntSatSolver(),
                 new BranchAndBoundSolverOffline()
             });
 
@@ -60,7 +60,7 @@ namespace implementation
             }*/
 
 
-            var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 100.0);
+            var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 60.0);
             Console.WriteLine(res.ToString());
         }
 
