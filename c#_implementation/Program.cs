@@ -37,7 +37,7 @@ namespace implementation
             {
                 Type[] offline_solver_types = { typeof(BranchAndBoundSolverOffline), typeof(CallableSolverOffline), typeof(RecursiveBruteforce) };
                 Type[] online_solver_types = { typeof(ExampleSolverOnline) };
-                string[] offline_problem_files = { "../data/offline/from_assignment.txt" };
+                string[] offline_problem_files = { "../data/offline/backtracker.txt" };
                 string[] online_problem_files = { "../data/online/from_assignment.txt" };
 
                 run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
