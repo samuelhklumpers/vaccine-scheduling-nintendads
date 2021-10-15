@@ -32,7 +32,7 @@ def latex():
 
     fmt = "c" + xn * "|c"
 
-    print("\\begin{longtable}{" + fmt + "}")
+    print("\\begin{tabular}{" + fmt + "}")
     print(row([""] + x))
 
     for lab in y:
@@ -41,14 +41,14 @@ def latex():
 
         print("\\hline")
         print(row(out))     
-    print("\\end{longtable}")
+    print("\\end{tabular}")
 
-    print("\\begin{longtable}{r|r}")
+    print("\\begin{tabular}{r|r}")
     print("\\hline")
     for k, v in data["labels"].items():
         print(row([k, v]))
         print("\\hline")
-    print("\\end{longtable}")
+    print("\\end{tabular}")
 
 
 def run_all():
