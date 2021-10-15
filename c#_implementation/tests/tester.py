@@ -5,7 +5,43 @@ import time
 
 
 def main():
-    run_all()
+    #run_all()
+    latex()
+
+
+def latex():
+    def row(vs):
+        return " & ".join(vs) + "\\\\"
+
+    data = jload("offline.json")
+
+    y = data["solvers"]
+    x = list(data["labels"].keys())
+
+    v = data["runs"]
+
+    xn = len(x)
+
+    fmt = xn * "|c" + "|"
+
+    print("\\begin{tabular}{" + fmt + "}")
+    print(row([""] + x))
+
+    for s in y:
+        vs = v[s]
+        vals = [s] + [vs.get(i, None) for i in x]
+        out = ["-" if val is None else str(val) for val in vals]
+
+        print("\\hline")
+        print(row(out))     
+    print("\\end{tabular}")
+
+    print("\\begin{tabular}{r|r}")
+    print("\\hline")
+    for k, v in data["labels"].items():
+        print(row([k, v]))
+        print("\\hline")
+    print("\\end{tabular}")
 
 
 def run_all():
