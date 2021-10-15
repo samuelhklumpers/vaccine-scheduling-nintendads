@@ -13,35 +13,42 @@ def latex():
     def row(vs):
         return " & ".join(vs) + "\\\\"
 
+    def formatter(v):
+        if isinstance(v, float):
+            return f"{v:.1e}"
+        elif isinstance(v, str):
+            return v
+        else:
+            return "-"
+
     data = jload("offline.json")
 
-    y = data["solvers"]
-    x = list(data["labels"].keys())
+    x = data["solvers"]
+    y = list(data["labels"].keys())
 
     v = data["runs"]
 
     xn = len(x)
 
-    fmt = xn * "|c" + "|"
+    fmt = "c" + xn * "|c"
 
-    print("\\begin{tabular}{" + fmt + "}")
+    print("\\begin{longtable}{" + fmt + "}")
     print(row([""] + x))
 
-    for s in y:
-        vs = v[s]
-        vals = [s] + [vs.get(i, None) for i in x]
-        out = ["-" if val is None else str(val) for val in vals]
+    for lab in y:
+        vals = [lab] + [v[i].get(lab, None) for i in x]
+        out = [formatter(val) for val in vals]
 
         print("\\hline")
         print(row(out))     
-    print("\\end{tabular}")
+    print("\\end{longtable}")
 
-    print("\\begin{tabular}{r|r}")
+    print("\\begin{longtable}{r|r}")
     print("\\hline")
     for k, v in data["labels"].items():
         print(row([k, v]))
         print("\\hline")
-    print("\\end{tabular}")
+    print("\\end{longtable}")
 
 
 def run_all():
