@@ -6,7 +6,7 @@ using Google.OrTools.LinearSolver;
 
 namespace implementation
 {
-    class LinearProgramming
+    class LinearProgrammingILP
     {
         public static Solution Solve(OfflineProblem problem)
         {
@@ -69,7 +69,7 @@ namespace implementation
                 }
             }
             objective.SetMaximization();
-
+            solver.SetTimeLimit(1);
             solver.Solve();
             //Console.WriteLine("Solution:");
 

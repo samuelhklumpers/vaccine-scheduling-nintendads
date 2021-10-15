@@ -13,8 +13,8 @@ namespace implementation
         static void Main(string[] args)
         {
 
-            bool test = false;
-            bool benchmark = true;
+            bool test = true;
+            bool benchmark = false;
             bool validate = false;
 
             //Test();
@@ -70,7 +70,7 @@ namespace implementation
             {
                 typeof(BranchAndBoundSolverOffline),
                 //typeof(RecursiveBruteforce),
-                typeof(IntSatSolver)
+                //typeof(IntSatSolver)
             };
             Type[] online_solver_types =
             {
