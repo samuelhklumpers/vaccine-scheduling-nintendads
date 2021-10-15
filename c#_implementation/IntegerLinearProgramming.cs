@@ -6,19 +6,19 @@ using Google.OrTools.LinearSolver;
 
 namespace implementation
 {
-    class LinearProgramming2
+    class IntegerLinearProgramming
     {
         public static void Solve(OfflineProblem problem)
         {
             //TOEVOEGEN: partial filled solution meegeven voor verder in de boom.
 
-            List<Job> jobs = new List<Job>();
+            List<Job2> jobs = new List<Job2>();
 
             for (int i = 0; i < problem.patient_data.Count; i++)
             {
                 Patient patient = problem.patient_data[i];
-                Job job1 = new Job(patient, 1, i * 2);
-                Job job2 = new Job(patient, 2, i * 2 + 1);
+                Job2 job1 = new Job2(patient, 1, i * 2);
+                Job2 job2 = new Job2(patient, 2, i * 2 + 1);
 
                 jobs.Add(job1);
                 jobs.Add(job2);
@@ -58,6 +58,20 @@ namespace implementation
             add_constraint_interval_vaccines(solver, problem, t, jobs);
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, samehospitals, jobs, max_h, max_t);
             add_constraints_compare(solver, compare, y, jobs, max_h); 
+
+            //Dict binnenkrijgen van B&B met variable names en waardes
+            //dict langs en constraints toevoegen dat die variable die waarde moet hebben.
+            /*foreach (Tuple set_value in set_variables)
+            {
+                variable_string = set_value[0];
+                double value = set_value[1];
+
+                var variable = [solver.variable where solver.variable_name == variable_string];
+
+                solver.Add(variable[0] == value);
+
+
+            }*/
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
@@ -122,13 +136,16 @@ namespace implementation
             Console.WriteLine();
 
             Console.WriteLine("mat y:");
-            int[] resulting_matrix_y = new int[max_j];
+            HashSet<int> hospitals_used = new HashSet<int>();
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
                 if (data[0][0] == 'y' )
                 {
                     Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
+
+                    hospitals_used.Add((int)variable.SolutionValue());
+                    
                 }
 
             }
@@ -166,7 +183,7 @@ namespace implementation
             }
             Console.WriteLine();
 
-            //Console.WriteLine("same hospital sum: " + sameHospitalsSum.SolutionValue());
+            Console.WriteLine("Number of hospitals used: " + hospitals_used.Count());
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
@@ -234,7 +251,7 @@ namespace implementation
         }
 
 
-        static private void add_constraints_z(Solver solver, Variable[,] z, Variable[] t, List<Job> jobs, int max_t)
+        static private void add_constraints_z(Solver solver, Variable[,] z, Variable[] t, List<Job2> jobs, int max_t)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -252,7 +269,7 @@ namespace implementation
             }
         }
 
-        static private void add_constraints_compare(Solver solver, Variable[,] compare, Variable[] y, List<Job> jobs, int max_h)
+        static private void add_constraints_compare(Solver solver, Variable[,] compare, Variable[] y, List<Job2> jobs, int max_h)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -269,7 +286,7 @@ namespace implementation
                 }
             }
         }
-        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, Variable[,] compare, List<Job> jobs, int max_h)
+        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, Variable[,] compare, List<Job2> jobs, int max_h)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -290,9 +307,9 @@ namespace implementation
             }
         }
 
-        static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job> jobs)
+        static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job2> jobs)
         {
-            foreach (Job j in jobs)
+            foreach (Job2 j in jobs)
             {
                 if (j.vaccine == 1)
                 {
@@ -308,7 +325,7 @@ namespace implementation
         }
 
 
-        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
+        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job2> jobs, int h_max, int t_max)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -342,7 +359,7 @@ namespace implementation
 
 
 
-    public class Job
+    public class Job2
     {
         public Patient patient;
         public int vaccine;
@@ -350,7 +367,7 @@ namespace implementation
 
 
 
-        public Job(Patient patient, int vaccine, int id)
+        public Job2(Patient patient, int vaccine, int id)
         {
             this.patient = patient;
             this.vaccine = vaccine;
