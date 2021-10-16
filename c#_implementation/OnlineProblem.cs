@@ -4,7 +4,7 @@ namespace implementation
 {
     class OnlineProblem : IProblem
     {
-        List<Patient> patients;
+        public List<Patient> patients;
         public OnlineProblem(int p1, int p2, int g, List<Patient> patients)
         {
             this.p1 = p1;

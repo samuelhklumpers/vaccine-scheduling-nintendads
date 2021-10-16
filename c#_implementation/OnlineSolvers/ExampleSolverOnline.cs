@@ -4,9 +4,10 @@ namespace implementation
 {
     class ExampleSolverOnline : IOnlineSolver
     {
-        public void solve(OnlineProblem problem)
+        public Solution2D solve(OnlineProblem problem)
         {
             Console.WriteLine(problem.ToString());
+            return null;
         }
     }
 }

@@ -11,7 +11,48 @@ namespace implementation
         static void Main(string[] args)
         {
             //Test();
-            Benchmark();
+            //Benchmark();
+            TestOnline();
+        }
+
+        static void TestOnline()
+        {
+            ForwardMinimizeOnline f = new ForwardMinimizeOnline();
+            Console.WriteLine(f.calculateScore(new bool[3,3] {{true, true, true}, {true, true,false}, {true, false, false}})); // seems to be fine.
+
+            // Okay, how do I test it? Where are our online test_cases?
+            // I need an OnlineProblem. Make a simple one, I suppose.
+
+            List<Patient> ps = new List<Patient>();
+            ps.Add(new Patient(0, 5, 0, 5, 1, 1, 0)); // why do I have to give p1, p2, g for patient?
+            ps.Add(new Patient(10, 15, 0, 5, 1, 1, 0));
+            ps.Add(new Patient(5, 10, 0, 5, 1, 1, 0));
+            // first and second fit narrowly. Third does not.
+            OnlineProblem o = new OnlineProblem(1, 1, 0, ps);
+
+            Doses2D a = new Doses2D(1,1,1,1);
+            Doses2D b = new Doses2D(1,1,1,1);
+            bool c = a == b;
+            Console.WriteLine(c);
+
+            List<Dose2D> ds = new List<Dose2D>();
+            ds.Add(new Dose2D(0, 0));
+            ds.Add(new Dose2D(2, 0));
+            ds.Add(new Dose2D(1, 1));
+            ds.Sort((Dose2D a, Dose2D b) => a.t.CompareTo(b.t));
+            foreach(Dose2D d in ds)
+                Console.Write(d.t + ", ");
+            
+            Solution2D sol = f.solve(o);
+            // here goes nothing...
+            Console.WriteLine("NO ERRORS!");
+            foreach(Doses d in sol.doses)
+                Console.Write(d.t1 + ", "+ d.t2 + "; ");
+
+            // YOOOO. On the most simple tasks, it runs!!
+            // Now: 1. It is sub-optimal.
+            //      2. Test-cases.
+            //      3. Re-factor, etc.
         }
 
         static void Benchmark()
