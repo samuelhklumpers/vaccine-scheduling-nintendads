@@ -79,6 +79,31 @@ namespace implementation
             }
         }
 
+        public static void RandomTestOnline(IOnlineSolver[] solvers, int n, int m, bool ratio)
+        {
+
+            for (int i = 0; i < n; ++i)
+            {
+                var pOffline = TroubleMaker.RandomProblemPreset(m);
+                var p = pOffline.ForgetN();
+                var validator = new OnlineValidator(p);
+
+                var opt = -1;
+                if (ratio)
+                    opt = new IntSatSolver().solve(pOffline).machines;
+
+                foreach (var solver in solvers)
+                {
+                    Console.WriteLine("running " + solver.GetType().ToString());
+                    var sol = solver.solve(p);
+                    validator.validate(sol);
+
+                    if (ratio)
+                        Console.WriteLine($"ratio: {(double)sol.machines / opt}");
+                }
+            }
+        }
+
         // run a benchmark on the $solvers, stopping when the first solver has run for more than $stop seconds in total 
         public Benchmark BenchmarkAll(IOfflineSolver[] solvers, double stop)
         {

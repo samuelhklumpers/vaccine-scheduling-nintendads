@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class OnlineProblem : IProblem
+    public class OnlineProblem : IProblem
     {
         public List<Patient> patients;
         public OnlineProblem(int p1, int p2, int g, List<Patient> patients)
@@ -23,6 +23,11 @@ namespace implementation
                 part4 += this.patients[i].ToString() + "\n";
             }
             return part1 + part2 + part3 + part4;
+        }
+
+        public OfflineProblem CountN()
+        {
+            return new OfflineProblem(this.p1, this.p2, this.g, this.patients.Count, this.patients);
         }
     }
 }

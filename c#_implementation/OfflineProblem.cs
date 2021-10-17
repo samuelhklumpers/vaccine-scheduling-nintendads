@@ -35,5 +35,10 @@ namespace implementation
             }
             return part1 + part2 + part3 + part4 + part5;
         }
+
+        public OnlineProblem ForgetN()
+        {
+            return new OnlineProblem(this.p1, this.p2, this.g, this.patients);
+        }
     }
 }
