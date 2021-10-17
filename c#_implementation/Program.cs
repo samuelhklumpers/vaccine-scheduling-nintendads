@@ -12,7 +12,25 @@ namespace implementation
         {
             //TestOffline();
             //Benchmark();
-            TestOnline();
+            MiniTestCase();
+            // TestOnline();
+        }
+
+        static void MiniTestCase()
+        {
+            ForwardMinimizeOnline f = new ForwardMinimizeOnline();
+
+            int p1 = 2, p2 = 3, g = 0;
+            List<Patient> p = new List<Patient>();
+            p.Add(new Patient(0, 2, 0, 3, p1, p2, g));
+            p.Add(new Patient(5, 10, 0, 3, p1, p2, g));
+            OnlineProblem o = new OnlineProblem(p1, p2, g, p);
+
+            Solution2D sol = f.solve(o);
+
+            Console.WriteLine("NO ERRORS!");
+            foreach(Doses d in sol.doses)
+                Console.Write(d.t1 + ", " + d.t2 + "; ");
         }
 
         static void TestOnline()
