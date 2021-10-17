@@ -18,7 +18,7 @@ namespace implementation
         static void TestOnline()
         {
             ForwardMinimizeOnline f = new ForwardMinimizeOnline();
-            Console.WriteLine(f.calculateScore(new bool[3,3] {{true, true, true}, {true, true,false}, {true, false, false}})); // seems to be fine.
+            // Console.WriteLine(f.calculateScore(new bool[3,3] {{true, true, true}, {true, true,false}, {true, false, false}})); // seems to be fine.
 
             // Okay, how do I test it? Where are our online test_cases?
             // I need an OnlineProblem. Make a simple one, I suppose.
