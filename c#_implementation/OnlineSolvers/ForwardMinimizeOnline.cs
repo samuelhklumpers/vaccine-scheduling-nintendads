@@ -36,7 +36,7 @@ namespace implementation
         // Optimize = a bit DONE ......
         // Add the option to put only ONE in new hospital?
 
-        public Solution2D processFMO(Solution2D sol, Patient p, OnlineProblem problem)
+        public Solution2D Step(Solution2D sol, Patient p, Parameters problem)
         {
             // everything goes in here!
 
@@ -196,7 +196,7 @@ namespace implementation
             Solution2D sol = new Solution2D(0, new List<Doses2D>());
             foreach(Patient p in problem.patients) // this is the loop! Every patient...
             {
-                Solution2D new_sol = processFMO(sol, p, problem); // TODO: This should be a variable function.
+                Solution2D new_sol = Step(sol, p, problem.parameters); // TODO: This should be a variable function.
                 sol = new_sol;
             }
 

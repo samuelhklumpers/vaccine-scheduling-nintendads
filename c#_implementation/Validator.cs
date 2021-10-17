@@ -14,14 +14,36 @@ namespace implementation
         public OnlineValidator(OnlineProblem problem)
         {
             this.problem = problem;
-            this.offline = new OfflineValidator(problem.CountN());
+        }
+
+        public Solution2D validateOnline(IOnlineSolver solver, OnlineProblem problem)
+        {
+            OfflineProblem currProb = new OfflineProblem(problem.p1, problem.p2, problem.g, 0, new List<Patient>());
+
+            Solution2D currSol = new Solution2D(0, new List<Doses2D>());
+            var parameters = problem.parameters;
+
+            foreach (Patient patient in problem.patients)
+            {
+                var prevSol = currSol;
+
+                currSol = solver.Step(currSol, patient, parameters);
+                currProb.nPatients++;
+                currProb.patients.Add(patient);
+
+                new OfflineValidator(currProb).validate(currSol);
+
+                Debug.Assert(prevSol.IsSubset(currSol));
+            }
+
+            new OfflineValidator(problem.CountN()).validate(currSol); // redundant but this eases my paranoia that maybe currProb != problem.CountN()
+
+            return currSol;
         }
 
         public void validate(Solution sol)
         {
-            this.offline.validate(sol);
-            // no online checks
-            // yet..
+            new OfflineValidator(this.problem.CountN()).validate(sol);
         }
 
     }

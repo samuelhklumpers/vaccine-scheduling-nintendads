@@ -95,8 +95,8 @@ namespace implementation
                 foreach (var solver in solvers)
                 {
                     Console.WriteLine("running " + solver.GetType().ToString());
-                    var sol = solver.solve(p);
-                    validator.validate(sol);
+                    
+                    var sol = validator.validateOnline(solver, p);
 
                     if (ratio)
                         Console.WriteLine($"ratio: {(double)sol.machines / opt}");

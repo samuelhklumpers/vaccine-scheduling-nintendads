@@ -12,8 +12,8 @@ namespace implementation
         {
             //TestOffline();
             //Benchmark();
-            MiniTestCase();
-            // TestOnline();
+            //MiniTestCase();
+            TestOnline();
         }
 
         static void MiniTestCase()

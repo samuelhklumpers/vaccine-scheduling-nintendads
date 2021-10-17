@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace implementation
 {
-    class Solution
+    public class Solution
     {
         public int machines;
         public List<Doses> doses;
@@ -57,7 +57,7 @@ namespace implementation
     }
 
     // wrapper class for tuple of two timeslots
-    class Doses
+    public class Doses
     {
         public int t1;
         public int t2;
@@ -75,7 +75,7 @@ namespace implementation
     }
 
     // wrapper class for tuple of timeslot and hospital id
-    class Dose2D
+    public class Dose2D
     {
         public int t;
         public int h;
@@ -101,7 +101,7 @@ namespace implementation
     }
 
     // wrapper class for tuple of timeslot1, hospital1, timeslot2, hospital2
-    class Doses2D
+    public class Doses2D
     {
         public int t1;
         public int h1;
@@ -113,6 +113,24 @@ namespace implementation
             this.h1 = h1;
             this.t2 = t2;
             this.h2 = h2;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Doses2D other)
+            {
+                return this.t1 == other.t1
+                    && this.t2 == other.t2
+                    && this.h1 == other.h1
+                    && this.h2 == other.h2;
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Tuple.Create(t1, h1, t2, h2).GetHashCode();
         }
 
         override public string ToString()
@@ -128,13 +146,18 @@ namespace implementation
         }
     }
 
-    class Solution2D : Solution
+    public class Solution2D : Solution
     {
         public List<Doses2D> hospitals;
 
         public Solution2D(int machines, List<Doses2D> hospitals) : base(machines, hospitals.Select(x => x.Forget()).ToList())
         {
             this.hospitals = hospitals;
+        }
+
+        public bool IsSubset(Solution2D other)
+        {
+            return this.hospitals.All(x => other.hospitals.Contains(x)) && this.machines <= other.machines;
         }
 
         public override string ToString()
