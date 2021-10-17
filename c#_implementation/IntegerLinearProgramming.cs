@@ -46,7 +46,6 @@ namespace implementation
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, samehospitals, jobs, max_h, max_t); //To make sure that there are no patients planned at the same time in the same hospital.
             add_constraints_compare(solver, compare, y, jobs, max_h); //Used to set sameHospitals.
 
-            //CODE RUNS BUT RESULTS IN INFEASIBLE PROBLEM.
             foreach (var item in partial_solution)
             {
                 string variable_string = item.Key;
