@@ -37,8 +37,9 @@ namespace implementation
             {
                 Type[] offline_solver_types = { typeof(BranchAndBoundSolverOffline) };
                 Type[] online_solver_types = { };
-                string[] offline_problem_files = { "../data/offline/from_assignment.txt","../data/offline/big_numbers.txt",
-                                                    "../data/offline/three_quarters.txt", "../data/offline/backtracker.txt"};
+                //string[] offline_problem_files = { "../data/offline/from_assignment.txt","../data/offline/big_numbers.txt",
+                //                                    "../data/offline/three_quarters.txt", "../data/offline/backtracker.txt"};
+                string[] offline_problem_files = { "../data/offline/from_assignment.txt"};
                 string[] online_problem_files = { "../data/online/from_assignment.txt" };
 
                 run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);

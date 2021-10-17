@@ -29,7 +29,9 @@ namespace implementation
             //als niet integer, dan verder zoeken
             //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
             //LinearProgramming2 lp = new LinearProgramming2();
-            LinearProgramming.Solve(problem);
+            Dictionary<string, double> partial_solution = new Dictionary<string, double>();
+            partial_solution["t0"] = 4;
+            IntegerLinearProgramming.Solve(problem, partial_solution);
 
             return new Solution(0, new List<Registration>());
         }
