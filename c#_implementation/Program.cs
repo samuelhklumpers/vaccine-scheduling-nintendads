@@ -24,30 +24,36 @@ namespace implementation
             // I need an OnlineProblem. Make a simple one, I suppose.
 
             List<Patient> ps = new List<Patient>();
-            ps.Add(new Patient(0, 5, 0, 5, 1, 1, 0)); // why do I have to give p1, p2, g for patient?
-            ps.Add(new Patient(10, 15, 0, 5, 1, 1, 0));
-            ps.Add(new Patient(5, 10, 0, 5, 1, 1, 0));
-            // first and second fit narrowly. Third does not.
-            OnlineProblem o = new OnlineProblem(1, 1, 0, ps);
+            int p1 = 2, p2 = 3, g = 0;
+            ps.Add(new Patient(0, 2, 0, 3, p1, p2, g)); // why do I have to give p1, p2, g for patient?
+            ps.Add(new Patient(5, 10, 0, 3, p1, p2, g));
+            OnlineProblem o = new OnlineProblem(p1, p2, g, ps);
 
-            Doses2D a = new Doses2D(1,1,1,1);
-            Doses2D b = new Doses2D(1,1,1,1);
-            bool c = a == b;
-            Console.WriteLine(c);
+            // Doses2D a = new Doses2D(1,1,1,1);
+            // Doses2D b = new Doses2D(1,1,1,1);
+            // bool c = a == b;
+            // Console.WriteLine(c);
 
-            List<Dose2D> ds = new List<Dose2D>();
-            ds.Add(new Dose2D(0, 0));
-            ds.Add(new Dose2D(2, 0));
-            ds.Add(new Dose2D(1, 1));
-            ds.Sort((Dose2D a, Dose2D b) => a.t.CompareTo(b.t));
-            foreach(Dose2D d in ds)
-                Console.Write(d.t + ", ");
+            // List<Dose2D> ds = new List<Dose2D>();
+            // ds.Add(new Dose2D(0, 0));
+            // ds.Add(new Dose2D(2, 0));
+            // ds.Add(new Dose2D(1, 1));
+            // ds.Sort((Dose2D a, Dose2D b) => a.t.CompareTo(b.t));
+            // foreach(Dose2D d in ds)
+            //     Console.Write(d.t + ", ");
             
             Solution2D sol = f.solve(o);
             // here goes nothing...
             Console.WriteLine("NO ERRORS!");
             foreach(Doses d in sol.doses)
                 Console.Write(d.t1 + ", "+ d.t2 + "; ");
+
+
+            // to add quickly (not needing sort), and remove quickly (not traversing everything).
+            // SORTEDLIST REMOVE IS O(n) OPERATION.
+            // SORTEDLIST ADD IS O(n) OPERATION. so only prevents the sort. (at least something)
+            // I would like quick ADD, quick REMOVE, and no SORT. Write it yourself then...
+            //   to add-sort a List of Ints.
 
             // YOOOO. On the most simple tasks, it runs!!
             // Now: 1. It is sub-optimal.
