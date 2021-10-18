@@ -2,16 +2,29 @@ using System.Collections.Generic;
 
 namespace implementation
 {
+    public class Parameters
+    {
+        public int p1;
+        public int p2;
+        public int g;
+    }
+
     public class OnlineProblem : IProblem
     {
+
         public List<Patient> patients;
+        public Parameters parameters;
+
         public OnlineProblem(int p1, int p2, int g, List<Patient> patients)
         {
             this.p1 = p1;
             this.p2 = p2;
             this.g = g;
             this.patients = patients;
+
+            this.parameters = new Parameters() { p1 = p1, p2 = p2, g = g };
         }
+
         public override string ToString()
         {
             string part1 = "processing_time_first_dose: " + this.p1 + "\n";
