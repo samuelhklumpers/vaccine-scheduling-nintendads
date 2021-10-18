@@ -1,0 +1,213 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Diagnostics;
+
+namespace implementation 
+
+{
+    class BFSBnBOffline : IOfflineSolver 
+    {
+        
+        public Solution solve(OfflineProblem problem)
+        {
+            (int lower, int upper) = calcBounds(problem);
+            List<Hospital> hospitals = new List<Hospital>();
+            List<Doses2D> regs = new List<Doses2D>();
+            for (int i = 0; i < lower; i++){
+                hospitals.Add(new Hospital(hospitals.Count));
+            }
+
+            List<(int,Patient)> idPatients = new List<(int, Patient)>();
+            for (int i = 0; i < problem.patients.Count(); i++)
+            {
+                idPatients.Add((i,problem.patients[i]));
+            }
+
+            idPatients.Sort(ComparePatientAvaliability);
+            Queue<Patient> patients = new Queue<Patient>();
+            foreach ((int, Patient) ip in idPatients) { patients.Enqueue(ip.Item2); }
+
+            bool solved = false;
+            Queue<PartialSolution> partials = new Queue<PartialSolution>();
+            PartialSolution ps = new PartialSolution(hospitals, regs, patients);
+            partials.Enqueue(ps);
+            while (!solved && partials.Count > 0) 
+            {
+                (solved, ps) = BFSolve(problem, partials, upper);
+            }
+
+            List<Doses2D> res = PutBack(idPatients, ps.regs);
+
+            return new Solution2D(ps.hospitals.Count, res);
+        }
+
+        private (bool, PartialSolution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
+        {
+            
+            PartialSolution ps = partials.Dequeue();
+            Patient p = ps.patients.Dequeue();
+
+            int pmax = Math.Max(problem.p1, problem.p2);
+            
+            // Wait, but now what? Enqueue every single start time and then enqueue everu single second start time?
+            // Think so? It's effectively the same as DFS trying every start time but in different order
+
+
+            // Thoughts: 
+            //   - Enqueue every single successful start time, both first and last (for each first start time, for each second start time, enqueue... p^2)
+            //   - Add hospital if not a single start time was possible (eitehr first or second start time)
+            //   - in order to guarantee most optimal strategy, have to for each layer, for each patient, for each first start time, for each second start time, enquueue, but that's n^3 and therefore insane
+            //   - instead, preprocess by making a List<Tuple<int,Patient>> = (int id, Patient p)
+            //   - well I say preprocess but literally just keep track of the original ordering.
+            //   - then you sort this tuple list on smallest to largest interval range as that is the most limiting in planning
+            //   - do the bfs thing, and then return the solution in the original order again. ggez
+
+
+            // If not a single appointment was possible, add a hospital
+            int queueLen = partials.Count();
+            while (queueLen == partials.Count()) 
+            {
+                foreach (int first_start_time in p.start_times_first_dose)
+                {
+                    // Naively set an appointment and fill a changelog of times marked as unavailable by planning this specific appointment.
+                    // The changelog helps seperating what appointments marked which hours as unavaliable in case of overlap.
+                    (List<(int,int)> first_changelog, int[] first_appointment) = tryStartTime(ps.hospitals, first_start_time, pmax);
+                    if (first_appointment is null) { continue; }
+
+                    // Calculate the start and end of the second appointment interval by adding the various delays
+                    int begin_second = first_appointment[0] + problem.g + p.x + problem.p1;
+                    int end_second = begin_second + p.L;
+
+                    // The interval range including the starting hour itself (Enumerable.Range(start,count) will return an empty range if count is 0)
+                    // The required processing time for the second dose -1 as the starting hour itself is also used
+                    int interval_range = end_second - begin_second + 1; 
+                    int processing = problem.p2 - 1; 
+                    int[] start_times_second_dose = Enumerable.Range(begin_second, interval_range - processing).ToArray();
+                    foreach (int second_start_time in start_times_second_dose)
+                    {
+                         
+                        (List<(int, int)> second_changelog, int[] second_appointment) = tryStartTime(ps.hospitals, second_start_time, pmax);
+                        if (second_appointment is null) { continue; }
+
+                        // With a second appointment set, a registration can be generated and added to the list.
+
+                        // With these things planned in and stuff, add a deepcopied partial solution to the queue for the next layer.
+                        PartialSolution copy = ps.deepcopy();
+                        copy.regs.Add(new Doses2D(first_appointment[0], first_appointment[1], second_appointment[0], second_appointment[1]));
+
+                        if (ps.patients.Count > 0)  
+                        { 
+                            partials.Enqueue(copy); 
+                            undoChangelog(ps.hospitals, second_changelog); // Undo everything of this layer to clean it for the next layer's deepcopy
+                        }
+                        // If all patients are planned in on this branch, return true and disregard the partials queue because who cares, we found a solution
+                        else { return (true, copy); }
+                    }
+                    // Undo everything of this layer to clean it for the next layer's deepcopy
+                    undoChangelog(ps.hospitals, first_changelog);
+                }
+            // If this branch has not capped on hospitals, add a hospital.
+            // If this branch fails to plan in the next patient and has capped on hopsitals, bound the branch by not enqueueing any children of it.
+            if ( queueLen == partials.Count() && ps.hospitals.Count < upper) { ps.hospitals.Add(new Hospital(ps.hospitals.Count)); }
+            else { return (false, ps); }
+            }
+
+            return (false, ps);
+        }
+
+        private (int, int) calcBounds(OfflineProblem problem)
+        {
+            int lower = Bounds.PigeonHole(problem);
+            GreedyOffline greedy = new GreedyOffline();
+            Solution sol = greedy.solve(problem);
+            OfflineValidator val = new OfflineValidator(problem);
+            val.validate(sol);
+            return (lower, sol.machines);
+        }
+
+        private (List<(int, int)>, int[]) tryStartTime(List<Hospital> hospitals, int start_time, int processing_time)
+        {
+            foreach (Hospital h in hospitals)
+            {
+                // Try this start time in all hospitals.
+                // If available, naively plan in and track a changelog of which starting times are designated as busy as a result of this specific appointment.
+                h.busy_dict.TryGetValue(start_time, out bool already_busy);
+                if (!already_busy)
+                {
+                    List<(int, int)> changelog = new List<(int, int)>();
+                    for (int i = start_time - processing_time + 1; i < start_time + processing_time; i++) 
+                    {
+                        h.busy_dict.TryGetValue(i, out bool already_true);
+                        if (!already_true) 
+                        { 
+                            h.busy_dict[i] = true;  
+                            changelog.Add((i, h.id)); 
+                        }
+                    }
+                    return (changelog, new int[2] { start_time, h.id });
+                }
+            }
+            // All start times failed to be planned in, return a fail state
+            return (null, null);
+        }
+
+        private void undoChangelog(List<Hospital> hospitals, List<(int, int)> changelog) {
+            foreach ((int t, int h) in changelog) { hospitals[h].busy_dict[t] = false; }
+        }
+
+        private static int ComparePatientAvaliability((int,Patient) tuple1, (int,Patient) tuple2)
+        {
+            // Sort patients from least available to most available
+            Patient a = tuple1.Item2;
+            Patient b = tuple2.Item2;
+            int totalGapA = (a.d1 - a.r1) + a.L;
+            int totalGapB = (b.d1 - b.r1) + b.L;
+            return totalGapA.CompareTo(totalGapB);
+        }
+
+        private static List<Doses2D> PutBack(List<(int, Patient)> idPatients, List<Doses2D> regs)
+        {
+            // Assume algorithm solves in order of patient input.
+            // But in case that patient list is sorted, put the registrations back in original input order
+            Doses2D[] res = new Doses2D[idPatients.Count()];
+            for (int i = 0; i < idPatients.Count(); i++) 
+            {
+                res[idPatients[i].Item1] = regs[i];
+            }
+            //foreach ((int,Patient) ip in idPatients) { res[ip.Item1] = regs[ip.Item1]; }
+            return res.ToList();
+        }
+    }
+
+    class PartialSolution 
+    {
+        // Store entire problem state for breadth first search rather than depth first
+        public List<Hospital> hospitals;
+        public List<Doses2D> regs;
+        public Queue<Patient> patients;
+
+        public PartialSolution(List<Hospital> hospitals, List<Doses2D> regs, Queue<Patient> patients)
+        {
+            this.hospitals = hospitals;
+            this.regs = regs;
+            this.patients = patients;
+        }
+
+        public PartialSolution deepcopy() 
+        {
+            // For the love of god please return a deep copy
+            return new PartialSolution(this.copyHospitals(this.hospitals), new List<Doses2D>(this.regs), new Queue<Patient>(this.patients));
+        }
+
+        private List<Hospital> copyHospitals(List<Hospital> h) 
+        {
+            List<Hospital> copy = new List<Hospital>();
+            foreach (Hospital hos in h) 
+            {
+                copy.Add(new Hospital(hos.id) { busy_dict = new Dictionary<int,bool>(hos.busy_dict) });
+            }
+            return copy;
+        }
+    }
+}    
