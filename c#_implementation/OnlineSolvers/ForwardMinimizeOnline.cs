@@ -52,7 +52,7 @@ namespace implementation
             foreach(Doses2D d in sol.hospitals)
             {
                 h_max = Math.Max(d.h1, d.h2);
-                while(assignments.Count <= h_max)
+                while(assignments.Count <= h_max) // <= because h_max is an index.
                     assignments.Add(new SortedList<int, int>());
                 assignments[d.h1][d.t1] = problem.p1;
                 assignments[d.h2][d.t2] = problem.p2;
@@ -69,7 +69,7 @@ namespace implementation
             // for finding the maximum t_value.
             int max_ass = 0; // max of current assignments.
             foreach(Doses2D a in sol.hospitals)
-                if(a.t2 + problem.p2 < max_ass)
+                if(a.t2 + problem.p2 > max_ass)
                     max_ass = a.t2 + problem.p2;
             int max_pat = 0; // max of new assignment.
 
@@ -78,6 +78,10 @@ namespace implementation
             // so the last place you can put J2 = NOT the last place in L!! It is + L - p2!!
             max_pat = p.d1 + problem.g + p.x + p.L;
             
+            // foreach(Doses2D d in sol.hospitals)
+            //     Console.Write(d.t1 + "," + d.t2 + "; ");
+            // Console.WriteLine("Pat: " + max_pat);
+
             int t_max = Math.Max(max_ass, max_pat); // t_max is the maximum of both.
             if(writeline)
                 Console.WriteLine("T_max: " + t_max);
@@ -100,6 +104,16 @@ namespace implementation
 
 
             // FROM HERE,  THIS PART REMAINS UNCHANGED
+
+
+
+            // Everything works. Except... it still puts it in a new one when not needed to!
+            // Okay, I get it! It should consider all options until h_max - 1. Then, when they cannot fit
+            // both in an old one, we should consider all new ones. Not as easy at it sounds, without repeating yourself.
+            // 1. We copy paste the loop. Once for all until h_max-1, next until h_max, ONLY if none found.
+            //    we do a lot of extra work. Double loop is a lot of extra space.
+            // 2. We make the optimal extra loopS. Lots of extra space...
+
 
 
             // now, go over all possible combinations of p1,p2.
@@ -132,12 +146,10 @@ namespace implementation
 
                                     // This is the 'forward' part - check the score again given
                                     //   that this pair is added.
-                                    Dose2D new_dose1 = new Dose2D(t1, h1);
-                                    Dose2D new_dose2 = new Dose2D(t2, h2);
-                                    assignments[h1].Add(new_dose1.t, problem.p1);
-                                    assignments[h2].Add(new_dose2.t, problem.p2);
-                                    // assignments[h1].Sort((Dose2D a, Dose2D b) => a.t.CompareTo(b.t)); // really inefficient. For now, fine.
-                                    // assignments[h2].Sort((Dose2D a, Dose2D b) => a.t.CompareTo(b.t));
+                                    assignments[h1].Add(t1, problem.p1);
+                                    assignments[h2].Add(t2, problem.p2);
+                                    // automatically sorted.
+
                                     // sorting is needed for assigning scores to a row (assignScoresRow)
                                     //   that is the most efficient way of calculating it, rather (given an efficient sort).
 
@@ -161,8 +173,8 @@ namespace implementation
 
 
                                     // now throw them out again (the 'backward' or 'undo' phase), and re-calculate the rows back to old.
-                                    assignments[h1].Remove(new_dose1.t);
-                                    assignments[h2].Remove(new_dose2.t);
+                                    assignments[h1].Remove(t1);
+                                    assignments[h2].Remove(t2);
                                     assignScoresRow(ref scoresP1, assignments, h1, problem.p1);
                                     assignScoresRow(ref scoresP1, assignments, h2, problem.p1);
                                     assignScoresRow(ref scoresP2, assignments, h1, problem.p2);
@@ -185,7 +197,16 @@ namespace implementation
             sol.hospitals.Add(best_dose);
 
 
-            // AHHH. I am not adding them correctly. I need to re- and re-make a new SOLUTION2D!
+            h_max = 0;
+            foreach(Doses2D d in sol.hospitals)
+            {
+                int max_d = Math.Max(d.h1, d.h2);
+                if(max_d > h_max)
+                    h_max = max_d;
+            }
+            h_max++; // because we check INDEXES - those are always one lower than the count!
+            
+            // AHHH. You need to re- and re-make new SOLUTION2D's!
             Solution2D new_sol = new Solution2D(h_max, sol.hospitals);
             return new_sol;
         }
@@ -196,7 +217,7 @@ namespace implementation
             Solution2D sol = new Solution2D(0, new List<Doses2D>());
             foreach(Patient p in problem.patients) // this is the loop! Every patient...
             {
-                Solution2D new_sol = processFMO(sol, p, problem); // TODO: This should be a variable function.
+                Solution2D new_sol = processFMO(sol, p, problem);
                 sol = new_sol;
             }
 
@@ -257,7 +278,13 @@ namespace implementation
                 int currentT = ass_times[a],   currentP = ass_ps[a];
                 int nextT    = ass_times[a+1];
                 for (t = currentT + currentP; t <= nextT - p; t++)
+                // {
+                    // if(t >= scores.GetLength(1))
+                    // {
+                    //     Console.WriteLine("Length: {0}; NextT: {1}; P: {2}", scores.GetLength(1), nextT, p);
+                    // }
                     scores[h,t] = true;
+                // }
             }
             
         }

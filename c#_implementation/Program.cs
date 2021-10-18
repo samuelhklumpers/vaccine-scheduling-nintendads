@@ -12,8 +12,8 @@ namespace implementation
         {
             //TestOffline();
             //Benchmark();
-            MiniTestCase();
-            // TestOnline();
+            // MiniTestCase();
+            TestOnline();
         }
 
         static void MiniTestCase()
@@ -36,7 +36,6 @@ namespace implementation
         static void TestOnline()
         {
             ForwardMinimizeOnline f = new ForwardMinimizeOnline();
-
 
             var solvers = new List<IOnlineSolver>(new IOnlineSolver[] {
                 new ForwardMinimizeOnline()
