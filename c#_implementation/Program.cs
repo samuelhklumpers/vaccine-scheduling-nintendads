@@ -13,7 +13,20 @@ namespace implementation
             //TestOffline();
             //Benchmark();
             //MiniTestCase();
-            TestOnline();
+            //TestOnline();
+            Compete();
+        }
+
+        static void Compete()
+        {
+            ForwardMinimizeOnline solver = new ForwardMinimizeOnline();
+
+            var (problem, alg) = SimpleAdversary.Triple(solver);
+            var opt = new IntSatSolver().solve(problem.CountN());
+
+            Console.WriteLine($"alg: {alg.machines}");
+            Console.WriteLine($"opt: {opt.machines}");
+            Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
         }
 
         static void MiniTestCase()
