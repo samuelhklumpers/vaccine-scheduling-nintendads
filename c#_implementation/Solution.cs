@@ -23,9 +23,9 @@ namespace implementation
 
             for (int i = 0; i < this.doses.Count; i++)
             {
-                    part2 += this.doses[i].ToString() + "\n";
+                part2 += this.doses[i].ToString() + "\n";
             }
-            
+
             return part1 + part2;
         }
 
@@ -123,7 +123,8 @@ namespace implementation
         }
 
         // forget the hospitals
-        public Doses Forget() {
+        public Doses Forget()
+        {
             return new Doses(this.t1, this.t2);
         }
     }

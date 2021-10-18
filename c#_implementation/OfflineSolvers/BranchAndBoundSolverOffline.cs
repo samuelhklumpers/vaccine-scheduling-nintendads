@@ -5,13 +5,27 @@ using System.Diagnostics;
 
 namespace implementation
 {
-    class RecursiveBruteforce : IOfflineSolver
+    class BranchAndBoundSolverOffline : IOfflineSolver
     {
+
         public Solution solve(OfflineProblem problem)
         {
+            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing/ heuristic --> of numPatients, stuk sneller
+            // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
+            //als niet integer, dan verder zoeken
+            //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
+            Console.WriteLine(LinearProgrammingLP.Solve(problem));
+            return LinearProgrammingILP.Solve(problem);
+        }
+
+        public Solution solve2(OfflineProblem problem) 
+        {
+            (int lower, int upper) = calcBounds(problem);
             Stack<Doses2D> regs = new Stack<Doses2D>();
             List<Hospital> hospitals = new List<Hospital>();
-            hospitals.Add(new Hospital(hospitals.Count));
+            for (int i = 0; i < lower; i++){
+                hospitals.Add(new Hospital(hospitals.Count));
+            }
 
             Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patients));
 
@@ -19,15 +33,17 @@ namespace implementation
             while (!solved)
             {
                 hospitals.Add(new Hospital(hospitals.Count));
-                if (hospitals.Count > problem.nPatients)
+                if (hospitals.Count > upper)
                 {
-                    throw new Exception($"More hospitals ({hospitals.Count}) than patients ({problem.nPatients}) generated.");
+                    throw new Exception($"More hospitals ({hospitals.Count}) than upper bound ({upper}) generated.");
                 }
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
             return new Solution2D(hospitals.Count, deleteMeReverseStack(regs).ToList());
         }
+
+
         private bool solveR(OfflineProblem problem, List<Hospital> hospitals, Stack<Doses2D> regs, Stack<Patient> patients, Patient p)
         {
             // After each successful try of first- and second appointment, recurse to the next patient.
@@ -126,6 +142,17 @@ namespace implementation
                 tmp.Push(input.Pop());
             }
             return tmp;
+        }
+        
+        private (int, int) calcBounds(OfflineProblem problem)
+        {
+            // Calculate lower and upper bound of machines with pigeonhole and greedy planning
+            int lower = Bounds.PigeonHole(problem);
+            GreedyOffline greedy = new GreedyOffline();
+            Solution sol = greedy.solve(problem);
+            OfflineValidator val = new OfflineValidator(problem);
+            val.validate(sol);
+            return (lower, sol.machines);
         }
     }
 }

@@ -8,7 +8,6 @@ namespace implementation
     class OfflineValidator
     {
         public OfflineProblem problem;
-        public Solution solution;
 
         public OfflineValidator(OfflineProblem problem)
         {
@@ -23,7 +22,8 @@ namespace implementation
             assertFeasible(sol);
         }
 
-        public void assertSameShape(Solution sol) {
+        public void assertSameShape(Solution sol)
+        {
             // assert that the solution forgets no patients
             Debug.Assert(this.problem.nPatients == sol.doses.Count);
         }
@@ -70,7 +70,8 @@ namespace implementation
                     --curr;
                 }
 
-                if (curr > max) {
+                if (curr > max)
+                {
                     max = curr;
                 }
             }
@@ -78,7 +79,8 @@ namespace implementation
             Debug.Assert(max == sol.machines);
         }
 
-        public void assertFeasible(Solution sol) {
+        public void assertFeasible(Solution sol)
+        {
             // assert that the solution is feasible
             var p1 = problem.p1;
             var p2 = problem.p2;
@@ -90,7 +92,7 @@ namespace implementation
 
                 Debug.Assert(r1 <= t1);
                 Debug.Assert(t1 <= d1 - p1 + 1);
-                
+
                 var r2 = t1 + p1 + x + g;
                 Debug.Assert(r2 <= t2);
                 Debug.Assert(t2 <= r2 + L - p2 + 1);
@@ -116,11 +118,12 @@ namespace implementation
                 sameHospitals[reg.h2].Add((reg.t2, false));
             }
 
-            for (int h = 0; h < this.solution.machines; h++){
+            for (int h = 0; h < sol.machines; h++)
+            {
                 sameHospitals[h].Sort();
             }
 
-            for (int h = 0; h < this.solution.machines; h++)
+            for (int h = 0; h < sol.machines; h++)
             {
                 if (sameHospitals[h].Count > 1)
                 {
@@ -148,7 +151,7 @@ namespace implementation
                 }
             }
         }
-        
+
         /*
         public void validate()
         {

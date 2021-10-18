@@ -24,7 +24,8 @@ namespace implementation
                 int m = (low + high) / 2;
                 var res = Satisfy(m, p1, p2, g, ps);
 
-                if (res != null) {
+                if (res != null)
+                {
                     success = res;
                     high = m;
                 }
