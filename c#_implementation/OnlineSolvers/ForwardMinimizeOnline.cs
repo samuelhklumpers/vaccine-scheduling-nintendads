@@ -123,67 +123,76 @@ namespace implementation
             // only when no assignment could be done, will this remain, and thus be placed.
             // Doses2D best_dose = new Doses2D(p.r1, h_max, p.r1 + problem.p1 + problem.g + p.x, h_max);
 
-            Doses2D best_dose = new Doses2D(-1, -1, -1, -1);
-            double best_score = -1; // automatically overwritten by any.
-
+            // first consider all the options within the existing hospitals - h_max - 1
+            List<Doses2D> possibleComb = new List<Doses2D>();
             for (int t1 = p.r1; t1 <= p.d1 - problem.p1 + 1; t1++)
-            {
                 // check whether can be placed in ANY hospital.
-                for (int h1 = 0; h1 < h_max; h1++)
-                {
+                for (int h1 = 0; h1 < h_max - 1; h1++)
                     // if can be placed there.
                     // luckily for us, we have the 'scores' list to tell us whether we can place there!
                     if(scoresP1[h1,t1])
-                    {
                         // for every placement of the second jab
                         for (int t2 = t1 + problem.p1 + problem.g + p.x; t2 <= t1 + problem.p1 + problem.g + p.x + p.L - problem.p2; t2++)
-                        {
-                            for (int h2 = 0; h2 < h_max; h2++)
-                            {
+                            for (int h2 = 0; h2 < h_max - 1; h2++)
                                 if(scoresP2[h2,t2])
-                                {
-                                    // we found a succesful placement for Jab1 and Jab2.
+                                    possibleComb.Add(new Doses2D(t1, h1, t2, h2));
+            // after those, the ones with a new hospital (substitute h1, respective h2, with h_max - 1)
+            for (int t1 = p.r1; t1 <= p.d1 - problem.p1 + 1; t1++)
+                if(scoresP1[h_max - 1,t1])
+                    for (int t2 = t1 + problem.p1 + problem.g + p.x; t2 <= t1 + problem.p1 + problem.g + p.x + p.L - problem.p2; t2++)
+                        for (int h2 = 0; h2 < h_max - 1; h2++)
+                            if(scoresP2[h2,t2])
+                                possibleComb.Add(new Doses2D(t1, h_max - 1, t2, h2));
+            for (int t1 = p.r1; t1 <= p.d1 - problem.p1 + 1; t1++)
+                for (int h1 = 0; h1 < h_max; h1++) // ONLY ONE NOT -1. SUCH THAT LAST CASE - BOTH IN NEW H - IS ALSO CONSIDERED!
+                    if(scoresP1[h1,t1])
+                        for (int t2 = t1 + problem.p1 + problem.g + p.x; t2 <= t1 + problem.p1 + problem.g + p.x + p.L - problem.p2; t2++)
+                            if(scoresP2[h_max - 1,t2])
+                                possibleComb.Add(new Doses2D(t1, h1, t2, h_max - 1));
+            // Together, these sum all the possibilities. However, all the ones using a new h are pushed to the back.
+            // This makes sure the other h's have priority if they happen to have the same score.
 
-                                    // This is the 'forward' part - check the score again given
-                                    //   that this pair is added.
-                                    assignments[h1].Add(t1, problem.p1);
-                                    assignments[h2].Add(t2, problem.p2);
-                                    // automatically sorted.
+            Doses2D best_dose = new Doses2D(-1, -1, -1, -1);
+            double best_score = -1; // automatically overwritten by any.
+            foreach(Doses2D d in possibleComb)
+            {
+                // we found a succesful placement for Jab1 and Jab2.
 
-                                    // sorting is needed for assigning scores to a row (assignScoresRow)
-                                    //   that is the most efficient way of calculating it, rather (given an efficient sort).
+                // This is the 'forward' part - check the score again given
+                //   that this pair is added.
+                assignments[d.h1].Add(d.t1, problem.p1);
+                assignments[d.h2].Add(d.t2, problem.p2);
+                // automatically sorted.
 
-                                    // do your calculations again, but only for the changed hospital(s).
-                                    assignScoresRow(ref scoresP1, assignments, h1, problem.p1);
-                                    assignScoresRow(ref scoresP1, assignments, h2, problem.p1);
-                                    assignScoresRow(ref scoresP2, assignments, h1, problem.p2);
-                                    assignScoresRow(ref scoresP2, assignments, h2, problem.p2);
+                // sorting is needed for assigning scores to a row (assignScoresRow)
+                //   that is the most efficient way of calculating it, rather (given an efficient sort).
 
-                                    // calulate the new root = final score!
-                                    // check whether this is larger than the largest until now. If so, keep.
-                                    double new_score = calculateScore(scoresP1) + calculateScore(scoresP2);
-                                    if(new_score > best_score)
-                                    {
-                                        best_score = new_score;
-                                        best_dose = new Doses2D(t1, h1, t2, h2);
-                                    }
+                // do your calculations again, but only for the changed hospital(s).
+                assignScoresRow(ref scoresP1, assignments, d.h1, problem.p1);
+                assignScoresRow(ref scoresP1, assignments, d.h2, problem.p1);
+                assignScoresRow(ref scoresP2, assignments, d.h1, problem.p2);
+                assignScoresRow(ref scoresP2, assignments, d.h2, problem.p2);
 
-                                    if(writeline)
-                                        Console.WriteLine("Succesful pair found: {0} at h {1}, {2} at h {3}: SCORE = {4}..", t1, h1, t2, h2, new_score);
-
-
-                                    // now throw them out again (the 'backward' or 'undo' phase), and re-calculate the rows back to old.
-                                    assignments[h1].Remove(t1);
-                                    assignments[h2].Remove(t2);
-                                    assignScoresRow(ref scoresP1, assignments, h1, problem.p1);
-                                    assignScoresRow(ref scoresP1, assignments, h2, problem.p1);
-                                    assignScoresRow(ref scoresP2, assignments, h1, problem.p2);
-                                    assignScoresRow(ref scoresP2, assignments, h2, problem.p2);
-                                }
-                            }
-                        }
-                    }
+                // calulate the new root = final score!
+                // check whether this is larger than the largest until now. If so, keep.
+                double new_score = calculateScore(scoresP1) + calculateScore(scoresP2);
+                if(new_score > best_score)
+                {
+                    best_score = new_score;
+                    best_dose = new Doses2D(d.t1, d.h1, d.t2, d.h2);
                 }
+
+                if(writeline)
+                    Console.WriteLine("Succesful pair found: {0} at h {1}, {2} at h {3}: SCORE = {4}..", d.t1, d.h1, d.t2, d.h2, new_score);
+
+
+                // now throw them out again (the 'backward' or 'undo' phase), and re-calculate the rows back to old.
+                assignments[d.h1].Remove(d.t1);
+                assignments[d.h2].Remove(d.t2);
+                assignScoresRow(ref scoresP1, assignments, d.h1, problem.p1);
+                assignScoresRow(ref scoresP1, assignments, d.h2, problem.p1);
+                assignScoresRow(ref scoresP2, assignments, d.h1, problem.p2);
+                assignScoresRow(ref scoresP2, assignments, d.h2, problem.p2);
             }
             // OLD: if no possible combination of assignments... add a new hospital.
             // the default 'best_score' was initiated to be placed in a new hospital, so we don't
@@ -265,13 +274,7 @@ namespace implementation
                 int currentT = ass_times[a],   currentP = ass_ps[a];
                 int nextT    = ass_times[a+1];
                 for (t = currentT + currentP; t <= nextT - p; t++)
-                // {
-                    // if(t >= scores.GetLength(1))
-                    // {
-                    //     Console.WriteLine("Length: {0}; NextT: {1}; P: {2}", scores.GetLength(1), nextT, p);
-                    // }
                     scores[h,t] = true;
-                // }
             }
             
         }
