@@ -20,13 +20,13 @@ namespace implementation
 
 			var t1 = sol.hospitals[0].t1;
 
-			problem.patients.Add(new Patient(0, 1, t1, 2, 2, 1, 0));
-			sol = solver.Step(sol, problem.patients[0], parameters);
+			problem.patients.Add(new Patient(0, 1, t1 - 2, 2, 2, 1, 0));
+			sol = solver.Step(sol, problem.patients[1], parameters);
 
 			var t2 = sol.hospitals[1].t2;
 
-			problem.patients.Add(new Patient(2, 3, t2 - 2, 1, 2, 1, 0));
-			sol = solver.Step(sol, problem.patients[0], parameters);
+			problem.patients.Add(new Patient(2, 3, t2 - 4, 1, 2, 1, 0));
+			sol = solver.Step(sol, problem.patients[2], parameters);
 
 			new OnlineValidator(problem).validate(sol);
 

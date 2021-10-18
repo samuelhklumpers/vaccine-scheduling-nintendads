@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Collections.Generic;
+using System;
+using System.Linq;
 
 namespace implementation
 {
@@ -21,19 +23,17 @@ namespace implementation
             this.nPatients = n; Debug.Assert(patients.Count == n); // why is this not just patients.Count?
             this.patients = patients;
         }
-        
+
+
         public override string ToString()
         {
-            string part1 = "processing_time_first_dose: " + this.p1 + "\n";
-            string part2 = "processing_time_second_dose: " + this.p2 + "\n";
-            string part3 = "gap: " + this.g + "\n";
-            string part4 = "number_of_patients: " + this.nPatients + "\n";
-            string part5 = "";
-            for (int i = 0; i < this.patients.Count; i++)
-            {
-                part5 += this.patients[i].ToString() + "\n";
-            }
-            return part1 + part2 + part3 + part4 + part5;
+            var ret = String.Join(' ', new int[] { p1, p2, g }.Select<int, string>(x => x.ToString())) + "\n";
+
+            ret += String.Join("\n", patients.Select<Patient, String>(x => x.ToString())) + "\n";
+
+            ret += this.nPatients.ToString() + "\n";
+
+            return ret;
         }
 
         public OnlineProblem ForgetN()

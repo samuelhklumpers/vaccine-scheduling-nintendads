@@ -31,19 +31,20 @@ namespace implementation
                 currProb.nPatients++;
                 currProb.patients.Add(patient);
 
-                new OfflineValidator(currProb).validate(currSol);
+                new OfflineValidator(currProb).validate(currSol, false);
 
                 Debug.Assert(prevSol.IsSubset(currSol));
             }
 
-            new OfflineValidator(problem.CountN()).validate(currSol); // redundant but this eases my paranoia that maybe currProb != problem.CountN()
+            new OfflineValidator(problem.CountN()).validate(currSol, false); // redundant but this eases my paranoia that maybe currProb != problem.CountN()
+            solver.Reset();
 
             return currSol;
         }
 
         public void validate(Solution sol)
         {
-            new OfflineValidator(this.problem.CountN()).validate(sol);
+            new OfflineValidator(this.problem.CountN()).validate(sol, false);
         }
 
     }
@@ -61,8 +62,18 @@ namespace implementation
         {
             // note that the hospital layout, even if incorrect, isn't really relevant
             assertSameShape(sol);
-            assertMachines(sol);
             assertFeasible(sol);
+            assertMachines(sol);
+        }
+
+        public void validate(Solution sol, bool machines)
+        {
+            // note that the hospital layout, even if incorrect, isn't really relevant
+            assertSameShape(sol);
+            assertFeasible(sol);
+
+            if (machines)
+                assertMachines(sol);
         }
 
         public void assertSameShape(Solution sol) {

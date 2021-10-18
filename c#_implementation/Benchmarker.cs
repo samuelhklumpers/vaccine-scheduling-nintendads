@@ -10,7 +10,11 @@ namespace implementation
     {
         // generate a random problem, with $n patients, and parameters within the given bounds
         public static OfflineProblem RandomProblem(int n, (int, int) p1B, (int, int) p2B, (int, int) gB, (int, int) rShiftB, (int, int) dd1B, (int, int) dd2B, (int, int) xB) {
-            var rand = new Random();
+            int seed = new Random().Next();
+
+            Console.WriteLine($"seed: {seed}");
+
+            var rand = new Random(seed);
             
             var p1 = rand.Next(p1B.Item1, p1B.Item2);
             var p2 = rand.Next(p2B.Item1, p2B.Item2);
@@ -75,7 +79,10 @@ namespace implementation
                 foreach (var solver in solvers) {
                     var sol = solver.solve(p);
                     validator.validate(sol);
+                    Console.WriteLine("----");
                 }
+
+                Console.WriteLine("====");
             }
         }
 
@@ -100,7 +107,12 @@ namespace implementation
 
                     if (ratio)
                         Console.WriteLine($"ratio: {(double)sol.machines / opt}");
+
+                    Console.WriteLine("----");
                 }
+
+
+                Console.WriteLine("====");
             }
         }
 

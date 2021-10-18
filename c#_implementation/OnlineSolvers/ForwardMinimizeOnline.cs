@@ -211,19 +211,6 @@ namespace implementation
             return new_sol;
         }
 
-        public Solution2D solve(OnlineProblem problem)
-        {
-
-            Solution2D sol = new Solution2D(0, new List<Doses2D>());
-            foreach(Patient p in problem.patients) // this is the loop! Every patient...
-            {
-                Solution2D new_sol = Step(sol, p, problem.parameters); // TODO: This should be a variable function.
-                sol = new_sol;
-            }
-
-            return sol;
-        }
-
         public double calculateScore(bool[,] scores)
         {
             double v = 0;

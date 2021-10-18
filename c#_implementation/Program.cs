@@ -13,23 +13,32 @@ namespace implementation
             //TestOffline();
             //Benchmark();
             //MiniTestCase();
-            //TestOnline();
+            TestOnline();
             Compete();
         }
 
         static void Compete()
         {
-            ForwardMinimizeOnline solver = new ForwardMinimizeOnline();
+            Console.WriteLine("adversary...");
+
+            IOnlineSolver solver = new GreedyOnline();
 
             var (problem, alg) = SimpleAdversary.Triple(solver);
             var opt = new IntSatSolver().solve(problem.CountN());
+
+            //Console.WriteLine(problem);
+            //Console.WriteLine(opt);
+            //Console.WriteLine(alg);
+
+            new OfflineValidator(problem.CountN()).validate(opt);
+            new OnlineValidator(problem).validate(alg);
 
             Console.WriteLine($"alg: {alg.machines}");
             Console.WriteLine($"opt: {opt.machines}");
             Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
         }
 
-        static void MiniTestCase()
+        /*static void MiniTestCase()
         {
             ForwardMinimizeOnline f = new ForwardMinimizeOnline();
 
@@ -44,13 +53,13 @@ namespace implementation
             Console.WriteLine("NO ERRORS!");
             foreach(Doses d in sol.doses)
                 Console.Write(d.t1 + ", " + d.t2 + "; ");
-        }
+        }*/
 
         static void TestOnline()
         {
-            ForwardMinimizeOnline f = new ForwardMinimizeOnline();
 
             var solvers = new List<IOnlineSolver>(new IOnlineSolver[] {
+                new GreedyOnline(),
                 new ForwardMinimizeOnline()
             });
 
@@ -80,7 +89,7 @@ namespace implementation
         static void TestOffline()
         {
             var solvers = new List<IOfflineSolver>(new IOfflineSolver[] {
-                new RecursiveBruteforce(), // TODO this one fails
+                //new RecursiveBruteforce(), // TODO this one fails
                 new IntSatSolver(),
             });
 

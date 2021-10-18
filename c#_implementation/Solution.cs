@@ -32,20 +32,25 @@ namespace implementation
         public Solution2D To2D(IProblem problem)
         {
             int[] hospitals = new int[this.machines];
+            for (int i = 0; i < hospitals.Count(); ++i)
+            {
+                hospitals[i] = -1;
+            }
 
-            var regs2 = this.doses.Select<Doses, (Dose2D, Dose2D)>(Dose2D.Split);
+            var regs2 = this.doses.Select<Doses, (Dose2D, Dose2D)>(Dose2D.Split).ToList();
 
-            var appointments = regs2.SelectMany<(Dose2D, Dose2D), Dose2D>(x => new Dose2D[] { x.Item1, x.Item2 });
-            appointments = appointments.OrderBy(x => x.t);
+            var appointments = regs2.SelectMany<(Dose2D, Dose2D), (Dose2D, int)>(x => new (Dose2D, int)[] { (x.Item1, problem.p1), (x.Item2, problem.p2) });
+            appointments = appointments.OrderBy(x => x.Item1.t);
 
             foreach (var app in appointments)
             {
                 for (int j = 0; j < hospitals.Count(); ++j) // TODO right now N * H, could probably be N * log(H) if we sort hospitals
                 {
-                    if (hospitals[j] < app.t)
+                    if (hospitals[j] < app.Item1.t)
                     {
-                        app.h = j;
-                        hospitals[j] = app.t + problem.p1;
+                        app.Item1.h = j;
+                        hospitals[j] = app.Item1.t + app.Item2 - 1;
+                        break;
                     }
                 }
             }
@@ -88,7 +93,7 @@ namespace implementation
 
         public static (Dose2D, Dose2D) Split(Doses r)
         {
-            return (new Dose2D(r.t1, 0), new Dose2D(r.t2, 0));
+            return (new Dose2D(r.t1, -1), new Dose2D(r.t2, -1));
         }
 
         public static Doses2D To2D((Dose2D, Dose2D) doses)
