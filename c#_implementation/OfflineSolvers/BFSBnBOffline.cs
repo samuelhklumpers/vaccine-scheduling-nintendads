@@ -11,23 +11,32 @@ namespace implementation
         
         public Solution solve(OfflineProblem problem)
         {
+            // Obtain lower and upper bounds with Pigeonhole and Greedy
             (int lower, int upper) = calcBounds(problem);
+
+            // Pre-emptively add lower amount of hospitals
             List<Hospital> hospitals = new List<Hospital>();
             List<Doses2D> regs = new List<Doses2D>();
-            for (int i = 0; i < lower; i++){
+            for (int i = 0; i < lower; i++)
+            { 
                 hospitals.Add(new Hospital(hospitals.Count));
             }
 
+            // Sort patients by ascending availability
             List<(int,Patient)> idPatients = new List<(int, Patient)>();
             for (int i = 0; i < problem.patients.Count(); i++)
             {
                 idPatients.Add((i,problem.patients[i]));
             }
-
             idPatients.Sort(ComparePatientAvaliability);
             Queue<Patient> patients = new Queue<Patient>();
-            foreach ((int, Patient) ip in idPatients) { patients.Enqueue(ip.Item2); }
+            foreach ((int, Patient) ip in idPatients) 
+            { 
+                patients.Enqueue(ip.Item2); 
+            }
 
+            // Create the first PartialSolution and put it in the BFS queue
+            // Keep planning partial solutions until a solution is found, branches now manage their own hospital count and bound accordingly
             bool solved = false;
             Queue<PartialSolution> partials = new Queue<PartialSolution>();
             PartialSolution ps = new PartialSolution(hospitals, regs, patients);
@@ -37,6 +46,7 @@ namespace implementation
                 (solved, ps) = BFSolve(problem, partials, upper);
             }
 
+            // Results are still ordered by ascending availability, put them back in input order
             List<Doses2D> res = PutBack(idPatients, ps.regs);
 
             return new Solution2D(ps.hospitals.Count, res);
@@ -44,27 +54,15 @@ namespace implementation
 
         private (bool, PartialSolution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
         {
-            
+            // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
             Patient p = ps.patients.Dequeue();
 
+            // Pretend all appointments are the one that takes the longest and keep hospitals empty accordingly
             int pmax = Math.Max(problem.p1, problem.p2);
             
-            // Wait, but now what? Enqueue every single start time and then enqueue everu single second start time?
-            // Think so? It's effectively the same as DFS trying every start time but in different order
-
-
-            // Thoughts: 
-            //   - Enqueue every single successful start time, both first and last (for each first start time, for each second start time, enqueue... p^2)
-            //   - Add hospital if not a single start time was possible (eitehr first or second start time)
-            //   - in order to guarantee most optimal strategy, have to for each layer, for each patient, for each first start time, for each second start time, enquueue, but that's n^3 and therefore insane
-            //   - instead, preprocess by making a List<Tuple<int,Patient>> = (int id, Patient p)
-            //   - well I say preprocess but literally just keep track of the original ordering.
-            //   - then you sort this tuple list on smallest to largest interval range as that is the most limiting in planning
-            //   - do the bfs thing, and then return the solution in the original order again. ggez
-
-
-            // If not a single appointment was possible, add a hospital
+            // If not a single appointment was possible, add a hospital. 
+            // So keep track of the partials count at this moment
             int queueLen = partials.Count();
             while (queueLen == partials.Count()) 
             {
@@ -91,20 +89,21 @@ namespace implementation
                         if (second_appointment is null) { continue; }
 
                         // With a second appointment set, a registration can be generated and added to the list.
-
-                        // With these things planned in and stuff, add a deepcopied partial solution to the queue for the next layer.
+                        // Deepcopy the current partial solution and plan in this appointment in that copy.
                         PartialSolution copy = ps.deepcopy();
                         copy.regs.Add(new Doses2D(first_appointment[0], first_appointment[1], second_appointment[0], second_appointment[1]));
 
                         if (ps.patients.Count > 0)  
                         { 
+                            // Algorithm isn't done, enqueue the copy.
+                            // Undo everything of this layer to clean it for the next deepcopy
                             partials.Enqueue(copy); 
-                            undoChangelog(ps.hospitals, second_changelog); // Undo everything of this layer to clean it for the next layer's deepcopy
+                            undoChangelog(ps.hospitals, second_changelog); 
                         }
-                        // If all patients are planned in on this branch, return true and disregard the partials queue because who cares, we found a solution
+                        // If all patients are planned in on this branch, return true and disregard the queue because who cares, we found a solution
                         else { return (true, copy); }
                     }
-                    // Undo everything of this layer to clean it for the next layer's deepcopy
+                    // Undo everything of this layer to clean it for the next deepcopy
                     undoChangelog(ps.hospitals, first_changelog);
                 }
             // If this branch has not capped on hospitals, add a hospital.
@@ -118,6 +117,7 @@ namespace implementation
 
         private (int, int) calcBounds(OfflineProblem problem)
         {
+            // Lower pigeonhole, for higher literally just run greedy on it and take its machine count
             int lower = Bounds.PigeonHole(problem);
             GreedyOffline greedy = new GreedyOffline();
             Solution sol = greedy.solve(problem);
@@ -175,14 +175,13 @@ namespace implementation
             {
                 res[idPatients[i].Item1] = regs[i];
             }
-            //foreach ((int,Patient) ip in idPatients) { res[ip.Item1] = regs[ip.Item1]; }
             return res.ToList();
         }
     }
 
     class PartialSolution 
     {
-        // Store entire problem state for breadth first search rather than depth first
+        // Store problem state for breadth first search rather than depth first
         public List<Hospital> hospitals;
         public List<Doses2D> regs;
         public Queue<Patient> patients;
@@ -196,12 +195,13 @@ namespace implementation
 
         public PartialSolution deepcopy() 
         {
-            // For the love of god please return a deep copy
+            // Need to return deep copies for the sake of BFS
             return new PartialSolution(this.copyHospitals(this.hospitals), new List<Doses2D>(this.regs), new Queue<Patient>(this.patients));
         }
 
         private List<Hospital> copyHospitals(List<Hospital> h) 
         {
+            // Each dictionary also needs to be a deep copy, otherwise multiple hospitals will point to the same dictionary
             List<Hospital> copy = new List<Hospital>();
             foreach (Hospital hos in h) 
             {
