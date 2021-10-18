@@ -15,7 +15,7 @@ def latex():
 
     def formatter(v):
         if isinstance(v, float):
-            return f"{v:.1e}"
+            return f"{v:.2f}"
         elif isinstance(v, str):
             return v
         else:
