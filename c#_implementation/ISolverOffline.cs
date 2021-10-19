@@ -1,24 +1,24 @@
 namespace implementation
 {
-    interface ISolverOffline
+    interface IOfflineSolver
     {
         Solution solve(OfflineProblem problem);
     }
-    interface IHospitalSolverOffline
+    interface IOffline2DSolver
     {
-        HospitalSolution solve(OfflineProblem problem);
+        Solution2D solve(OfflineProblem problem);
     }
 
-    class Hospitalizer : IHospitalSolverOffline
+    class Wrapper2D : IOffline2DSolver
     {
-        public ISolverOffline solver;
+        public IOfflineSolver solver;
 
-        public Hospitalizer(ISolverOffline solver) {
+        public Wrapper2D(IOfflineSolver solver) {
             this.solver = solver;
         }
 
-        public HospitalSolution solve(OfflineProblem problem) {
-            return this.solver.solve(problem).AddHospitals(problem);
+        public Solution2D solve(OfflineProblem problem) {
+            return this.solver.solve(problem).To2D(problem);
         }
     }
 }

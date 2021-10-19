@@ -8,24 +8,23 @@ namespace implementation
 {
     class IntegerLinearProgramming
     {
-        public static void Solve(OfflineProblem problem, Dictionary<string, double> partial_solution)
+        public static Solution Solve(OfflineProblem problem, Dictionary<string, double> partial_solution)
         {
-            List<Job2> jobs = new List<Job2>();
+            List<Job> jobs = new List<Job>();
 
             //Create the jobs, each job is one vaccine. 
-            for (int i = 0; i < problem.patient_data.Count; i++)
+            for (int i = 0; i < problem.patients.Count; i++)
             {
-                Patient patient = problem.patient_data[i];
-                Job2 job1 = new Job2(patient, 1, i * 2);
-                Job2 job2 = new Job2(patient, 2, i * 2 + 1);
+                Patient patient = problem.patients[i];
+                Job job1 = new Job(patient, 1, i * 2);
+                Job job2 = new Job(patient, 2, i * 2 + 1);
 
                 jobs.Add(job1);
                 jobs.Add(job2);
             }
 
             Solver solver = new Solver("vaccine_scheduling", Solver.OptimizationProblemType.SCIP_MIXED_INTEGER_PROGRAMMING);
-
-            int max_hospitals_upperbound = problem.patient_data.Count; //hospitals upperbound is when every patient gets its own hospital
+            int max_hospitals_upperbound = problem.patients.Count; //hospitals upperbound is when every patient gets its own hospital
             int max_time_upperbound = calculate_upperbound_time(problem); //time upperbound is from 0 until the end of the last 2nd dose interval
 
             int max_j = jobs.Count;
@@ -69,17 +68,25 @@ namespace implementation
 
             // Create the objective function, minimizing the number of hospitals by maximizing the number of equal hospitals among the different jobs.
             Objective objective = solver.Objective();
-            for(int i = 0; i < max_j; i++){
-                for(int j = 0; j < max_j; j++){
-                     objective.SetCoefficient(samehospitals[i,j], 1);
-                }   
+            for (int i = 0; i < max_j; i++)
+            {
+                for (int j = 0; j < max_j; j++)
+                {
+                    objective.SetCoefficient(samehospitals[i, j], 1);
+                }
             }
             objective.SetMaximization();
-
-
             solver.Solve();
+            //Console.WriteLine("Solution:");
 
-            Console.WriteLine("Solution:");
+
+
+            Solution sol = new Solution(999, new List<Doses>()); //TODO extract solution from solved ilp
+            /*Console.WriteLine(sol);
+
+
+
+
 
             //Print the solutions variables as an array
             Console.WriteLine("Objective value = " + solver.Objective().Value());
@@ -145,7 +152,7 @@ namespace implementation
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 't' )
+                if (data[0][0] == 't')
                 {
                     Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
@@ -157,7 +164,7 @@ namespace implementation
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
-                if (data[0][0] != 'z' && data[0][0] != 'y' && data[0][0] != 't' &&data[0][0] != 'H')
+                if (data[0][0] != 'z' && data[0][0] != 'y' && data[0][0] != 't' && data[0][0] != 'H')
                 {
                     resulting_matrix_sh[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
                 }
@@ -171,16 +178,16 @@ namespace implementation
                 Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
 
             }
-            Console.WriteLine();
-
-            Console.WriteLine("Number of hospitals used: " + hospitals_used.Count());
+            Console.WriteLine();*/
+            return sol;
+            //Console.WriteLine("same hospital sum: " + sameHospitalsSum.SolutionValue());
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
             int max_time_upperbound = 0;
-            foreach (Patient p in problem.patient_data)
+            foreach (Patient p in problem.patients)
             {
-                max_time_upperbound = Math.Max(p.delay_between_doses + p.last_timeslot_first_dose + p.second_dose_interval + problem.gap + 1, max_time_upperbound);
+                max_time_upperbound = Math.Max(p.x + p.d1 + p.L + problem.g + 1, max_time_upperbound);
             }
             return max_time_upperbound;
         }
@@ -242,7 +249,7 @@ namespace implementation
         }
 
 
-        static private void add_constraints_z(Solver solver, Variable[,] z, Variable[] t, List<Job2> jobs, int max_t)
+        static private void add_constraints_z(Solver solver, Variable[,] z, Variable[] t, List<Job> jobs, int max_t)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -261,7 +268,7 @@ namespace implementation
 
         //Add the constraint for each job pair that Compare needs to be one if y[j] is smaller than y[k].
         //It also ensures that if y[j] and y[k] are equal, than compare[j,k] needs to be zero.
-        static private void add_constraints_compare(Solver solver, Variable[,] compare, Variable[] y, List<Job2> jobs, int max_h)
+        static private void add_constraints_compare(Solver solver, Variable[,] compare, Variable[] y, List<Job> jobs, int max_h)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -278,7 +285,7 @@ namespace implementation
                 }
             }
         }
-        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, Variable[,] compare, List<Job2> jobs, int max_h)
+        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, Variable[,] compare, List<Job> jobs, int max_h)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -300,25 +307,25 @@ namespace implementation
         }
 
         //Adds constraints for each job to ensure the job is scheduled in the correct interval.
-        static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job2> jobs)
+        static private void add_constraint_interval_vaccines(Solver solver, OfflineProblem problem, Variable[] t, List<Job> jobs)
         {
-            foreach (Job2 j in jobs)
+            foreach (Job j in jobs)
             {
                 if (j.vaccine == 1)
                 {
-                    solver.Add(t[j.id] >= j.patient.first_timeslot_first_dose);
-                    solver.Add(t[j.id] <= j.patient.last_timeslot_first_dose - problem.processing_time_first_dose + 1);
+                    solver.Add(t[j.id] >= j.patient.r1);
+                    solver.Add(t[j.id] <= j.patient.d1 - problem.p1 + 1);
                 }
                 else if (j.vaccine == 2)
                 {
-                    solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap);
-                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap + (j.patient.second_dose_interval - problem.processing_time_second_dose + 1));
+                    solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g);
+                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + (j.patient.L - problem.p2 + 1));
                 }
             }
         }
 
 
-        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job2> jobs, int h_max, int t_max)
+        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -332,43 +339,18 @@ namespace implementation
                     //Ensures that no job is scheduled within the processing time of a previous job that is in the same hospital. 
                     if (jobs[j].vaccine == 1)
                     {
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.processing_time_first_dose);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.p1);
 
                     }
 
                     else if (jobs[j].vaccine == 2)
                     {
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.processing_time_second_dose);
+                        //CONTROLEREN GOEIE Z
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1 - z[j, k]) - (t_max + 1) * (1 - samehospitals[j, k]) <= -problem.p2);
+
                     }
                 }
             }
-        }
-    }
-
-
-
-    public class Job2
-    {
-        public Patient patient;
-        public int vaccine;
-        public int id;
-
-
-
-        public Job2(Patient patient, int vaccine, int id)
-        {
-            this.patient = patient;
-            this.vaccine = vaccine;
-            this.id = id;
-        }
-
-
-        public override string ToString()
-        {
-            string part1 = "Patient: " + this.patient.ToString() + " ";
-            string part2 = "Vaccine: " + this.vaccine + " ";
-            string part3 = "ID: " + this.id + " ";
-            return part1 + part2 + part3;
         }
     }
 }

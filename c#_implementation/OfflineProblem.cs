@@ -1,36 +1,37 @@
+using System.Diagnostics;
 using System.Collections.Generic;
 
 namespace implementation
 {
     public class IProblem {
-        public int processing_time_first_dose;
-        public int processing_time_second_dose;
-        public int gap;
+        public int p1;
+        public int p2;
+        public int g;
     }
 
     public class OfflineProblem : IProblem
     {
-        public int number_of_patients;
-        public List<Patient> patient_data;
-        public OfflineProblem(int processing_time_first_dose, int processing_time_second_dose, int gap, int number_of_patients, List<Patient> patient_data)
+        public int nPatients;
+        public List<Patient> patients;
+        public OfflineProblem(int p1, int p2, int g, int n, List<Patient> patients)
         {
-            this.processing_time_first_dose = processing_time_first_dose;
-            this.processing_time_second_dose = processing_time_second_dose;
-            this.gap = gap;
-            this.number_of_patients = number_of_patients; // why is this not patient_data.Length?
-            this.patient_data = patient_data;
+            this.p1 = p1;
+            this.p2 = p2;
+            this.g = g;
+            this.nPatients = n; Debug.Assert(patients.Count == n); // why is this not just patients.Count?
+            this.patients = patients;
         }
         
         public override string ToString()
         {
-            string part1 = "processing_time_first_dose: " + this.processing_time_first_dose + "\n";
-            string part2 = "processing_time_second_dose: " + this.processing_time_second_dose + "\n";
-            string part3 = "gap: " + this.gap + "\n";
-            string part4 = "number_of_patients: " + this.number_of_patients + "\n";
+            string part1 = "processing_time_first_dose: " + this.p1 + "\n";
+            string part2 = "processing_time_second_dose: " + this.p2 + "\n";
+            string part3 = "gap: " + this.g + "\n";
+            string part4 = "number_of_patients: " + this.nPatients + "\n";
             string part5 = "";
-            for (int i = 0; i < this.patient_data.Count; i++)
+            for (int i = 0; i < this.patients.Count; i++)
             {
-                part5 += this.patient_data[i].ToString() + "\n";
+                part5 += this.patients[i].ToString() + "\n";
             }
             return part1 + part2 + part3 + part4 + part5;
         }

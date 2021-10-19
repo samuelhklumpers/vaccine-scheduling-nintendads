@@ -14,9 +14,9 @@ namespace implementation
 
             List<Job> jobs = new List<Job>();
 
-            for (int i = 0; i < problem.patient_data.Count; i++)
+            for (int i = 0; i < problem.patients.Count; i++)
             {
-                Patient patient = problem.patient_data[i];
+                Patient patient = problem.patients[i];
                 Job job1 = new Job(patient, 1, i * 2);
                 Job job2 = new Job(patient, 2, i * 2 + 1);
 
@@ -26,7 +26,7 @@ namespace implementation
 
             Solver solver = new Solver("vaccine_scheduling", Solver.OptimizationProblemType.SCIP_MIXED_INTEGER_PROGRAMMING);
 
-            int max_hospitals_upperbound = problem.patient_data.Count; //hospitals upperbound is when every patient gets its own hospital
+            int max_hospitals_upperbound = problem.patients.Count; //hospitals upperbound is when every patient gets its own hospital
             int max_time_upperbound = calculate_upperbound_time(problem); //time upperbound is from 0 until the end of the last 2nd dose interval
 
             //Create variable for number of hospitals.
@@ -219,9 +219,9 @@ namespace implementation
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
             int max_time_upperbound = 0;
-            foreach (Patient p in problem.patient_data)
+            foreach (Patient p in problem.patients)
             {
-                max_time_upperbound = Math.Max(p.delay_between_doses + p.last_timeslot_first_dose + p.second_dose_interval + problem.gap + 1, max_time_upperbound);
+                max_time_upperbound = Math.Max(p.x + p.d1 + p.L + problem.g + 1, max_time_upperbound);
             }
             return max_time_upperbound;
         }
@@ -344,13 +344,13 @@ namespace implementation
             {
                 if (j.vaccine == 1)
                 {
-                    solver.Add(t[j.id] >= j.patient.first_timeslot_first_dose);
-                    solver.Add(t[j.id] <= j.patient.last_timeslot_first_dose - problem.processing_time_first_dose + 1);
+                    solver.Add(t[j.id] >= j.patient.r1);
+                    solver.Add(t[j.id] <= j.patient.d1 - problem.p1 + 1);
                 }
                 else if (j.vaccine == 2)
                 {
-                    solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap);
-                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.processing_time_first_dose - 1 + j.patient.delay_between_doses + problem.gap + (j.patient.second_dose_interval - problem.processing_time_second_dose + 1));
+                    solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.p1 - 1 + j.patient.x + problem.g);
+                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 - 1 + j.patient.x + problem.g + (j.patient.L - problem.p2+ 1));
                 }
             }
         }
@@ -373,14 +373,14 @@ namespace implementation
                         //CONTROLEREN GOEIE Z
                         //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
 
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.processing_time_first_dose);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.p1);
 
                     }
 
                     else if (jobs[j].vaccine == 2)
                     {
                         //CONTROLEREN GOEIE Z
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.processing_time_second_dose);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.p1);
 
                     }
                 }

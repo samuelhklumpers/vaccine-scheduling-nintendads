@@ -4,7 +4,7 @@ using System.IO;
 using System.Collections;
 using static implementation.Parser;
 using System.Collections.Generic;
-using Google.OrTools.LinearSolver;
+
 
 namespace implementation
 {
@@ -12,34 +12,85 @@ namespace implementation
     {
         static void Main(string[] args)
         {
-            /*
-            HospitalSolution testSolution = Parse_solution("../data/big_numbers.txt");
-            Console.WriteLine(testSolution.ToString());
+            if (args.Count() == 0)
+            {
+                bool test = false;
+                bool benchmark = true;
+                bool validate = false;
 
-            RecursiveBruteforce brute = new RecursiveBruteforce();
-            Solution solution = brute.solve(offline_problem);
-            OfflineValidator validator = new OfflineValidator(offline_problem, solution);
-            validator.validate();
+                //Test();
+                if (test)
+                {
+                    Test();
+                }
+                if (benchmark)
+                {
+                    Benchmark();
+                }
+                if (validate)
+                {
+                    Validate();
+                }
+            }
+            else
+            {
+                switch (args[0])
+                {
+                    case "benchmark": Benchmark(); break;
+                    case "test": Test(); break;
+                    case "case": RunCase(args); break;
+                }
+            }
+        }
 
-            Console.WriteLine(solution);
+        static void RunCase(String[] args)
+        {
+            if (args.Length < 3)
+                return;
 
-            OnlineProblem online_problem = Parse_problem_online("../data/online/from_assignment.txt");
-            ExampleSolverOnline online_solver = new ExampleSolverOnline();
-            online_solver.solve(online_problem);*/
+            var (solverName, testFile) = (args[1], args[2]);
+            var solver = makeSolver(solverName);
 
-            bool test = true;
-            bool benchmark = false;
-            bool validate = true;
+            OfflineProblem problem = ParseOfflineProblem(testFile);
 
+            var sol = solver.solve(problem);
+            Console.WriteLine(sol.machines);
+            //new OfflineValidator(problem).validate(sol);
+            //i'll trust you I guess
+        }
 
-            OfflineProblem offline_problem = Parse_problem_offline("../data/offline/from_assignment.txt");
-            if (test)
+        static IOfflineSolver makeSolver(String name)
+        {
+            switch (name)
+            {
+                case "sat": return new IntSatSolver();
+                case "bf": return new RecursiveBruteforce();
+                case "ilp": return new BranchAndBoundSolverOffline();
+                default: throw new Exception($"invalid solver name: {name}");
+            }
+        }
+
+        static void Benchmark()
+        {
+            var solvers = new List<IOfflineSolver>(new IOfflineSolver[] {
+                //new RecursiveBruteforce(),
+                new IntSatSolver(),
+                new BranchAndBoundSolverOffline()
+            });
+
+            /*String prologPath = "C:\\Program Files\\swipl\\bin\\swipl.exe";
+            if (File.Exists(prologPath))
             {
                 Type[] offline_solver_types = { typeof(BranchAndBoundSolverOffline) };
+<<<<<<< HEAD
                 Type[] online_solver_types = { };
                 //string[] offline_problem_files = { "../data/offline/from_assignment.txt","../data/offline/big_numbers.txt",
                 //                                    "../data/offline/three_quarters.txt", "../data/offline/backtracker.txt"};
                 string[] offline_problem_files = { "../data/offline/from_assignment.txt"};
+=======
+                Type[] online_solver_types = { typeof(ExampleSolverOnline) };
+                string[] offline_problem_files = { "../data/offline/from_assignment.txt", "../data/offline/backtracker.txt", "../data/offline/big_numbers.txt", "../data/offline/three_quarters.txt" };
+>>>>>>> origin/main
                 string[] online_problem_files = { "../data/online/from_assignment.txt" };
 
                 run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
@@ -49,13 +100,46 @@ namespace implementation
             if (benchmark)
             {
                 ISolverOffline[] solvers = { new CallableSolverOffline(), new BranchAndBoundSolverOffline() };
+                Console.WriteLine(Directory.GetCurrentDirectory());
+                var clpfd = new CallableSolver(prologPath, new String[] { "..\\..\\..\\Callables\\constraint_programming.pl" });
+                solvers.Add(clpfd);
+            }*/
 
-                var bench = Benchmarker.benchmark(solvers, 5.0);
 
-                Console.WriteLine(bench.ToString());
-            }
+            var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 60.0);
+            Console.WriteLine(res.ToString());
+        }
 
-            if (validate)
+        static void Test()
+        {
+            Type[] offline_solver_types =
+            {
+                typeof(BranchAndBoundSolverOffline),
+                //typeof(RecursiveBruteforce),
+                //typeof(IntSatSolver)
+            };
+            Type[] online_solver_types =
+            {
+
+            };
+            List<string> offline_problem_files = new List<string>
+            {
+                "../data/offline/from_assignment.txt",
+                "../data/offline/backtracker.txt",
+                "../data/offline/big_numbers.txt",
+                "../data/offline/three_quarters.txt"
+            };
+            List<string> online_problem_files = new List<string>
+            {
+                "../data/online/from_assignment.txt"
+            };
+            run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
+            run_using_solvers_and_files(online_solver_types, online_problem_files, test_online_solver);
+        }
+        static void Validate()
+        {
+            // validator test
+            if (Directory.Exists("../data/offline/"))
             {
                 List<string> problems = new List<string>
                 {
@@ -74,22 +158,27 @@ namespace implementation
                     "../data/solutions/online/Solution1.txt",
                     "../data/solutions/online/Solution2.txt"
                 };
-                testABunch(problems, solutions);
+
+                ValidateTestcases(problems, solutions);
+            }
+            else
+            {
+                Console.WriteLine("warning: can't find unit test path");
             }
         }
 
-        static private void testABunch(List<string> problem_filenames, List<string> solution_filenames)
+        static private void ValidateTestcases(List<string> problem_filenames, List<string> solution_filenames)
         {
             for (int i = 0; i < problem_filenames.Count; i++)
             {
-                OfflineProblem prob = Parse_problem_offline(problem_filenames[i]);
-                HospitalSolution sol = Parse_solution(solution_filenames[i]);
-                OfflineValidator val = new OfflineValidator(prob, sol);
+                OfflineProblem prob = ParseOfflineProblem(problem_filenames[i]);
+                Solution2D sol = ParseSolution2D(solution_filenames[i]);
+                OfflineValidator val = new OfflineValidator(prob);
                 Console.WriteLine($"Validating {problem_filenames[i]} and {solution_filenames[i]}...");
-                val.validate();
+                val.validate(sol);
             }
         }
-        static private void run_using_solvers_and_files(Type[] solver_types, string[] problem_files, Action<Type, string> test_method)
+        static private void run_using_solvers_and_files(Type[] solver_types, List<string> problem_files, Action<Type, string> test_method)
         {
             foreach (var solver_type in solver_types)
             {
@@ -111,11 +200,11 @@ namespace implementation
         }
         static private void test_offline_solver(Type solver_type, string problem_file)
         {
-            ISolverOffline solver = Activator.CreateInstance(solver_type) as ISolverOffline;
-            OfflineProblem problem = Parse_problem_offline(problem_file);
+            IOfflineSolver solver = Activator.CreateInstance(solver_type) as IOfflineSolver;
+            OfflineProblem problem = ParseOfflineProblem(problem_file);
             Solution solution = solver.solve(problem);
-            OfflineValidator validator = new OfflineValidator(problem, solution);
-            validator.validate();
+            OfflineValidator validator = new OfflineValidator(problem);
+            validator.validate(solution);
             Console.WriteLine("Problem:");
             Console.WriteLine(problem.ToString());
             Console.WriteLine("\nSolution:");
@@ -123,10 +212,10 @@ namespace implementation
         }
         static private void test_online_solver(Type solver_type, string problem_file)
         {
-            ISolverOnline solver = Activator.CreateInstance(solver_type) as ISolverOnline;
-            OnlineProblem problem = Parse_problem_online(problem_file);
+            IOnlineSolver solver = Activator.CreateInstance(solver_type) as IOnlineSolver;
+            OnlineProblem problem = ParseOnlineProblem(problem_file);
             Solution solution = solver.solve(problem);
-            OnlineValidator.validate(problem, solution);
+            //OfflineValidator.validate(problem, solution); //TODO need to implement an online validator
             Console.WriteLine("Problem:");
             Console.WriteLine(problem.ToString());
             Console.WriteLine("\nSolution:");
