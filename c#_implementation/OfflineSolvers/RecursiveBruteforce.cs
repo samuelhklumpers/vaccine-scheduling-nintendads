@@ -34,11 +34,12 @@ namespace implementation
             // If that doesn't work out, recurse back and try another second appointment combination and recurse.
             // If that doesn't work out either, also try another first appointment, try all second appointments and recurse.
             bool solved = false;
+            int pmax = Math.Max(problem.p1, problem.p2);
             foreach (int first_start_time in p.start_times_first_dose)
             {
                 // Naively set an appointment and fill a changelog of times marked as unavailable by planning this specific appointment.
                 // The changelog helps seperating what appointments marked which hours as unavaliable in case of overlap.
-                (List<(int, int)> first_changelog, int[] first_appointment) = tryStartTime(hospitals, first_start_time, problem.p1);
+                (List<(int, int)> first_changelog, int[] first_appointment) = tryStartTime(hospitals, first_start_time, pmax);
                 if (first_appointment is null) { continue; }
 
                 // Calculate the start and end of the second appointment interval by adding the various delays
@@ -53,7 +54,7 @@ namespace implementation
 
                 foreach (int second_start_time in start_times_second_dose)
                 {
-                    (List<(int, int)> second_changelog, int[] second_appointment) = tryStartTime(hospitals, second_start_time, problem.p2);
+                    (List<(int, int)> second_changelog, int[] second_appointment) = tryStartTime(hospitals, second_start_time, pmax);
                     if (second_appointment is null) { continue; }
 
                     // With a second appointment set, a registration can be generated and added to the list.

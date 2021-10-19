@@ -113,7 +113,10 @@ namespace implementation
 
                 testcases.Add(p);
 
+                var pigeons = Bounds.PigeonHole(p);
+
                 Console.WriteLine($"benchmarking n = {n}");
+                Console.WriteLine($"pigeonhole = {pigeons}");
                 Console.WriteLine("==========");
 
                 for (int i = 0; i < ts.Count(); ++i)

@@ -109,7 +109,7 @@ namespace implementation
             {
                 typeof(BranchAndBoundSolverOffline),
                 //typeof(RecursiveBruteforce),
-                typeof(IntSatSolver)
+                //typeof(IntSatSolver)
             };
             Type[] online_solver_types =
             {
