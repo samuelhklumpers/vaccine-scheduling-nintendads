@@ -209,5 +209,31 @@ namespace implementation
             }
             return copy;
         }
+
+        private Dictionary<string,double> toILP()
+        {
+            Dictionary<string,double> res = new Dictionary<string, double>();
+            int t = 0;
+            int y = 0;
+            foreach (Doses2D dose in this.regs)
+            {
+                res["t" + t.ToString()] = (double) dose.t1;
+                t++;
+                res["t" + t.ToString()] = (double) dose.t2;
+                t++;
+                res["y" + y.ToString()] = (double) dose.h1;
+                y++;
+                res["y" + y.ToString()] = (double) dose.h2;
+                y++;
+            }
+            
+            /*t0 t1  -> eerste timeslot, tweede timeslot vaccinatie
+            y0 y1 -> eerste timeslot hospital
+
+            t2 t3 tweede patient ....
+            y2 y3 ....*/
+            
+            return res;
+        }
     }
 }    
