@@ -8,7 +8,7 @@ namespace implementation
 {
     class LinearProgrammingILP
     {
-        public static (bool, bool, int?, Solution?) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timelimit)
+        public static (bool, bool, int?, Solution) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timelimit)
         {
             List<Job> jobs = new List<Job>();
 
@@ -77,7 +77,7 @@ namespace implementation
             bool feasibleNoSolution = false;
             bool someSolution = false;
             int? upperboundHospitals = null;
-            Solution? sol = null;
+            Solution sol = null;
 
 
             if (status == Solver.ResultStatus.OPTIMAL)

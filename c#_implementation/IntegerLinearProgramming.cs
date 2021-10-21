@@ -12,7 +12,7 @@ namespace implementation
         //Second boolean is true if the ILP found some solution. 
         //int is the upperbound if a suboptimal solution is found. Is null if infeasible or no solution
         //Solution is not null if an optimal solution is found. (thus done within time)
-        public static (bool, bool, int?, Solution?) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timeLimit)
+        public static (bool, bool, int?, Solution) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timeLimit)
         {
             List<Job> jobs = new List<Job>();
 
@@ -86,7 +86,7 @@ namespace implementation
             bool feasibleNoSolution = false;
             bool someSolution = false;
             int? upperboundHospitals = null;
-            Solution? sol = null;
+            Solution sol = null;
 
 
             if (status == Solver.ResultStatus.OPTIMAL)

@@ -12,7 +12,7 @@ namespace implementation
         public Solution solve(OfflineProblem problem)
         {
             // Obtain lower and upper bounds with Pigeonhole and Greedy
-            (int lower, int upper, Solution? sol) = boundsOrSolve(problem, new Dictionary<string, double>());
+            (int lower, int upper, Solution sol) = boundsOrSolve(problem, new Dictionary<string, double>());
             if (sol is not null) { return sol; }
 
             // Pre-emptively add lower amount of hospitals
@@ -56,9 +56,9 @@ namespace implementation
             }
         }
 
-        private (bool, PartialSolution, Solution?) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
+        private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
         {
-            (int lower2, int upper2, Solution? sol) = boundsOrSolve(problem, new Dictionary<string, double>());
+            (int lower2, int upper2, Solution sol) = boundsOrSolve(problem, new Dictionary<string, double>());
             if (sol is not null) { return (true, null, sol); }
             else if (upper2 == 0) { return (false, null, null); }
             
@@ -134,9 +134,9 @@ namespace implementation
             return (lower, sol.machines);
         }
 
-        private (int, int, Solution?) boundsOrSolve(OfflineProblem problem, Dictionary<string, double> partialString)
+        private (int, int, Solution) boundsOrSolve(OfflineProblem problem, Dictionary<string, double> partialString)
         {
-            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
+            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
             if (sol is not null) { return (sol.machines, sol.machines, sol); }
             else if (feasibleNoSolution == false && someSolution == false) { return (0, 0, null); }
             else { (int lower, int upper) = calcBounds(problem); return (lower, upper, null); }
