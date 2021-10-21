@@ -12,7 +12,8 @@ namespace implementation
         public Solution solve(OfflineProblem problem)
         {
             // Obtain lower and upper bounds with Pigeonhole and Greedy
-            (int lower, int upper) = calcBounds(problem);
+            (int lower, int upper, Solution? sol) = boundsOrSolve(problem, new Dictionary<string, double>());
+            if (sol is not null) { return sol; }
 
             // Pre-emptively add lower amount of hospitals
             List<Hospital> hospitals = new List<Hospital>();
@@ -43,17 +44,24 @@ namespace implementation
             partials.Enqueue(ps);
             while (!solved && partials.Count > 0) 
             {
-                (solved, ps) = BFSolve(problem, partials, upper);
+                (solved, ps, sol) = BFSolve(problem, partials, upper);
             }
 
-            // Results are still ordered by ascending availability, put them back in input order
-            List<Doses2D> res = PutBack(idPatients, ps.regs);
-
-            return new Solution2D(ps.hospitals.Count, res);
+            if (sol is not null) { return sol; }
+            else 
+            {
+                // Results are still ordered by ascending availability, put them back in input order
+                List<Doses2D> res = PutBack(idPatients, ps.regs);
+                return new Solution2D(ps.hospitals.Count, res);
+            }
         }
 
-        private (bool, PartialSolution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
+        private (bool, PartialSolution, Solution?) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
         {
+            (int lower2, int upper2, Solution? sol) = boundsOrSolve(problem, new Dictionary<string, double>());
+            if (sol is not null) { return (true, null, sol); }
+            else if (upper2 == 0) { return (false, null, null); }
+            
             // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
             Patient p = ps.patients.Dequeue();
@@ -101,7 +109,7 @@ namespace implementation
                             undoChangelog(ps.hospitals, second_changelog); 
                         }
                         // If all patients are planned in on this branch, return true and disregard the queue because who cares, we found a solution
-                        else { return (true, copy); }
+                        else { return (true, copy, null); }
                     }
                     // Undo everything of this layer to clean it for the next deepcopy
                     undoChangelog(ps.hospitals, first_changelog);
@@ -109,10 +117,10 @@ namespace implementation
             // If this branch has not capped on hospitals, add a hospital.
             // If this branch fails to plan in the next patient and has capped on hopsitals, bound the branch by not enqueueing any children of it.
             if ( queueLen == partials.Count() && ps.hospitals.Count < upper) { ps.hospitals.Add(new Hospital(ps.hospitals.Count)); }
-            else { return (false, ps); }
+            else { return (false, null, null); }
             }
 
-            return (false, ps);
+            return (false, null, null);
         }
 
         private (int, int) calcBounds(OfflineProblem problem)
@@ -124,6 +132,14 @@ namespace implementation
             OfflineValidator val = new OfflineValidator(problem);
             val.validate(sol);
             return (lower, sol.machines);
+        }
+
+        private (int, int, Solution?) boundsOrSolve(OfflineProblem problem, Dictionary<string, double> partialString)
+        {
+            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
+            if (sol is not null) { return (sol.machines, sol.machines, sol); }
+            else if (feasibleNoSolution == false && someSolution == false) { return (0, 0, null); }
+            else { (int lower, int upper) = calcBounds(problem); return (lower, upper, null); }
         }
 
         private (List<(int, int)>, int[]) tryStartTime(List<Hospital> hospitals, int start_time, int processing_time)
