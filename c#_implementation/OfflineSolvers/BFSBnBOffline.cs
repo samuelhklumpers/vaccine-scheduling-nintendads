@@ -61,9 +61,9 @@ namespace implementation
             // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
 
-            (int lower2, int upper2, Solution sol) = boundsOrSolve(problem, ps.ToILP());
+            (bool feasible, bool _, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 100); // Tenth of a second
             if (sol is not null) { return (true, null, sol); }
-            else if (upper2 == 0) { return (false, null, null); }
+            else if (!feasible) { return (false, null, null); }
 
             Patient p = ps.patients.Dequeue();
 
