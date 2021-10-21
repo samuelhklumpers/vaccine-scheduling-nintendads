@@ -57,13 +57,14 @@ namespace implementation
         }
 
         private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
-        {
-            (int lower2, int upper2, Solution sol) = boundsOrSolve(problem, new Dictionary<string, double>());
-            if (sol is not null) { return (true, null, sol); }
-            else if (upper2 == 0) { return (false, null, null); }
-            
+        {            
             // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
+
+            (int lower2, int upper2, Solution sol) = boundsOrSolve(problem, ps.ToILP());
+            if (sol is not null) { return (true, null, sol); }
+            else if (upper2 == 0) { return (false, null, null); }
+
             Patient p = ps.patients.Dequeue();
 
             // Pretend all appointments are the one that takes the longest and keep hospitals empty accordingly
@@ -226,7 +227,7 @@ namespace implementation
             return copy;
         }
 
-        private Dictionary<string,double> toILP()
+        public Dictionary<string,double> ToILP()
         {
             Dictionary<string,double> res = new Dictionary<string, double>();
             int t = 0;
