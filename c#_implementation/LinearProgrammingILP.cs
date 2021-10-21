@@ -8,7 +8,7 @@ namespace implementation
 {
     class LinearProgrammingILP
     {
-        public static Solution Solve(OfflineProblem problem)
+        public static Solution Solve(OfflineProblem problem, Dictionary<string, double> partial_solution)
         {
             List<Job> jobs = new List<Job>();
 
@@ -34,20 +34,28 @@ namespace implementation
             Variable[] t = init_variables_vector(solver, max_j, max_t, "t"); // tj starting time of job j
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
             Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j); //one if jobs j,k in same hospital
-            //Variable sameHospitalsSum = solver.MakeIntVar(0, max_j*max_j, "Hospital_sum");
-
-            /*Constraint hospital_sum_constraint = solver.MakeConstraint(0, max_j*max_j);    
-            for(int i = 0; i < max_j; i++){
-                for(int j = 0; j < max_j; j++){
-                     hospital_sum_constraint.SetCoefficient(samehospitals[i,j], 1);
-                }   
-            }*/
 
             //Add the constraints to the solver
             add_constraints_z(solver, z, t, jobs, max_t); // calculate which jobs are before other jobs
-            //add_constraints_y(solver, y, jobs, max_h); //
             add_constraint_interval_vaccines(solver, problem, t, jobs);
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, samehospitals, jobs, max_h, max_t);
+
+
+            foreach (var item in partial_solution)
+            {
+                string variable_string = item.Key;
+                double value = item.Value;
+
+                var variable = solver.LookupVariableOrNull(variable_string);
+
+                if(variable == null)
+                {
+                    Console.WriteLine("No variable with name: " + variable_string);
+                    continue;
+                }
+
+                solver.Add(variable == value);
+            }
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
             Console.WriteLine("Number of constraints = " + solver.NumConstraints());
@@ -62,7 +70,7 @@ namespace implementation
                 }
             }
             objective.SetMaximization();
-            solver.SetTimeLimit(1);
+            solver.SetTimeLimit(4000);
             solver.Solve();
             //Console.WriteLine("Solution:");
 
@@ -107,7 +115,7 @@ namespace implementation
             {
                 registrations.Add(new Doses(chronological_jobs_copy[i * 2].Item1, chronological_jobs_copy[i * 2 + 1].Item1));
             }
-            Solution sol = new Solution(hospital_numbers.Max() + 1, registrations);
+            Solution sol = new Solution((hospital_numbers.Length > 0)? hospital_numbers.Max() + 1:0, registrations);
             /*Console.WriteLine(sol);
 
 
@@ -270,7 +278,7 @@ namespace implementation
                 else if (j.vaccine == 2)
                 {
                     solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g);
-                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + (j.patient.L - problem.p2 + 1));
+                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + (j.patient.L - 1 - problem.p2 + 1));
                 }
             }
         }

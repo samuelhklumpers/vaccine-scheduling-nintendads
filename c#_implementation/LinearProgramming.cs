@@ -235,7 +235,7 @@ namespace implementation
             {
                 for (int j = 0; j < j_max; j++)
                 {
-                    z[i, j] = solver.MakeIntVar(0, 1, "z: " + i.ToString() + " " + j.ToString());
+                    z[i, j] = solver.MakeNumVar(0, 1, "z: " + i.ToString() + " " + j.ToString());
                 }
             }
             return z;
@@ -250,7 +250,7 @@ namespace implementation
             {
                 for (int j = 0; j < j_max; j++)
                 {
-                    compare[i, j] = solver.MakeIntVar(0, 1, "compare: " + i.ToString() + " " + j.ToString());
+                    compare[i, j] = solver.MakeNumVar(0, 1, "compare: " + i.ToString() + " " + j.ToString());
                 }
             }
             return compare;
@@ -265,7 +265,7 @@ namespace implementation
             {
                 for (int h = 0; h < j_max; h++)
                 {
-                    samehospitals[j, h] = solver.MakeIntVar(0, 1, "samehospital: " + j.ToString() + " " + h.ToString());
+                    samehospitals[j, h] = solver.MakeNumVar(0, 1, "samehospital: " + j.ToString() + " " + h.ToString());
                 }
             }
             return samehospitals;
