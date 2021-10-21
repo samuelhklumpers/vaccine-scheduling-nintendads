@@ -8,7 +8,11 @@ namespace implementation
 {
     class IntegerLinearProgramming
     {
-        public static Solution Solve(OfflineProblem problem, Dictionary<string, double> partial_solution)
+        //First boolean is true if the ILP is feasible but no solution is found.        
+        //Second boolean is true if the ILP found some solution. 
+        //int is the upperbound if a suboptimal solution is found. Is null if infeasible or no solution
+        //Solution is not null if an optimal solution is found. (thus done within time)
+        public static (bool, bool, int?, Solution?) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timeLimit)
         {
             List<Job> jobs = new List<Job>();
 
@@ -45,6 +49,7 @@ namespace implementation
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, samehospitals, jobs, max_h, max_t); //To make sure that there are no patients planned at the same time in the same hospital.
             add_constraints_compare(solver, compare, y, jobs, max_h); //Used to set sameHospitals.
 
+            //Add extra constraints to comply to the partial solution given by branch and bound.
             foreach (var item in partial_solution)
             {
                 string variable_string = item.Key;
@@ -59,8 +64,6 @@ namespace implementation
                 }
 
                 solver.Add(variable == value);
-
-
             }
 
             Console.WriteLine("Number of variables = " + solver.NumVariables());
@@ -76,112 +79,82 @@ namespace implementation
                 }
             }
             objective.SetMaximization();
-            solver.Solve();
-            //Console.WriteLine("Solution:");
+            solver.SetTimeLimit(timeLimit);
+
+            Solver.ResultStatus status = solver.Solve();
+
+            bool feasibleNoSolution = false;
+            bool someSolution = false;
+            int? upperboundHospitals = null;
+            Solution? sol = null;
 
 
-
-            Solution sol = new Solution(999, new List<Doses>()); //TODO extract solution from solved ilp
-            /*Console.WriteLine(sol);
-
-
-
-
-
-            //Print the solutions variables as an array
-            Console.WriteLine("Objective value = " + solver.Objective().Value());
-            Console.WriteLine("mat z:");
-            int[,] resulting_matrix_z = new int[max_j, max_j];
-            foreach (var variable in solver.variables())
+            if (status == Solver.ResultStatus.OPTIMAL)
             {
-                string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 'z')
-                {
-                    resulting_matrix_z[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
-                }
-            }
-            for (int i = 0; i < resulting_matrix_z.Length; i++)
-            {
-                if (i % max_j == 0)
-                {
-                    Console.WriteLine();
-                }
-                Console.Write(resulting_matrix_z[i / max_j, i % max_j] + " ");
-
-            }
-            Console.WriteLine();
-
-            Console.WriteLine("mat compare:");
-            int[,] resulting_matrix_compare = new int[max_j, max_j];
-            foreach (var variable in solver.variables())
-            {
-                string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 'c')
-                {
-                    resulting_matrix_compare[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
-                }
-            }
-            for (int i = 0; i < resulting_matrix_compare.Length; i++)
-            {
-                if (i % max_j == 0)
-                {
-                    Console.WriteLine();
-                }
-                Console.Write(resulting_matrix_compare[i / max_j, i % max_j] + " ");
-
-            }
-            Console.WriteLine();
-
-            Console.WriteLine("mat y:");
-            HashSet<int> hospitals_used = new HashSet<int>();
-            foreach (var variable in solver.variables())
-            {
-                string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 'y' )
-                {
-                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
-
-                    hospitals_used.Add((int)variable.SolutionValue());
+                someSolution = true;
                     
-                }
+                List<Doses2D> doses = new List<Doses2D>();
+                HashSet<int> hospitals_used = new HashSet<int>();
 
-            }
-            Console.WriteLine();
-            Console.WriteLine("mat t:");
-            int[] resulting_vector_t = new int[max_j];
-            foreach (var variable in solver.variables())
-            {
-                string[] data = variable.Name().Split(' ');
-                if (data[0][0] == 't')
+
+                for (int i = 0; i < problem.patients.Count; i++)
                 {
-                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
+                    Patient patient = problem.patients[i];
+
+                    var firstHospital = solver.LookupVariableOrNull("y" + (i * 2));
+                    var secondHospital = solver.LookupVariableOrNull("y" + (i * 2 + 1));
+                    var firstTime = solver.LookupVariableOrNull("t" + (i * 2));
+                    var secondTime = solver.LookupVariableOrNull("t" + (i * 2 + 1));
+
+                    hospitals_used.Add((int)firstHospital.SolutionValue());
+                    hospitals_used.Add((int)secondHospital.SolutionValue());
+
+                    Doses2D dose = new Doses2D((int)firstTime.SolutionValue(), (int)firstHospital.SolutionValue(), (int)secondTime.SolutionValue(), (int)secondHospital.SolutionValue());
+
+                    doses.Add(dose);
                 }
+
+                upperboundHospitals = hospitals_used.Count;
+
+                sol = new Solution2D(hospitals_used.Count, doses); 
 
             }
 
-            Console.WriteLine("mat samehospitals:");
-            int[,] resulting_matrix_sh = new int[max_j, max_j];
-            foreach (var variable in solver.variables())
+            else if (status == Solver.ResultStatus.NOT_SOLVED)
             {
-                string[] data = variable.Name().Split(' ');
-                if (data[0][0] != 'z' && data[0][0] != 'y' && data[0][0] != 't' && data[0][0] != 'H')
-                {
-                    resulting_matrix_sh[int.Parse(data[1]), int.Parse(data[2])] = (int)variable.SolutionValue();
-                }
-            }
-            for (int i = 0; i < resulting_matrix_sh.Length; i++)
-            {
-                if (i % max_j == 0)
-                {
-                    Console.WriteLine();
-                }
-                Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
+                feasibleNoSolution = true;
+                someSolution = false;
 
             }
-            Console.WriteLine();*/
-            return sol;
-            //Console.WriteLine("same hospital sum: " + sameHospitalsSum.SolutionValue());
+
+            else if (status == Solver.ResultStatus.FEASIBLE)
+            {
+                feasibleNoSolution = false;
+                someSolution = true;
+
+                HashSet<int> hospitals_used = new HashSet<int>();
+
+                foreach (var variable in solver.variables())
+                {
+                    string[] data = variable.Name().Split(' ');
+                    if (data[0][0] == 'y' )
+                    {
+                        hospitals_used.Add((int)variable.SolutionValue());  
+                    }
+                }
+
+                upperboundHospitals = hospitals_used.Count;
+            }
+
+            else
+            {
+                feasibleNoSolution = false;
+                someSolution = false;
+            }
+            
+            return (feasibleNoSolution, someSolution, upperboundHospitals, sol);
         }
+
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
             int max_time_upperbound = 0;
@@ -259,9 +232,9 @@ namespace implementation
                     {
                         continue;
                     }
-                    //Constraints that set z[j,k] to one if job j starts before job k. 
+                    //Constraints that set z[j,k] to one if job j starts before job k or at the same time. 
                     solver.Add(t[j] >= t[k] + 1 - (max_t + 1) * (z[j, k]));
-                    solver.Add(t[k] >= t[j] + 1 - (max_t + 1) * (1 - z[j, k]));
+                    solver.Add(t[k] >= t[j] - (max_t + 1) * (1 - z[j, k]));
                 }
             }
         }
@@ -319,7 +292,7 @@ namespace implementation
                 else if (j.vaccine == 2)
                 {
                     solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g);
-                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + (j.patient.L - problem.p2 + 1));
+                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + j.patient.L - 1 - problem.p2 + 1);
                 }
             }
         }

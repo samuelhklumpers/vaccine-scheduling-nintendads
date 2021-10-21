@@ -10,16 +10,49 @@ namespace implementation
 
         public Solution solve(OfflineProblem problem)
         {
-            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing/ heuristic --> of numPatients, stuk sneller
-            // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
-            //als niet integer, dan verder zoeken
-            //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            //LinearProgramming2 lp = new LinearProgramming2();
+            //start timelimit high and decrease when branching more --> start with 4 seconds, then 2 en then go to 100 milliseconds or something
+            // done to first see if an optimal solution can be found in reasonable time before starting to branch a lot. but with a lot of branching it needs to be faster.
             Dictionary<string, double> partial_solution = new Dictionary<string, double>();
             //partial_solution["t0"] = 4;
-            Solution sol = IntegerLinearProgramming.Solve(problem, partial_solution);
+            //(bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
 
+            Solution sol = LinearProgrammingILP.Solve(problem, partial_solution, 10000);
             return sol;
+
+            /*
+
+            if (sol != null)
+            {
+                return sol;
+            }
+
+            else if (feasibleNoSolution == false && someSolution == false)
+            {
+                //stop branching as it is infeasible
+                Console.WriteLine("infeasible");
+                return sol;
+            }
+
+            else if (feasibleNoSolution && someSolution == false)
+            {
+                //do greedy for upperbound cuz no solution was found but it is feasible
+                Console.WriteLine("no solution");
+                return sol;
+            }
+
+            else 
+            {
+                //branch with upperbound given by upperboundHospitals or with min of upperbound en greedy --> check of greedy beter of niet, solution was found but not an optimal one
+                Console.WriteLine("non optimal " );
+                Console.WriteLine("upperbound " + upperboundHospitals);
+
+                GreedyOffline greedy = new GreedyOffline();
+                Solution greedy_sol = greedy.solve(problem);
+
+                Console.WriteLine("upperbound greedy " + greedy_sol.machines );
+                
+                return sol;
+            }*/
         }
 
         public Solution solve2(OfflineProblem problem) 

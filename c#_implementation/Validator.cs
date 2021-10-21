@@ -30,7 +30,7 @@ namespace implementation
 
         public void assertMachines(Solution sol)
         {
-            // assert that the solution uses as machines as it claims to
+            // assert that the solution uses as many machines as it claims to
             var r = sol.doses;
 
             var starts = new int[2 * r.Count];
@@ -75,7 +75,6 @@ namespace implementation
                     max = curr;
                 }
             }
-
             Debug.Assert(max == sol.machines);
         }
 

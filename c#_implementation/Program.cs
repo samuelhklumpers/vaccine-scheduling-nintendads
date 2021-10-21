@@ -4,6 +4,7 @@ using System.IO;
 using System.Collections;
 using static implementation.Parser;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 
 namespace implementation
@@ -14,8 +15,8 @@ namespace implementation
         {
             if (args.Count() == 0)
             {
-                bool test = false;
-                bool benchmark = true;
+                bool test = true;
+                bool benchmark = false;
                 bool validate = false;
 
                 //Test();
@@ -82,15 +83,10 @@ namespace implementation
             if (File.Exists(prologPath))
             {
                 Type[] offline_solver_types = { typeof(BranchAndBoundSolverOffline) };
-<<<<<<< HEAD
                 Type[] online_solver_types = { };
                 //string[] offline_problem_files = { "../data/offline/from_assignment.txt","../data/offline/big_numbers.txt",
                 //                                    "../data/offline/three_quarters.txt", "../data/offline/backtracker.txt"};
                 string[] offline_problem_files = { "../data/offline/from_assignment.txt"};
-=======
-                Type[] online_solver_types = { typeof(ExampleSolverOnline) };
-                string[] offline_problem_files = { "../data/offline/from_assignment.txt", "../data/offline/backtracker.txt", "../data/offline/big_numbers.txt", "../data/offline/three_quarters.txt" };
->>>>>>> origin/main
                 string[] online_problem_files = { "../data/online/from_assignment.txt" };
 
                 run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
@@ -112,6 +108,10 @@ namespace implementation
 
         static void Test()
         {
+            var timer = new Stopwatch();
+
+            timer.Start();
+
             Type[] offline_solver_types =
             {
                 typeof(BranchAndBoundSolverOffline),
@@ -124,10 +124,23 @@ namespace implementation
             };
             List<string> offline_problem_files = new List<string>
             {
-                "../data/offline/from_assignment.txt",
-                "../data/offline/backtracker.txt",
+                "../data/offline/from_assignment.txt", 
                 "../data/offline/big_numbers.txt",
-                "../data/offline/three_quarters.txt"
+                "../data/offline/three_quarters.txt",
+                "../data/offline/backtracker.txt",
+                "./tests/offline/0.txt",
+                "./tests/offline/1.txt",
+                "./tests/offline/2-1.txt",
+                "./tests/offline/2-2.txt",
+                "./tests/offline/3-1.txt",
+                "./tests/offline/3-2.txt",
+                "./tests/offline/3-3.txt",
+                "./tests/offline/4-1.txt",
+                "./tests/offline/12.txt",
+                "./tests/offline/15.txt",
+                "./tests/offline/20.txt",
+                //"./tests/offline/45.txt",
+                "./tests/offline/60.txt"
             };
             List<string> online_problem_files = new List<string>
             {
@@ -135,6 +148,12 @@ namespace implementation
             };
             run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
             run_using_solvers_and_files(online_solver_types, online_problem_files, test_online_solver);
+
+            timer.Stop();
+
+            double dt = timer.Elapsed.TotalSeconds;
+
+            Console.WriteLine($"passed {dt}s");
         }
         static void Validate()
         {
