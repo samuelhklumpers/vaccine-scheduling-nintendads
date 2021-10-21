@@ -124,7 +124,7 @@ namespace implementation
             };
             List<string> offline_problem_files = new List<string>
             {
-                "../data/offline/from_assignment.txt", 
+                "../data/offline/from_assignment.txt",
                 "../data/offline/big_numbers.txt",
                 "../data/offline/three_quarters.txt",
                 "../data/offline/backtracker.txt",
@@ -139,8 +139,11 @@ namespace implementation
                 "./tests/offline/12.txt",
                 "./tests/offline/15.txt",
                 "./tests/offline/20.txt",
-                //"./tests/offline/45.txt",
-                "./tests/offline/60.txt"
+                "./tests/offline/45.txt",
+                "./tests/offline/60.txt",
+                "./tests/offline/100-1.txt",
+                "./tests/offline/100-2.txt",
+                "./tests/offline/340.txt"
             };
             List<string> online_problem_files = new List<string>
             {

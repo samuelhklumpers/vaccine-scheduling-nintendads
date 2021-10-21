@@ -8,7 +8,7 @@ namespace implementation
 {
     class LinearProgrammingILP
     {
-        public static Solution Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timelimit)
+        public static (bool, bool, int?, Solution?) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timelimit)
         {
             List<Job> jobs = new List<Job>();
 
@@ -48,7 +48,7 @@ namespace implementation
 
                 var variable = solver.LookupVariableOrNull(variable_string);
 
-                if(variable == null)
+                if (variable == null)
                 {
                     Console.WriteLine("No variable with name: " + variable_string);
                     continue;
@@ -83,50 +83,9 @@ namespace implementation
             if (status == Solver.ResultStatus.OPTIMAL)
             {
                 someSolution = true;
-
-                int[] hospital_numbers = new int[max_j];
-                List<(int, int, int)> chronological_jobs = new List<(int, int, int)>();
-                for (int i = 0; i < solver.variables().Count; i++)
-                {
-                    string[] data = solver.variables()[i].Name().Split(' ');
-                    if (data[0][0] == 't')
-                    {
-                        chronological_jobs.Add(((int)solver.variables()[i].SolutionValue(), i % 2, i)); //fill list with start times and 0 when first dose, 1 when second dose, and job id
-                    }
-                }
-                List<(int, int, int)> chronological_jobs_copy = new List<(int, int, int)>(chronological_jobs);
-                chronological_jobs.Sort();
-                int[] hospital_available = new int[max_h];
-                int done_job_index = 0;
-                for (int i = 0; i < max_t; i++)
-                {
-                    if (done_job_index >= chronological_jobs.Count) break;
-                    if (chronological_jobs[done_job_index].Item1 == i)
-                    {
-                        for (int j = 0; j < hospital_available.Length; j++)
-                        {
-                            if (hospital_available[j] == 0)
-                            {
-                                hospital_available[j] = chronological_jobs[done_job_index].Item2 == 0 ? problem.p1 : problem.p2;
-                                hospital_numbers[chronological_jobs[done_job_index].Item3] = j;
-                                break;
-                            }
-                        }
-                        done_job_index++;
-                    }
-                    for (int j = 0; j < hospital_available.Length; j++)
-                    {
-                        hospital_available[j] = Math.Max(0, hospital_available[j] - 1);
-                    }
-                }
-                List<Doses> registrations = new List<Doses>();
-                for (int i = 0; i < hospital_numbers.Length / 2; i++)
-                {
-                    registrations.Add(new Doses(chronological_jobs_copy[i * 2].Item1, chronological_jobs_copy[i * 2 + 1].Item1));
-                }
-                Solution sol = new Solution((hospital_numbers.Length > 0)? hospital_numbers.Max() + 1:0, registrations);
-                
-
+                (int upperbound, Solution solution) = calculate_upperbound_and_solution_ilp(solver, problem, max_j, max_h);
+                sol = solution;
+                upperboundHospitals = upperbound;
             }
 
             else if (status == Solver.ResultStatus.NOT_SOLVED)
@@ -140,7 +99,9 @@ namespace implementation
             {
                 feasibleNoSolution = false;
                 someSolution = true;
-
+                (int upperbound, Solution solution) = calculate_upperbound_and_solution_ilp(solver, problem, max_j, max_h);
+                sol = solution;
+                upperboundHospitals = upperbound;
             }
 
             else
@@ -148,9 +109,61 @@ namespace implementation
                 feasibleNoSolution = false;
                 someSolution = false;
             }
-            
+
             return (feasibleNoSolution, someSolution, upperboundHospitals, sol);
-            
+
+        }
+        static private (int, Solution) calculate_upperbound_and_solution_ilp(Solver solver, OfflineProblem problem, int max_j, int max_h)
+        {
+            int[] hospital_numbers = new int[max_j];
+            List<(int, int, int)> chronological_jobs = new List<(int, int, int)>();
+            for (int i = 0; i < solver.variables().Count; i++)
+            {
+                string[] data = solver.variables()[i].Name().Split(' ');
+                if (data[0][0] == 't')
+                {
+                    chronological_jobs.Add(((int)solver.variables()[i].SolutionValue(), i % 2, i)); //fill list with start times and 0 when first dose, 1 when second dose, and job id
+                }
+            }
+            List<(int, int, int)> chronological_jobs_copy = new List<(int, int, int)>(chronological_jobs);
+            chronological_jobs.Sort();
+            int[] hospital_available = new int[max_h];
+            int current_time = 0;
+            int curent_max = 0;
+            foreach ((int, int, int) job in chronological_jobs)
+            {
+                for (int i = 0; i < hospital_available.Length; i++)
+                {
+                    hospital_available[i] = Math.Max(0, hospital_available[i] - (job.Item1 - current_time));
+                }
+                current_time = job.Item1;
+                for (int i = 0; i < hospital_available.Length; i++)
+                {
+                    if (hospital_available[i] == 0)
+                    {
+                        hospital_available[i] = job.Item2 == 0 ? problem.p1 : problem.p2;
+                        hospital_numbers[job.Item3] = i;
+                        break;
+                    }
+                }
+
+                int max = 0;
+                for (int i = 0; i < hospital_available.Length; i++)
+                {
+                    max += hospital_available[i] != 0 ? 1 : 0;
+                }
+                if (max > curent_max)
+                {
+                    curent_max = max;
+                }
+            }
+            List<Doses> registrations = new List<Doses>();
+            for (int i = 0; i < hospital_numbers.Length / 2; i++)
+            {
+                registrations.Add(new Doses(chronological_jobs_copy[i * 2].Item1, chronological_jobs_copy[i * 2 + 1].Item1));
+            }
+            Solution sol = new Solution((hospital_numbers.Length > 0) ? hospital_numbers.Max() + 1 : 0, registrations);
+            return (curent_max, sol);
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {

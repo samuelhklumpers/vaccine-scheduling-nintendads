@@ -16,10 +16,10 @@ namespace implementation
             //partial_solution["t0"] = 4;
             //(bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
 
-            Solution sol = LinearProgrammingILP.Solve(problem, partial_solution, 10000);
-            return sol;
+            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 100000);
+            //return sol;
 
-            /*
+
 
             if (sol != null)
             {
@@ -37,30 +37,36 @@ namespace implementation
             {
                 //do greedy for upperbound cuz no solution was found but it is feasible
                 Console.WriteLine("no solution");
+
+                GreedyOffline greedy = new GreedyOffline();
+                Solution greedy_sol = greedy.solve(problem);
+
+                Console.WriteLine("upperbound greedy " + greedy_sol.machines);
                 return sol;
             }
 
-            else 
+            else
             {
                 //branch with upperbound given by upperboundHospitals or with min of upperbound en greedy --> check of greedy beter of niet, solution was found but not an optimal one
-                Console.WriteLine("non optimal " );
+                Console.WriteLine("non optimal ");
                 Console.WriteLine("upperbound " + upperboundHospitals);
 
                 GreedyOffline greedy = new GreedyOffline();
                 Solution greedy_sol = greedy.solve(problem);
 
-                Console.WriteLine("upperbound greedy " + greedy_sol.machines );
-                
+                Console.WriteLine("upperbound greedy " + greedy_sol.machines);
+
                 return sol;
-            }*/
+            }
         }
 
-        public Solution solve2(OfflineProblem problem) 
+        public Solution solve2(OfflineProblem problem)
         {
             (int lower, int upper) = calcBounds(problem);
             Stack<Doses2D> regs = new Stack<Doses2D>();
             List<Hospital> hospitals = new List<Hospital>();
-            for (int i = 0; i < lower; i++){
+            for (int i = 0; i < lower; i++)
+            {
                 hospitals.Add(new Hospital(hospitals.Count));
             }
 
@@ -101,8 +107,8 @@ namespace implementation
 
                 // The interval range including the starting hour itself (Enumerable.Range(start,count) will return an empty range if count is 0)
                 // The required processing time for the second dose -1 as the starting hour itself is also used
-                int interval_range = end_second - begin_second + 1; 
-                int processing = problem.p2 - 1; 
+                int interval_range = end_second - begin_second + 1;
+                int processing = problem.p2 - 1;
                 int[] start_times_second_dose = Enumerable.Range(begin_second, interval_range - processing).ToArray();
 
                 foreach (int second_start_time in start_times_second_dose)
@@ -148,13 +154,13 @@ namespace implementation
                 if (!already_busy)
                 {
                     List<(int, int)> changelog = new List<(int, int)>();
-                    for (int i = start_time - processing_time + 1; i < start_time + processing_time; i++) 
+                    for (int i = start_time - processing_time + 1; i < start_time + processing_time; i++)
                     {
                         h.busy_dict.TryGetValue(i, out bool already_true);
-                        if (!already_true) 
-                        { 
-                            h.busy_dict[i] = true;  
-                            changelog.Add((i, h.id)); 
+                        if (!already_true)
+                        {
+                            h.busy_dict[i] = true;
+                            changelog.Add((i, h.id));
                         }
                     }
                     return (changelog, new int[2] { start_time, h.id });
@@ -164,8 +170,10 @@ namespace implementation
             return (null, null);
         }
 
-        private void undoChangelog(List<Hospital> hospitals, List<(int, int)> changelog) {
-            foreach ((int t, int h) in changelog) {
+        private void undoChangelog(List<Hospital> hospitals, List<(int, int)> changelog)
+        {
+            foreach ((int t, int h) in changelog)
+            {
                 hospitals[h].busy_dict[t] = false;
             }
         }
@@ -180,7 +188,7 @@ namespace implementation
             }
             return tmp;
         }
-        
+
         private (int, int) calcBounds(OfflineProblem problem)
         {
             // Calculate lower and upper bound of machines with pigeonhole and greedy planning

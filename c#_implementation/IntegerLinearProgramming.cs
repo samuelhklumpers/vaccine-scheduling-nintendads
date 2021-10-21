@@ -38,7 +38,7 @@ namespace implementation
             //Create the decision variables
             Variable[] t = init_variables_vector(solver, max_j, max_t, "t"); // tj starting time of job j
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
-            Variable[] y = init_variables_vector(solver, max_j, max_h-1, "y"); // y_j --> hospital number of job j
+            Variable[] y = init_variables_vector(solver, max_j, max_h - 1, "y"); // y_j --> hospital number of job j
             Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j); //one if jobs j and k in same hospital
             Variable[,] compare = init_2d_boolean_variable_compare(solver, max_j); //Compare[j,k] is zero if y[j] is bigger than y[k] and one otherwise, used together with sameHospitals.
 
@@ -57,7 +57,7 @@ namespace implementation
 
                 var variable = solver.LookupVariableOrNull(variable_string);
 
-                if(variable == null)
+                if (variable == null)
                 {
                     Console.WriteLine("No variable with name: " + variable_string);
                     continue;
@@ -92,7 +92,7 @@ namespace implementation
             if (status == Solver.ResultStatus.OPTIMAL)
             {
                 someSolution = true;
-                    
+
                 List<Doses2D> doses = new List<Doses2D>();
                 HashSet<int> hospitals_used = new HashSet<int>();
 
@@ -116,7 +116,7 @@ namespace implementation
 
                 upperboundHospitals = hospitals_used.Count;
 
-                sol = new Solution2D(hospitals_used.Count, doses); 
+                sol = new Solution2D(hospitals_used.Count, doses);
 
             }
 
@@ -132,18 +132,30 @@ namespace implementation
                 feasibleNoSolution = false;
                 someSolution = true;
 
+                List<Doses2D> doses = new List<Doses2D>();
                 HashSet<int> hospitals_used = new HashSet<int>();
 
-                foreach (var variable in solver.variables())
+
+                for (int i = 0; i < problem.patients.Count; i++)
                 {
-                    string[] data = variable.Name().Split(' ');
-                    if (data[0][0] == 'y' )
-                    {
-                        hospitals_used.Add((int)variable.SolutionValue());  
-                    }
+                    Patient patient = problem.patients[i];
+
+                    var firstHospital = solver.LookupVariableOrNull("y" + (i * 2));
+                    var secondHospital = solver.LookupVariableOrNull("y" + (i * 2 + 1));
+                    var firstTime = solver.LookupVariableOrNull("t" + (i * 2));
+                    var secondTime = solver.LookupVariableOrNull("t" + (i * 2 + 1));
+
+                    hospitals_used.Add((int)firstHospital.SolutionValue());
+                    hospitals_used.Add((int)secondHospital.SolutionValue());
+
+                    Doses2D dose = new Doses2D((int)firstTime.SolutionValue(), (int)firstHospital.SolutionValue(), (int)secondTime.SolutionValue(), (int)secondHospital.SolutionValue());
+
+                    doses.Add(dose);
                 }
 
                 upperboundHospitals = hospitals_used.Count;
+
+                sol = new Solution2D(hospitals_used.Count, doses);
             }
 
             else
@@ -151,7 +163,7 @@ namespace implementation
                 feasibleNoSolution = false;
                 someSolution = false;
             }
-            
+
             return (feasibleNoSolution, someSolution, upperboundHospitals, sol);
         }
 
@@ -254,7 +266,7 @@ namespace implementation
 
                     //if compare needs to be zero because samehospitals is zero, y[j] and y[k] need to be different.
                     solver.Add(y[j] >= y[k] + 1 - (max_h + 1) * (compare[j, k]));
-                    
+
                 }
             }
         }
@@ -270,7 +282,7 @@ namespace implementation
                     }
 
                     //sameHospitals is one if both y[j] and y[k] are equal. 
-                    solver.Add(compare[j,k] + compare[k,j] <= samehospitals[j,k] + 1); //if samehospitals is zero, one of the compares needs to be zero
+                    solver.Add(compare[j, k] + compare[k, j] <= samehospitals[j, k] + 1); //if samehospitals is zero, one of the compares needs to be zero
                     solver.Add((y[j] - y[k]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]); //if same hospital is one, y[j] and y[k] need to be the same
                     solver.Add((y[k] - y[j]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]); //need this one for above constraint to hold, otherwise can also be one
                     // if y[k] smaller than y[j]. --> this minimizes the number of hospitals as we maximize samehospitals. 
@@ -312,7 +324,7 @@ namespace implementation
                     //Ensures that no job is scheduled within the processing time of a previous job that is in the same hospital. 
                     if (jobs[j].vaccine == 1)
                     {
-                        solver.Add(t[j] - t[k] - (t_max + 1) * (1-z[j,k]) - (t_max + 1) * (1-samehospitals[j, k]) <= - problem.p1);
+                        solver.Add(t[j] - t[k] - (t_max + 1) * (1 - z[j, k]) - (t_max + 1) * (1 - samehospitals[j, k]) <= -problem.p1);
 
                     }
 
