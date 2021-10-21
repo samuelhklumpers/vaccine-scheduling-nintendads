@@ -75,8 +75,7 @@ namespace implementation
                     max = curr;
                 }
             }
-            Console.WriteLine(max + " " + sol.machines );
-            //Debug.Assert(max == sol.machines);
+            Debug.Assert(max == sol.machines);
         }
 
         public void assertFeasible(Solution sol)

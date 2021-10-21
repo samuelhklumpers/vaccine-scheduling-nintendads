@@ -4,6 +4,7 @@ using System.IO;
 using System.Collections;
 using static implementation.Parser;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 
 namespace implementation
@@ -107,6 +108,10 @@ namespace implementation
 
         static void Test()
         {
+            var timer = new Stopwatch();
+
+            timer.Start();
+
             Type[] offline_solver_types =
             {
                 typeof(BranchAndBoundSolverOffline),
@@ -131,7 +136,10 @@ namespace implementation
                 "./tests/offline/3-2.txt",
                 "./tests/offline/3-3.txt",
                 "./tests/offline/4-1.txt",
-                "./tests/offline/45.txt",
+                "./tests/offline/12.txt",
+                "./tests/offline/15.txt",
+                "./tests/offline/20.txt",
+                //"./tests/offline/45.txt",
                 "./tests/offline/60.txt"
             };
             List<string> online_problem_files = new List<string>
@@ -140,6 +148,12 @@ namespace implementation
             };
             run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
             run_using_solvers_and_files(online_solver_types, online_problem_files, test_online_solver);
+
+            timer.Stop();
+
+            double dt = timer.Elapsed.TotalSeconds;
+
+            Console.WriteLine($"passed {dt}s");
         }
         static void Validate()
         {
