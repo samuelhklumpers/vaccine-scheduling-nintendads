@@ -21,7 +21,7 @@ namespace implementation
         {
             Console.WriteLine("adversary...");
 
-            IOnlineSolver solver = new GreedyOnline();
+            IOnlineSolver solver = new VeryGreedyOnline();
 
             var (problem, alg) = SimpleAdversary.Triple(solver);
             var opt = new IntSatSolver().solve(problem.CountN());
@@ -60,6 +60,7 @@ namespace implementation
 
             var solvers = new List<IOnlineSolver>(new IOnlineSolver[] {
                 new GreedyOnline(),
+                new VeryGreedyOnline(),
                 new ForwardMinimizeOnline()
             });
 
