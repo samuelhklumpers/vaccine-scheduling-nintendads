@@ -13,7 +13,7 @@ namespace implementation
         {
             // Obtain lower and upper bounds with Pigeonhole and Greedy
             (int lower, int upper, Solution sol) = boundsOrSolve(problem, new Dictionary<string, double>());
-            if (sol is not null) { return sol; }
+            if (sol is not null && sol.machines <= lower) { return sol; }
 
             // Pre-emptively add lower amount of hospitals
             List<Hospital> hospitals = new List<Hospital>();
@@ -44,7 +44,7 @@ namespace implementation
             partials.Enqueue(ps);
             while (!solved && partials.Count > 0) 
             {
-                (solved, ps, sol) = BFSolve(problem, partials, upper);
+                (solved, ps, sol) = BFSolve(problem, partials, lower, upper);
             }
 
             if (sol is not null) { return sol; }
@@ -56,14 +56,14 @@ namespace implementation
             }
         }
 
-        private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int upper)
+        private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int lower, int upper)
         {            
             // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
 
-            (bool feasible, bool _, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 100); // Tenth of a second
-            if (sol is not null) { return (true, null, sol); }
-            else if (!feasible) { return (false, null, null); }
+            //(bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
+            //if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
+            //else if (!feasible && !someSolution) { return (false, null, null); }
 
             Patient p = ps.patients.Dequeue();
 
@@ -137,10 +137,11 @@ namespace implementation
 
         private (int, int, Solution) boundsOrSolve(OfflineProblem problem, Dictionary<string, double> partialString)
         {
-            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
-            if (sol is not null) { return (sol.machines, sol.machines, sol); }
-            else if (feasibleNoSolution == false && someSolution == false) { return (0, 0, null); }
-            else { (int lower, int upper) = calcBounds(problem); return (lower, upper, null); }
+            (bool feasible, bool someSolution, int? upperboundHospitals, Solution sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
+            (int lower, int upper) = calcBounds(problem);
+            if (sol is not null && sol.machines <= upper) { return (sol.machines, sol.machines, sol); }
+            else if (!feasible && !someSolution) { return (0, 0, null); }
+            else { return (lower, upper, null); }
         }
 
         private (List<(int, int)>, int[]) tryStartTime(List<Hospital> hospitals, int start_time, int processing_time)
@@ -231,25 +232,13 @@ namespace implementation
         {
             Dictionary<string,double> res = new Dictionary<string, double>();
             int t = 0;
-            int y = 0;
             foreach (Doses2D dose in this.regs)
             {
                 res["t" + t.ToString()] = (double) dose.t1;
                 t++;
                 res["t" + t.ToString()] = (double) dose.t2;
                 t++;
-                res["y" + y.ToString()] = (double) dose.h1;
-                y++;
-                res["y" + y.ToString()] = (double) dose.h2;
-                y++;
-            }
-            
-            /*t0 t1  -> eerste timeslot, tweede timeslot vaccinatie
-            y0 y1 -> eerste timeslot hospital
-
-            t2 t3 tweede patient ....
-            y2 y3 ....*/
-            
+            }            
             return res;
         }
     }
