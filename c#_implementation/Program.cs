@@ -15,7 +15,7 @@ namespace implementation
         {
             if (args.Count() == 0)
             {
-                bool test = true;
+                bool test = false;
                 bool benchmark = false;
                 bool validate = false;
 
@@ -31,6 +31,14 @@ namespace implementation
                 if (validate)
                 {
                     Validate();
+                }
+                else
+                { 
+                    OfflineProblem p = ParseOfflineProblem("../data/offline/backtracker.txt");
+                    var sol = new BFSBnBOffline().solve(p);
+                    OfflineValidator v = new OfflineValidator(p);
+                    v.validate(sol);
+                    Console.WriteLine(sol); 
                 }
             }
             else
