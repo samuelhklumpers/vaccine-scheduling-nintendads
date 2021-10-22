@@ -52,7 +52,10 @@ def latex():
 
 
 def run_all():
-    data = jload("offline.json")
+    offline = "offline"
+    json_file = offline + ".json"
+
+    data = jload(json_file)
     
     for solver in data["solvers"]:
         print("solver", solver)
@@ -65,21 +68,21 @@ def run_all():
             if label in runs:
                 continue
 
-            fn = os.path.join("offline", fn)
+            fn = os.path.join(offline, fn)
             fn = os.path.abspath(fn)
             
-            res = run_one(solver, fn)
+            res = run_one(solver, fn, offline)
             runs[label] = res
         
-            jdump("offline.json", data)
+            jdump(json_file, data)
 
 
-def run_one(solver, test):
+def run_one(solver, test, offline):
     exe = "../bin/Debug/net5.0/c#_implementation.exe"
 
     t0 = time.perf_counter()
 
-    p = subprocess.Popen([exe, "case", solver, test])
+    p = subprocess.Popen([exe, "case", offline, solver, test])
     
     try:
         p.wait(60)
