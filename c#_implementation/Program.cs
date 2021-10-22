@@ -18,8 +18,13 @@ namespace implementation
                 bool test = false;
                 bool benchmark = false;
                 bool validate = false;
+                bool debug = true;
 
-                //Test();
+                if (debug)
+                {
+                    var problem = ParseOfflineProblem("../data/offline/backtracker.txt");
+                    Console.WriteLine(Bounds.PigeonHole(problem));
+                }
                 if (test)
                 {
                     Test();
