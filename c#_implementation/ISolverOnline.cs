@@ -4,6 +4,7 @@ namespace implementation
 {
     public interface IOnlineSolver
     {
+        public Solution2D solve(OnlineProblem problem) 
         {
             var sol = new Solution2D(0, new List<Doses2D>());
             foreach (var patient in problem.patients)
