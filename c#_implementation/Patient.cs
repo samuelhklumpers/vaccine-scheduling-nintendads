@@ -32,11 +32,7 @@ namespace implementation
 
         public override string ToString()
         {
-            string part1 = "first_timeslot_first_dose: " + this.r1 + " ";
-            string part2 = "last_timeslot_first_dose: " + this.d1 + " ";
-            string part3 = "delay_between_doses: " + this.x + " ";
-            string part4 = "second_dose_interval: " + this.L;
-            return part1 + part2 + part3 + part4;
+            return String.Join(' ', new int[] { r1, d1, x, L });
         }
     }
 }
