@@ -47,7 +47,7 @@ namespace implementation
             while (partials.Count > 0) // todo finish queue (and if solved already, dont enqueue new partial solutions) and bound all solutions.
             {
                 (solved, ps, sol) = BFSolve(problem, partials, lower, upper, solution_found);
-                if (solved && ps.hospitals.Count() <= upper)  /// <= because of the if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } line
+                if (solved && sol is null && ps.hospitals.Count() <= upper)  /// <= because of the if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } line
                 {
                     solution_found = true;
                     best_ps = ps;
@@ -73,7 +73,7 @@ namespace implementation
 
             (bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
             if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
-            //else if (!feasible && !someSolution) { return (false, null, null); }
+            else if (!feasible && !someSolution) { return (false, null, null); }
 
             Patient p = ps.patients.Dequeue();
 
@@ -130,10 +130,14 @@ namespace implementation
                     // Undo everything of this layer to clean it for the next deepcopy
                     undoChangelog(ps.hospitals, first_changelog);
                 }
-            // If this branch has not capped on hospitals, add a hospital.
-            // If this branch fails to plan in the next patient and has capped on hopsitals, bound the branch by not enqueueing any children of it.
-            if ( queueLen == partials.Count() && ps.hospitals.Count < upper) { ps.hospitals.Add(new Hospital(ps.hospitals.Count)); }
-            else { return (false, null, null); }
+                // If this branch has not capped on hospitals, add a hospital.
+                // If this branch fails to plan in the next patient and has capped on hopsitals, bound the branch by not enqueueing any children of it.
+                // Additionally, if a solution has already been found, then branches with a hospital count equal to the upper are not interesting either anymore
+                if ( queueLen == partials.Count() && ps.hospitals.Count < upper && (!solution_found || ps.hospitals.Count + 1 < upper)) 
+                { 
+                    ps.hospitals.Add(new Hospital(ps.hospitals.Count)); 
+                }
+                else { return (false, null, null); }
             }
 
             return (false, null, null);
