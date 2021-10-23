@@ -39,30 +39,40 @@ namespace implementation
             // Create the first PartialSolution and put it in the BFS queue
             // Keep planning partial solutions until a solution is found, branches now manage their own hospital count and bound accordingly
             bool solved = false;
+            bool solution_found = false;
             Queue<PartialSolution> partials = new Queue<PartialSolution>();
             PartialSolution ps = new PartialSolution(hospitals, regs, patients);
+            PartialSolution best_ps = ps;
             partials.Enqueue(ps);
-            while (!solved && partials.Count > 0) 
+            while (partials.Count > 0) // todo finish queue (and if solved already, dont enqueue new partial solutions) and bound all solutions.
             {
-                (solved, ps, sol) = BFSolve(problem, partials, lower, upper);
+                (solved, ps, sol) = BFSolve(problem, partials, lower, upper, solution_found);
+                if (solved && ps.hospitals.Count() <= upper)  /// <= because of the if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } line
+                {
+                    solution_found = true;
+                    best_ps = ps;
+                    upper = best_ps.hospitals.Count();
+                }
             }
 
             if (sol is not null) { return sol; }
             else 
             {
                 // Results are still ordered by ascending availability, put them back in input order
-                List<Doses2D> res = PutBack(idPatients, ps.regs);
-                return new Solution2D(ps.hospitals.Count, res);
+                List<Doses2D> res = PutBack(idPatients, best_ps.regs);
+                return new Solution2D(best_ps.hospitals.Count, res);
             }
         }
 
-        private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int lower, int upper)
-        {            
+        private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int lower, int upper, bool solution_found)
+        {           
             // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
 
-            //(bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
-            //if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
+            if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } // basically if upper == lower, stop
+
+            (bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
+            if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
             //else if (!feasible && !someSolution) { return (false, null, null); }
 
             Patient p = ps.patients.Dequeue();
@@ -106,8 +116,13 @@ namespace implementation
                         { 
                             // Algorithm isn't done, enqueue the copy.
                             // Undo everything of this layer to clean it for the next deepcopy
-                            partials.Enqueue(copy); 
-                            undoChangelog(ps.hospitals, second_changelog); 
+                            // But only if no solution already has been found.
+                            if (!solution_found) 
+                            { 
+                                partials.Enqueue(copy); 
+                                undoChangelog(ps.hospitals, second_changelog); 
+                            }
+                            else { return (false, null, null); }
                         }
                         // If all patients are planned in on this branch, return true and disregard the queue because who cares, we found a solution
                         else { return (true, copy, null); }
