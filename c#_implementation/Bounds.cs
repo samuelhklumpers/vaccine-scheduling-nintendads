@@ -18,8 +18,8 @@ namespace implementation
             {
                 var pat = ps[i];
 
-                var (left1, right1) = (pat.r1, pat.d1); // note: don't want the -p1 here
-                var (left2, right2) = (left1 + p1 + g + pat.x, right1 + p1 + g + pat.x + pat.L); // please don't be off by one
+                var (left1, right1) = (pat.r1, pat.d1 + 1); // note: don't want the -p1 here
+                var (left2, right2) = (left1 + p1 + g + pat.x, right1 + g + pat.x + pat.L + 1); // please don't be off by one
 
                 intervals.Add((left1, p1, right1));
                 intervals.Add((left2, p2, right2));

@@ -5,6 +5,18 @@ using System.Diagnostics;
 
 namespace implementation
 {
+    class Hospital
+    {
+        public int id;
+        public Dictionary<int, bool> busy_dict;
+
+        public Hospital(int id)
+        {
+            this.id = id;
+            this.busy_dict = new Dictionary<int,bool>();
+        }
+    }
+
     class RecursiveBruteforce : IOfflineSolver
     {
         public Solution solve(OfflineProblem problem)
@@ -13,7 +25,7 @@ namespace implementation
             List<Hospital> hospitals = new List<Hospital>();
             hospitals.Add(new Hospital(hospitals.Count));
 
-            Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patients));
+            Stack<Patient> patients = ReverseStack(new Stack<Patient>(problem.patients));
 
             bool solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             while (!solved)
@@ -26,7 +38,7 @@ namespace implementation
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
-            return new Solution2D(hospitals.Count, deleteMeReverseStack(regs).ToList());
+            return new Solution2D(hospitals.Count, ReverseStack(regs).ToList());
         }
         private bool solveR(OfflineProblem problem, List<Hospital> hospitals, Stack<Doses2D> regs, Stack<Patient> patients, Patient p)
         {
@@ -118,7 +130,7 @@ namespace implementation
         }
 
         // Temporary for testing purposes
-        private Stack<T> deleteMeReverseStack<T>(Stack<T> input)
+        private Stack<T> ReverseStack<T>(Stack<T> input)
         {
             Stack<T> tmp = new Stack<T>();
             while (input.Count > 0)

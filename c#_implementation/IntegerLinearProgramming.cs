@@ -6,12 +6,17 @@ using Google.OrTools.LinearSolver;
 
 namespace implementation
 {
-    class LinearProgrammingILP
+    class IntegerLinearProgramming
     {
-        public static (bool, bool, int?, Solution) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timelimit)
+        //First boolean is true if the ILP is feasible but no solution is found.        
+        //Second boolean is true if the ILP found some solution. 
+        //int is the upperbound if a suboptimal solution is found. Is null if infeasible or no solution
+        //Solution is not null if an optimal solution is found. (thus done within time)
+        public static (bool, bool, int?, Solution) Solve(OfflineProblem problem, Dictionary<string, double> partial_solution, int timeLimit)
         {
             List<Job> jobs = new List<Job>();
 
+            //Create the jobs, each job is one vaccine. 
             for (int i = 0; i < problem.patients.Count; i++)
             {
                 Patient patient = problem.patients[i];
@@ -33,14 +38,18 @@ namespace implementation
             //Create the decision variables
             Variable[] t = init_variables_vector(solver, max_j, max_t, "t"); // tj starting time of job j
             Variable[,] z = init_2d_boolean_variable_z(solver, max_j); // z_j,j' --> 1 if job j starts before job j'
-            Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j); //one if jobs j,k in same hospital
+            Variable[] y = init_variables_vector(solver, max_j, max_h - 1, "y"); // y_j --> hospital number of job j
+            Variable[,] samehospitals = init_2d_boolean_variable_samehospitals(solver, max_j); //one if jobs j and k in same hospital
+            Variable[,] compare = init_2d_boolean_variable_compare(solver, max_j); //Compare[j,k] is zero if y[j] is bigger than y[k] and one otherwise, used together with sameHospitals.
 
             //Add the constraints to the solver
             add_constraints_z(solver, z, t, jobs, max_t); // calculate which jobs are before other jobs
-            add_constraint_interval_vaccines(solver, problem, t, jobs);
-            add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, samehospitals, jobs, max_h, max_t);
+            add_constraints_samehospital(solver, samehospitals, y, compare, jobs, max_h); //Used to check whether the patients are in the same hospital
+            add_constraint_interval_vaccines(solver, problem, t, jobs); //Makes sure the two doses of one patient are in the correct interval
+            add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, y, samehospitals, jobs, max_h, max_t); //To make sure that there are no patients planned at the same time in the same hospital.
+            add_constraints_compare(solver, compare, y, jobs, max_h); //Used to set sameHospitals.
 
-
+            //Add extra constraints to comply to the partial solution given by branch and bound.
             foreach (var item in partial_solution)
             {
                 string variable_string = item.Key;
@@ -70,7 +79,7 @@ namespace implementation
                 }
             }
             objective.SetMaximization();
-            solver.SetTimeLimit(timelimit);
+            solver.SetTimeLimit(timeLimit);
 
             Solver.ResultStatus status = solver.Solve();
 
@@ -83,9 +92,32 @@ namespace implementation
             if (status == Solver.ResultStatus.OPTIMAL)
             {
                 someSolution = true;
-                (int upperbound, Solution solution) = calculate_upperbound_and_solution_ilp(solver, problem, max_j, max_h);
-                sol = solution;
-                upperboundHospitals = upperbound;
+
+                List<Doses2D> doses = new List<Doses2D>();
+                HashSet<int> hospitals_used = new HashSet<int>();
+
+
+                for (int i = 0; i < problem.patients.Count; i++)
+                {
+                    Patient patient = problem.patients[i];
+
+                    var firstHospital = solver.LookupVariableOrNull("y" + (i * 2));
+                    var secondHospital = solver.LookupVariableOrNull("y" + (i * 2 + 1));
+                    var firstTime = solver.LookupVariableOrNull("t" + (i * 2));
+                    var secondTime = solver.LookupVariableOrNull("t" + (i * 2 + 1));
+
+                    hospitals_used.Add((int)firstHospital.SolutionValue());
+                    hospitals_used.Add((int)secondHospital.SolutionValue());
+
+                    Doses2D dose = new Doses2D((int)firstTime.SolutionValue(), (int)firstHospital.SolutionValue(), (int)secondTime.SolutionValue(), (int)secondHospital.SolutionValue());
+
+                    doses.Add(dose);
+                }
+
+                upperboundHospitals = hospitals_used.Count;
+
+                sol = new Solution2D(hospitals_used.Count, doses);
+
             }
 
             else if (status == Solver.ResultStatus.NOT_SOLVED)
@@ -99,9 +131,31 @@ namespace implementation
             {
                 feasibleNoSolution = false;
                 someSolution = true;
-                (int upperbound, Solution solution) = calculate_upperbound_and_solution_ilp(solver, problem, max_j, max_h);
-                sol = solution;
-                upperboundHospitals = upperbound;
+
+                List<Doses2D> doses = new List<Doses2D>();
+                HashSet<int> hospitals_used = new HashSet<int>();
+
+
+                for (int i = 0; i < problem.patients.Count; i++)
+                {
+                    Patient patient = problem.patients[i];
+
+                    var firstHospital = solver.LookupVariableOrNull("y" + (i * 2));
+                    var secondHospital = solver.LookupVariableOrNull("y" + (i * 2 + 1));
+                    var firstTime = solver.LookupVariableOrNull("t" + (i * 2));
+                    var secondTime = solver.LookupVariableOrNull("t" + (i * 2 + 1));
+
+                    hospitals_used.Add((int)firstHospital.SolutionValue());
+                    hospitals_used.Add((int)secondHospital.SolutionValue());
+
+                    Doses2D dose = new Doses2D((int)firstTime.SolutionValue(), (int)firstHospital.SolutionValue(), (int)secondTime.SolutionValue(), (int)secondHospital.SolutionValue());
+
+                    doses.Add(dose);
+                }
+
+                upperboundHospitals = hospitals_used.Count;
+
+                sol = new Solution2D(hospitals_used.Count, doses);
             }
 
             else
@@ -111,60 +165,8 @@ namespace implementation
             }
 
             return (feasibleNoSolution, someSolution, upperboundHospitals, sol);
-
         }
-        static private (int, Solution) calculate_upperbound_and_solution_ilp(Solver solver, OfflineProblem problem, int max_j, int max_h)
-        {
-            int[] hospital_numbers = new int[max_j];
-            List<(int, int, int)> chronological_jobs = new List<(int, int, int)>();
-            for (int i = 0; i < solver.variables().Count; i++)
-            {
-                string[] data = solver.variables()[i].Name().Split(' ');
-                if (data[0][0] == 't')
-                {
-                    chronological_jobs.Add(((int)solver.variables()[i].SolutionValue(), i % 2, i)); //fill list with start times and 0 when first dose, 1 when second dose, and job id
-                }
-            }
-            List<(int, int, int)> chronological_jobs_copy = new List<(int, int, int)>(chronological_jobs);
-            chronological_jobs.Sort();
-            int[] hospital_available = new int[max_h];
-            int current_time = 0;
-            int curent_max = 0;
-            foreach ((int, int, int) job in chronological_jobs)
-            {
-                for (int i = 0; i < hospital_available.Length; i++)
-                {
-                    hospital_available[i] = Math.Max(0, hospital_available[i] - (job.Item1 - current_time));
-                }
-                current_time = job.Item1;
-                for (int i = 0; i < hospital_available.Length; i++)
-                {
-                    if (hospital_available[i] == 0)
-                    {
-                        hospital_available[i] = job.Item2 == 0 ? problem.p1 : problem.p2;
-                        hospital_numbers[job.Item3] = i;
-                        break;
-                    }
-                }
 
-                int max = 0;
-                for (int i = 0; i < hospital_available.Length; i++)
-                {
-                    max += hospital_available[i] != 0 ? 1 : 0;
-                }
-                if (max > curent_max)
-                {
-                    curent_max = max;
-                }
-            }
-            List<Doses> registrations = new List<Doses>();
-            for (int i = 0; i < hospital_numbers.Length / 2; i++)
-            {
-                registrations.Add(new Doses(chronological_jobs_copy[i * 2].Item1, chronological_jobs_copy[i * 2 + 1].Item1));
-            }
-            Solution sol = new Solution((hospital_numbers.Length > 0) ? hospital_numbers.Max() + 1 : 0, registrations);
-            return (curent_max, sol);
-        }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
             int max_time_upperbound = 0;
@@ -242,9 +244,49 @@ namespace implementation
                     {
                         continue;
                     }
-                    //Constraints that set z[j,k] to one if job j starts before job k. 
+                    //Constraints that set z[j,k] to one if job j starts before job k or at the same time. 
                     solver.Add(t[j] >= t[k] + 1 - (max_t + 1) * (z[j, k]));
                     solver.Add(t[k] >= t[j] - (max_t + 1) * (1 - z[j, k]));
+                }
+            }
+        }
+
+        //Add the constraint for each job pair that Compare needs to be one if y[j] is smaller than y[k].
+        //It also ensures that if y[j] and y[k] are equal, than compare[j,k] needs to be zero.
+        static private void add_constraints_compare(Solver solver, Variable[,] compare, Variable[] y, List<Job> jobs, int max_h)
+        {
+            for (int j = 0; j < jobs.Count; j++)
+            {
+                for (int k = 0; k < jobs.Count; k++)
+                {
+                    if (jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
+                    {
+                        continue;
+                    }
+
+                    //if compare needs to be zero because samehospitals is zero, y[j] and y[k] need to be different.
+                    solver.Add(y[j] >= y[k] + 1 - (max_h + 1) * (compare[j, k]));
+
+                }
+            }
+        }
+        static private void add_constraints_samehospital(Solver solver, Variable[,] samehospitals, Variable[] y, Variable[,] compare, List<Job> jobs, int max_h)
+        {
+            for (int j = 0; j < jobs.Count; j++)
+            {
+                for (int k = 0; k < jobs.Count; k++)
+                {
+                    if (jobs[j].id == jobs[k].id) // Don't add the constraints for the same job as this will be infeasible
+                    {
+                        continue;
+                    }
+
+                    //sameHospitals is one if both y[j] and y[k] are equal. 
+                    solver.Add(compare[j, k] + compare[k, j] <= samehospitals[j, k] + 1); //if samehospitals is zero, one of the compares needs to be zero
+                    solver.Add((y[j] - y[k]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]); //if same hospital is one, y[j] and y[k] need to be the same
+                    solver.Add((y[k] - y[j]) + (max_h + 1) >= (max_h + 1) * samehospitals[j, k]); //need this one for above constraint to hold, otherwise can also be one
+                    // if y[k] smaller than y[j]. --> this minimizes the number of hospitals as we maximize samehospitals. 
+
                 }
             }
         }
@@ -262,13 +304,13 @@ namespace implementation
                 else if (j.vaccine == 2)
                 {
                     solver.Add(t[j.id] >= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g);
-                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + (j.patient.L - 1 - problem.p2 + 1));
+                    solver.Add(t[j.id] <= t[jobs[j.id - 1].id] + problem.p1 + j.patient.x + problem.g + j.patient.L - 1 - problem.p2 + 1);
                 }
             }
         }
 
 
-        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
+        static private void add_constraint_no_two_patients_at_the_same_time(Solver solver, OfflineProblem problem, Variable[] t, Variable[,] z, Variable[] y, Variable[,] samehospitals, List<Job> jobs, int h_max, int t_max)
         {
             for (int j = 0; j < jobs.Count; j++)
             {
@@ -282,9 +324,6 @@ namespace implementation
                     //Ensures that no job is scheduled within the processing time of a previous job that is in the same hospital. 
                     if (jobs[j].vaccine == 1)
                     {
-                        //CONTROLEREN GOEIE Z
-                        //MOET OOK CONSTRAINT VOOR ANDERSOM, DIE GELDIG IS ALS J' VOOR J
-
                         solver.Add(t[j] - t[k] - (t_max + 1) * (1 - z[j, k]) - (t_max + 1) * (1 - samehospitals[j, k]) <= -problem.p1);
 
                     }

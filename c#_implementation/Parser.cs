@@ -28,22 +28,38 @@ namespace implementation
         public static OfflineProblem ParseOfflineProblem(string fn)
         {
             string[] data = System.IO.File.ReadAllLines(fn);
-            int processing_time_first_dose = int.Parse(data[0]);
-            int processing_time_second_dose = int.Parse(data[1]);
-            int gap = int.Parse(data[2]);
-            int number_of_patients = int.Parse(data[3]);
+            int processing_time_first_dose = parseInt(data[0]);
+            int processing_time_second_dose = parseInt(data[1]);
+            int gap = parseInt(data[2]);
+            int number_of_patients = parseInt(data[3]);
 
             List<Patient> patients_data = new List<Patient>();
             for (int i = 4; i < data.Length; i++)
             {
                 string[] patient_data = data[i].Split(", ");
-                Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]), processing_time_first_dose, processing_time_second_dose, gap);
+                Patient patient = new Patient(parseInt(patient_data[0]), parseInt(patient_data[1]), parseInt(patient_data[2]), parseInt(patient_data[3]), processing_time_first_dose, processing_time_second_dose, gap);
                 patients_data.Add(patient);
             }
 
             OfflineProblem problem = new OfflineProblem(processing_time_first_dose, processing_time_second_dose, gap, number_of_patients, patients_data);
             return problem;
         }
+
+        public static int parseInt(string information) 
+        {
+            int info;
+
+            if (int.TryParse(information, out info))
+            { 
+                 return info;
+            }
+
+            else
+            {
+                return int.MaxValue - 10; 
+            }
+        }
+
         public static OnlineProblem ParseOnlineProblem(string fn)
         {
             string[] data = System.IO.File.ReadAllLines(fn);

@@ -83,7 +83,7 @@ namespace implementation
 
         public void assertMachines(Solution sol)
         {
-            // assert that the solution uses as machines as it claims to
+            // assert that the solution uses as many machines as it claims to
             var r = sol.doses;
 
             var starts = new int[2 * r.Count];
@@ -128,9 +128,8 @@ namespace implementation
                     max = curr;
                 }
             }
-
-            Console.WriteLine("Max: {0}, Current: {1}", max, sol.machines);
-            // Debug.Assert(max == sol.machines); // it works. My alg just doens't.
+          
+            Debug.Assert(max == sol.machines);
         }
 
         public void assertFeasible(Solution sol)

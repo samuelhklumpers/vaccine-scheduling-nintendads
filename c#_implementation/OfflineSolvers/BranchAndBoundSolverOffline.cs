@@ -10,24 +10,67 @@ namespace implementation
 
         public Solution solve(OfflineProblem problem)
         {
-            //tak is lege solution, hier lower bound pakken met LP en upper bound met bruteforce oplossing/ heuristic --> of numPatients, stuk sneller
-            // bij lower bound kijken of het een integer oplossing is, alle decision variables moeten integer zijn. 
-            //als niet integer, dan verder zoeken
-            //dan branchen door random 1 persoon in te vullen, dit gaat DF. Hier opnieuw LP en bruteforce, alleen dan geef je ze partial oplossing mee. 
-            Console.WriteLine(LinearProgrammingLP.Solve(problem));
-            return LinearProgrammingILP.Solve(problem);
+            //start timelimit high and decrease when branching more --> start with 4 seconds, then 2 en then go to 100 milliseconds or something
+            // done to first see if an optimal solution can be found in reasonable time before starting to branch a lot. but with a lot of branching it needs to be faster.
+            Dictionary<string, double> partial_solution = new Dictionary<string, double>();
+            //partial_solution["t0"] = 4;
+            //(bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
+
+            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 100000);
+            //return sol;
+
+
+
+            if (sol != null)
+            {
+                return sol;
+            }
+
+            else if (feasibleNoSolution == false && someSolution == false)
+            {
+                //stop branching as it is infeasible
+                Console.WriteLine("infeasible");
+                return sol;
+            }
+
+            else if (feasibleNoSolution && someSolution == false)
+            {
+                //do greedy for upperbound cuz no solution was found but it is feasible
+                Console.WriteLine("no solution");
+
+                GreedyOffline greedy = new GreedyOffline();
+                Solution greedy_sol = greedy.solve(problem);
+
+                Console.WriteLine("upperbound greedy " + greedy_sol.machines);
+                return sol;
+            }
+
+            else
+            {
+                //branch with upperbound given by upperboundHospitals or with min of upperbound en greedy --> check of greedy beter of niet, solution was found but not an optimal one
+                Console.WriteLine("non optimal ");
+                Console.WriteLine("upperbound " + upperboundHospitals);
+
+                GreedyOffline greedy = new GreedyOffline();
+                Solution greedy_sol = greedy.solve(problem);
+
+                Console.WriteLine("upperbound greedy " + greedy_sol.machines);
+
+                return sol;
+            }
         }
 
-        public Solution solve2(OfflineProblem problem) 
+        public Solution solve2(OfflineProblem problem)
         {
             (int lower, int upper) = calcBounds(problem);
             Stack<Doses2D> regs = new Stack<Doses2D>();
             List<Hospital> hospitals = new List<Hospital>();
-            for (int i = 0; i < lower; i++){
+            for (int i = 0; i < lower; i++)
+            {
                 hospitals.Add(new Hospital(hospitals.Count));
             }
 
-            Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patients));
+            Stack<Patient> patients = ReverseStack(new Stack<Patient>(problem.patients));
 
             bool solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             while (!solved)
@@ -40,7 +83,7 @@ namespace implementation
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
-            return new Solution2D(hospitals.Count, deleteMeReverseStack(regs).ToList());
+            return new Solution2D(hospitals.Count, ReverseStack(regs).ToList());
         }
 
 
@@ -64,8 +107,8 @@ namespace implementation
 
                 // The interval range including the starting hour itself (Enumerable.Range(start,count) will return an empty range if count is 0)
                 // The required processing time for the second dose -1 as the starting hour itself is also used
-                int interval_range = end_second - begin_second + 1; 
-                int processing = problem.p2 - 1; 
+                int interval_range = end_second - begin_second + 1;
+                int processing = problem.p2 - 1;
                 int[] start_times_second_dose = Enumerable.Range(begin_second, interval_range - processing).ToArray();
 
                 foreach (int second_start_time in start_times_second_dose)
@@ -111,13 +154,13 @@ namespace implementation
                 if (!already_busy)
                 {
                     List<(int, int)> changelog = new List<(int, int)>();
-                    for (int i = start_time - processing_time + 1; i < start_time + processing_time; i++) 
+                    for (int i = start_time - processing_time + 1; i < start_time + processing_time; i++)
                     {
                         h.busy_dict.TryGetValue(i, out bool already_true);
-                        if (!already_true) 
-                        { 
-                            h.busy_dict[i] = true;  
-                            changelog.Add((i, h.id)); 
+                        if (!already_true)
+                        {
+                            h.busy_dict[i] = true;
+                            changelog.Add((i, h.id));
                         }
                     }
                     return (changelog, new int[2] { start_time, h.id });
@@ -127,14 +170,16 @@ namespace implementation
             return (null, null);
         }
 
-        private void undoChangelog(List<Hospital> hospitals, List<(int, int)> changelog) {
-            foreach ((int t, int h) in changelog) {
+        private void undoChangelog(List<Hospital> hospitals, List<(int, int)> changelog)
+        {
+            foreach ((int t, int h) in changelog)
+            {
                 hospitals[h].busy_dict[t] = false;
             }
         }
 
         // Temporary for testing purposes
-        private Stack<T> deleteMeReverseStack<T>(Stack<T> input)
+        private Stack<T> ReverseStack<T>(Stack<T> input)
         {
             Stack<T> tmp = new Stack<T>();
             while (input.Count > 0)
@@ -143,7 +188,7 @@ namespace implementation
             }
             return tmp;
         }
-        
+
         private (int, int) calcBounds(OfflineProblem problem)
         {
             // Calculate lower and upper bound of machines with pigeonhole and greedy planning
