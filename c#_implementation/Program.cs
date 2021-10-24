@@ -67,14 +67,6 @@ namespace implementation
                         case "case": RunCaseOnline(solver, extra); break;
                     }
                 }
-                else
-                { 
-                    OfflineProblem p = ParseOfflineProblem("../data/offline/backtracker.txt");
-                    var sol = new BFSBnBOffline().solve(p);
-                    OfflineValidator v = new OfflineValidator(p);
-                    v.validate(sol);
-                    Console.WriteLine(sol); 
-                }
             }
             else
             {
