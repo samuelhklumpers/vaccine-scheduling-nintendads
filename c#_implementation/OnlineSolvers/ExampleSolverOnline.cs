@@ -3,11 +3,17 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class ExampleSolverOnline : IOnlineSolver
+    public class ExampleSolverOnline : IOnlineSolver
     {
-        public Solution solve(OnlineProblem problem)
+        public Solution2D solve(OnlineProblem problem)
         {
-            return new Solution(0, new List<Doses>());
+            Console.WriteLine(problem.ToString());
+            return null;
+        }
+
+        public Solution2D Step(Solution2D partial, Patient nextPatient, Parameters parameters)
+        {
+            return null;
         }
     }
 }

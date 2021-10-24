@@ -15,27 +15,57 @@ namespace implementation
         {
             if (args.Count() == 0)
             {
-                bool test = false;
-                bool benchmark = false;
-                bool validate = false;
-                bool debug = true;
+                Console.WriteLine("hi");
+            }
+            else if (args.Count() >= 3)
+            {
+                bool offline = true;
+                string[] extra = args.Skip(3).ToArray();
 
-                if (debug)
+                switch (args[1])
+
                 {
-                    var problem = ParseOfflineProblem("../data/offline/backtracker.txt");
-                    Console.WriteLine(Bounds.PigeonHole(problem));
+                    case "offline": offline = true; break;
+                    case "online": offline = false; break;
                 }
-                if (test)
+
+                if (offline)
                 {
-                    Test();
+                    IOfflineSolver solver = null;
+
+                    switch (args[2])
+                    {
+                        case "sat": solver = new IntSatSolver(); break;
+                        case "bf": solver = new RecursiveBruteforce(); break;
+                        case "ilp": solver = new BranchAndBoundSolverOffline(); break;
+                        default: throw new Exception($"invalid solver name: {args[2]}");
+                    }
+
+                    switch (args[0])
+                    {
+                        case "benchmark": BenchmarkOffline(solver, extra); break;
+                        case "test": TestOffline(solver); break;
+                        case "case": RunCaseOffline(solver, extra); break;
+                    }
                 }
-                if (benchmark)
+                else
                 {
-                    Benchmark();
-                }
-                if (validate)
-                {
-                    Validate();
+                    IOnlineSolver solver = null;
+
+                    switch (args[2])
+                    {
+                        case "greedy": solver = new GreedyOnline(); break;
+                        case "forward": solver = new ForwardMinimizeOnline(); break;
+                        case "verygreedy": solver = new VeryGreedyOnline(); break;
+                        default: throw new Exception($"invalid solver name: {args[2]}");
+                    }
+
+                    switch (args[0])
+                    {
+                        case "compete": CompeteOnline(solver, extra); break;
+                        case "test": TestOnline(solver); break;
+                        case "case": RunCaseOnline(solver, extra); break;
+                    }
                 }
                 else
                 { 
@@ -48,30 +78,89 @@ namespace implementation
             }
             else
             {
-                switch (args[0])
-                {
-                    case "benchmark": Benchmark(); break;
-                    case "test": Test(); break;
-                    case "case": RunCase(args); break;
-                }
+                Console.WriteLine("Usage: xyz.exe <mode> <offline> <solver> [extra]");
             }
         }
 
-        static void RunCase(String[] args)
+        static void BenchmarkOffline(IOfflineSolver solver, string[] args)
         {
-            if (args.Length < 3)
-                return;
+            double timeout = 60;
 
-            var (solverName, testFile) = (args[1], args[2]);
-            var solver = makeSolver(solverName);
+            if (args.Count() > 0)
+            {
+                timeout = double.Parse(args[0]);
+            }
 
-            OfflineProblem problem = ParseOfflineProblem(testFile);
+            var res = new Benchmarker(false, false).BenchmarkAll(new IOfflineSolver[] { solver }, timeout);
 
+            Console.WriteLine(res.ToString());
+        }
+
+        static void TestOffline(IOfflineSolver solver)
+        {
+
+        }
+
+        static void RunCaseOffline(IOfflineSolver solver, string[] args)
+        {
+            var testFile = args[0];
+            var problem = ParseOfflineProblem(testFile);
             var sol = solver.solve(problem);
             Console.WriteLine(sol.machines);
-            //new OfflineValidator(problem).validate(sol);
-            //i'll trust you I guess
         }
+
+        static void CompeteOnline(IOnlineSolver solver, string[] args)
+        {
+            var testFile = args[0];
+            var problem = ParseOnlineProblem(testFile);
+
+            var alg = solver.solve(problem);
+            var opt = new IntSatSolver().solve(problem.CountN());
+
+            new OfflineValidator(problem.CountN()).validate(opt);
+            new OnlineValidator(problem).validate(alg);
+
+            Console.WriteLine($"alg: {alg.machines}");
+            Console.WriteLine($"opt: {opt.machines}");
+            Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+        }
+
+        static void AdversaryOnline()
+        {
+            Console.WriteLine("adversary...");
+
+            IOnlineSolver solver = new VeryGreedyOnline();
+
+            var (problem, alg) = SimpleAdversary.Triple(solver);
+            var opt = new IntSatSolver().solve(problem.CountN());
+
+            //Console.WriteLine(problem);
+            //Console.WriteLine(opt);
+            //Console.WriteLine(alg);
+
+            new OfflineValidator(problem.CountN()).validate(opt);
+            new OnlineValidator(problem).validate(alg);
+
+            Console.WriteLine($"alg: {alg.machines}");
+            Console.WriteLine($"opt: {opt.machines}");
+            Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+        }
+
+        static void TestOnline(IOnlineSolver solver)
+        {
+
+        }
+
+        static void RunCaseOnline(IOnlineSolver solver, string[] args)
+        {
+            var testFile = args[0];
+            var problem = ParseOnlineProblem(testFile);
+            var sol = solver.solve(problem);
+            Console.WriteLine(sol.machines);
+        }
+
+
+        // old
 
         static IOfflineSolver makeSolver(String name)
         {
@@ -91,35 +180,12 @@ namespace implementation
                 new IntSatSolver(),
                 new BranchAndBoundSolverOffline()
             });
-
-            /*String prologPath = "C:\\Program Files\\swipl\\bin\\swipl.exe";
-            if (File.Exists(prologPath))
-            {
-                Type[] offline_solver_types = { typeof(BranchAndBoundSolverOffline) };
-                Type[] online_solver_types = { };
-                //string[] offline_problem_files = { "../data/offline/from_assignment.txt","../data/offline/big_numbers.txt",
-                //                                    "../data/offline/three_quarters.txt", "../data/offline/backtracker.txt"};
-                string[] offline_problem_files = { "../data/offline/from_assignment.txt"};
-                string[] online_problem_files = { "../data/online/from_assignment.txt" };
-
-                run_using_solvers_and_files(offline_solver_types, offline_problem_files, test_offline_solver);
-                run_using_solvers_and_files(online_solver_types, online_problem_files, test_online_solver);
-            }
-
-            if (benchmark)
-            {
-                ISolverOffline[] solvers = { new CallableSolverOffline(), new BranchAndBoundSolverOffline() };
-                Console.WriteLine(Directory.GetCurrentDirectory());
-                var clpfd = new CallableSolver(prologPath, new String[] { "..\\..\\..\\Callables\\constraint_programming.pl" });
-                solvers.Add(clpfd);
-            }*/
-
-
+          
             var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 60.0);
             Console.WriteLine(res.ToString());
         }
 
-        static void Test()
+        /*static void TestOffline()
         {
             var timer = new Stopwatch();
 
@@ -133,7 +199,7 @@ namespace implementation
             };
             Type[] online_solver_types =
             {
-
+              
             };
             List<string> offline_problem_files = new List<string>
             {
@@ -170,7 +236,8 @@ namespace implementation
             double dt = timer.Elapsed.TotalSeconds;
 
             Console.WriteLine($"passed {dt}s");
-        }
+        }*/
+      
         static void Validate()
         {
             // validator test
@@ -245,7 +312,8 @@ namespace implementation
             Console.WriteLine("\nSolution:");
             Console.WriteLine(solution.ToString());
         }
-        static private void test_online_solver(Type solver_type, string problem_file)
+        
+        /*static private void test_online_solver(Type solver_type, string problem_file)
         {
             IOnlineSolver solver = Activator.CreateInstance(solver_type) as IOnlineSolver;
             OnlineProblem problem = ParseOnlineProblem(problem_file);
@@ -255,6 +323,18 @@ namespace implementation
             Console.WriteLine(problem.ToString());
             Console.WriteLine("\nSolution:");
             Console.WriteLine(solution.ToString());
-        }
+        }*/
+
+        /*static void TestOnline()
+        {
+
+            var solvers = new List<IOnlineSolver>(new IOnlineSolver[] {
+                new GreedyOnline(),
+                new VeryGreedyOnline(),
+                new ForwardMinimizeOnline()
+            });
+
+            Benchmarker.RandomTestOnline(solvers.ToArray(), 10, 10, true);
+        }*/
     }
 }
