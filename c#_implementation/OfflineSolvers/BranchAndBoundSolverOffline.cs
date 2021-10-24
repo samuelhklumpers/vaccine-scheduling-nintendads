@@ -70,7 +70,7 @@ namespace implementation
                 hospitals.Add(new Hospital(hospitals.Count));
             }
 
-            Stack<Patient> patients = deleteMeReverseStack(new Stack<Patient>(problem.patients));
+            Stack<Patient> patients = ReverseStack(new Stack<Patient>(problem.patients));
 
             bool solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             while (!solved)
@@ -83,7 +83,7 @@ namespace implementation
                 solved = solveR(problem, hospitals, regs, patients, patients.Pop());
             }
 
-            return new Solution2D(hospitals.Count, deleteMeReverseStack(regs).ToList());
+            return new Solution2D(hospitals.Count, ReverseStack(regs).ToList());
         }
 
 
@@ -179,7 +179,7 @@ namespace implementation
         }
 
         // Temporary for testing purposes
-        private Stack<T> deleteMeReverseStack<T>(Stack<T> input)
+        private Stack<T> ReverseStack<T>(Stack<T> input)
         {
             Stack<T> tmp = new Stack<T>();
             while (input.Count > 0)
