@@ -1,0 +1,74 @@
+seed: 2017113019
+benchmarking n = 2
+pigeonhole = 1
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 1
+passed 0.0275941s
+---------
+seed: 876071926
+benchmarking n = 3
+pigeonhole = 2
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 2
+passed 0.0148397s
+---------
+seed: 392075830
+benchmarking n = 4
+pigeonhole = 1
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 1
+passed 0.0457495s
+---------
+seed: 254312943
+benchmarking n = 5
+pigeonhole = 3
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 3
+passed 1.0995895s
+---------
+seed: 1737047548
+benchmarking n = 6
+pigeonhole = 2
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 2
+passed 0.1793819s
+---------
+seed: 272230792
+benchmarking n = 7
+pigeonhole = 2
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 3
+passed 41.4995883s
+---------
+seed: 1965755561
+benchmarking n = 8
+pigeonhole = 1
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 2
+passed 0.3817096s
+---------
+seed: 274377052
+benchmarking n = 9
+pigeonhole = 1
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 1
+passed 0.1480069s
+---------
+seed: 947799900
+benchmarking n = 10
+pigeonhole = 2
+==========
+running implementation.BranchAndBoundSolverOffline
+machines 2
+passed 99.6409585s
+---------
+number: 2 3 4 5 6 7 8 9 10
+solver 1: 0.03 0.01 0.05 1.10 0.18 41.50 0.38 0.15 99.64
