@@ -5,8 +5,9 @@ import time
 
 
 def main():
-    #run_all()
-    latex()
+    run_all()
+    #latex()
+    input()
 
 
 def latex():
