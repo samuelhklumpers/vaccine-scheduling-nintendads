@@ -239,7 +239,7 @@ namespace implementation
             if (overlaps2.Count < d1 + p1 + x + g + L + p2)
                 overlaps2.AddRange(Enumerable.Repeat(0, d1 + p1 + x + g + L + p2 - overlaps2.Count));
 
-            var (m, mv) = (sol.doses.Count + 2, (-1, -1));
+            var (m, mv) = (sol.doses.Count + 100, (-1, -1));
             for (int i = r1; i <= d1 - p1 + 1; ++i)
             {
                 var machines = overlaps1[i];

@@ -15,7 +15,7 @@ namespace implementation
         {
             if (args.Count() == 0)
             {
-                Console.WriteLine("hi");
+                RatioOnline(new VeryGreedyOnline(), new string[] { "10", "10", "1234" });
             }
             else if (args.Count() >= 3)
             {
@@ -65,6 +65,7 @@ namespace implementation
                         case "compete": CompeteOnline(solver, extra); break;
                         case "test": TestOnline(solver); break;
                         case "case": RunCaseOnline(solver, extra); break;
+                        case "ratio": RatioOnline(solver, extra); break;
                     }
                 }
             }
@@ -115,6 +116,16 @@ namespace implementation
             Console.WriteLine($"alg: {alg.machines}");
             Console.WriteLine($"opt: {opt.machines}");
             Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+        }
+
+        static void RatioOnline(IOnlineSolver solver, string[] args)
+        {
+            var runs = int.Parse(args[0]);
+            var size = int.Parse(args[1]);
+            var seed = int.Parse(args[2]);
+
+            var (avg, worst) = Benchmarker.RandomRatioOnline(solver, runs, size, seed);
+            Console.WriteLine(avg + " " + worst);
         }
 
         static void AdversaryOnline()

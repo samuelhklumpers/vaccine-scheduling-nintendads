@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import time
+import random
 
 
 def main():
@@ -101,6 +102,44 @@ def run_one(solver, test, offline):
     return dt
 
 
+def ratios(solver, seed=None):
+    exe = "../bin/Debug/net5.0/c#_implementation.exe"
+
+    runs = 20
+    size = 10
+
+    if seed is None:
+        seed = random.randint(-1 << 30, 1 << 30)
+
+    try:
+        out = subprocess.check_output([exe, "ratio", "online", solver, str(runs), str(size), str(seed)])
+    except:
+        out = None
+
+    print(out)
+
+    if out is not None:
+        avg, worst = out.split()
+        avg = float(avg)
+        worst = float(worst)
+        out = (avg, worst)
+
+    ratio_file = "ratio.json"
+    try:
+        data = jload(ratio_file)
+    except:
+        data = {}
+
+    runs = str(runs)
+    size = str(size)
+    seed = str(seed)
+    
+    point = data.setdefault(solver, {}).setdefault(runs, {}).setdefault(size, {})
+    point[seed] = out
+    
+    jdump(ratio_file, data)
+
+
 def read_file(fn):
     with open(fn, mode="r", encoding="utf-8") as f:
         return f.read()
@@ -145,4 +184,7 @@ def label():
 
 
 if __name__ == "__main__":
-    main()
+    #main()
+
+    for s in ["greedy", "forward", "verygreedy"]:
+        ratios(s, -160261352)
