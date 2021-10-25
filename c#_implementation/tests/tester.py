@@ -123,7 +123,7 @@ def series(solver, seed=None, timeout=None, tries=None):
 
     filename = "series.json"
     try:
-        data = jload(ratio_file)
+        data = jload(filename)
     except:
         data = {}
 
