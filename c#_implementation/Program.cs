@@ -44,6 +44,7 @@ namespace implementation
                     switch (args[0])
                     {
                         case "benchmark": BenchmarkOffline(solver, extra); break;
+                        case "series": BenchmarkOffline2(solver, extra); break;
                         case "test": TestOffline(solver); break;
                         case "case": RunCaseOffline(solver, extra); break;
                     }
@@ -87,6 +88,17 @@ namespace implementation
             var res = new Benchmarker(false, false).BenchmarkAll(new IOfflineSolver[] { solver }, timeout);
 
             Console.WriteLine(res.ToString());
+        }
+
+
+        static void BenchmarkOffline2(IOfflineSolver solver, string[] args)
+        {
+            double timeout = double.Parse(args[0]);
+            int tries = int.Parse(args[1]);
+            int seed = int.Parse(args[2]);
+
+            var res = Benchmarker.BenchmarkSeries(solver, timeout, tries, seed);
+            Console.WriteLine(res);
         }
 
         static void TestOffline(IOfflineSolver solver)

@@ -102,6 +102,40 @@ def run_one(solver, test, offline):
     return dt
 
 
+def series(solver, seed=None, timeout=None, tries=None):
+    exe = "../bin/Debug/net5.0/c#_implementation.exe"
+
+    if seed is None:
+        seed = random.randint(-1 << 30, 1 << 30)
+
+    if timeout is None:
+        timeout = 1.0
+
+    if tries is None:
+        tries = 10
+
+    try:
+        out = subprocess.check_output([exe, "series", "offline", solver, str(timeout), str(tries), str(seed)])
+    except:
+        out = None
+
+    out = json.loads(out)
+
+    filename = "series.json"
+    try:
+        data = jload(ratio_file)
+    except:
+        data = {}
+
+    tries = str(tries)
+    seed = str(seed)
+    
+    point = data.setdefault(solver, {}).setdefault(tries, {})
+    point[seed] = out
+    
+    jdump(filename, data)
+
+
 def ratios(solver, seed=None):
     exe = "../bin/Debug/net5.0/c#_implementation.exe"
 
@@ -186,5 +220,7 @@ def label():
 if __name__ == "__main__":
     #main()
 
-    for s in ["greedy", "forward", "verygreedy"]:
-        ratios(s, -160261352)
+    #for s in ["greedy", "forward", "verygreedy"]:
+    #    ratios(s, -160261352)
+
+    series("ilp", 765292910, 10.0, 10)

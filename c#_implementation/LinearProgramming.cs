@@ -75,8 +75,8 @@ namespace implementation
             }*/
 
 
-            Console.WriteLine("Number of variables = " + solver.NumVariables());
-            Console.WriteLine("Number of constraints = " + solver.NumConstraints());
+            //Console.WriteLine("Number of variables = " + solver.NumVariables());
+            //Console.WriteLine("Number of constraints = " + solver.NumConstraints());
 
             // Create the objective function, minimizing the number of hospitals.
             //solver.Maximize(sameHospitalsSum);
@@ -92,10 +92,10 @@ namespace implementation
 
             solver.Solve();
 
-            Console.WriteLine("Solution:");
+            //Console.WriteLine("Solution:");
 
-            Console.WriteLine("Objective value = " + solver.Objective().Value());
-            Console.WriteLine("mat z:");
+            //Console.WriteLine("Objective value = " + solver.Objective().Value());
+            //Console.WriteLine("mat z:");
             double[,] resulting_matrix_z = new double[max_j, max_j];
             foreach (var variable in solver.variables())
             {
@@ -109,14 +109,14 @@ namespace implementation
             {
                 if (i % max_j == 0)
                 {
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 }
-                Console.Write(resulting_matrix_z[i / max_j, i % max_j] + " ");
+                //Console.Write(resulting_matrix_z[i / max_j, i % max_j] + " ");
 
             }
-            Console.WriteLine();
+            //Console.WriteLine();
 
-            Console.WriteLine("mat compare:");
+            //Console.WriteLine("mat compare:");
             double[,] resulting_matrix_compare = new double[max_j, max_j];
             foreach (var variable in solver.variables())
             {
@@ -130,21 +130,21 @@ namespace implementation
             {
                 if (i % max_j == 0)
                 {
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 }
-                Console.Write(resulting_matrix_compare[i / max_j, i % max_j] + " ");
+                //Console.Write(resulting_matrix_compare[i / max_j, i % max_j] + " ");
 
             }
-            Console.WriteLine();
+            //Console.WriteLine();
 
-            Console.WriteLine("mat y:");
+            //Console.WriteLine("mat y:");
             HashSet<int> hospitals_used = new HashSet<int>();
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
                 if (data[0][0] == 'y' )
                 {
-                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
+                    //Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
 
                     //Add the rounded number to the set
                     hospitals_used.Add((int)variable.SolutionValue());
@@ -167,7 +167,7 @@ namespace implementation
                         //If the hospital number is already in the list, set the bool to true such that is it not added
                         /*if(variable.SolutionValue() >= (double)hospitals_used[i] - 0.001 && variable.SolutionValue() <= (double)hospitals_used[i] + 0.001)
                         {
-                            Console.WriteLine("not added: " + variable.SolutionValue() + " " + (double)hospitals_used[i]);
+                            //Console.WriteLine("not added: " + variable.SolutionValue() + " " + (double)hospitals_used[i]);
                             in_list = true;
                             break;
                         }
@@ -181,19 +181,19 @@ namespace implementation
 
 
             }
-            Console.WriteLine();
-            Console.WriteLine("mat t:");
+            //Console.WriteLine();
+            //Console.WriteLine("mat t:");
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
                 if (data[0][0] == 't' )
                 {
-                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
+                    //Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
 
             }
 
-            Console.WriteLine("mat samehospitals:");
+            //Console.WriteLine("mat samehospitals:");
             double[,] resulting_matrix_sh = new double[max_j, max_j];
             foreach (var variable in solver.variables())
             {
@@ -207,14 +207,14 @@ namespace implementation
             {
                 if (i % max_j == 0)
                 {
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 }
-                Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
+                //Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
 
             }
-            Console.WriteLine();
+            //Console.WriteLine();
 
-             Console.WriteLine("Number of hospitals used: " + hospitals_used.Count());
+             //Console.WriteLine("Number of hospitals used: " + hospitals_used.Count());
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {
