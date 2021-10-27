@@ -57,7 +57,7 @@ namespace implementation
                     {
                         case "greedy": solver = new GreedyOnline(); break;
                         case "forward": solver = new ForwardMinimizeOnline(); break;
-                        case "verygreedy": solver = new VeryGreedyOnline(); break;
+                        case "lexi": solver = new VeryGreedyOnline(); break;
                         default: throw new Exception($"invalid solver name: {args[2]}");
                     }
 
@@ -125,9 +125,10 @@ namespace implementation
             new OfflineValidator(problem.CountN()).validate(opt);
             new OnlineValidator(problem).validate(alg);
 
-            Console.WriteLine($"alg: {alg.machines}");
-            Console.WriteLine($"opt: {opt.machines}");
-            Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+            //Console.WriteLine($"alg: {alg.machines}");
+            //Console.WriteLine($"opt: {opt.machines}");
+            //Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+            Console.WriteLine((double)alg.machines / opt.machines);
         }
 
         static void RatioOnline(IOnlineSolver solver, string[] args)
@@ -171,6 +172,9 @@ namespace implementation
             var testFile = args[0];
             var problem = ParseOnlineProblem(testFile);
             var sol = solver.solve(problem);
+
+
+
             Console.WriteLine(sol.machines);
         }
 

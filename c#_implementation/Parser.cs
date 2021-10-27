@@ -68,7 +68,7 @@ namespace implementation
             int gap = int.Parse(data[2]);
 
             List<Patient> patients_data = new List<Patient>();
-            for (int i = 3; i < data.Length; i++)
+            for (int i = 3; i < data.Length - 1; i++)
             {
                 string[] patient_data = data[i].Split(", ");
                 Patient patient = new Patient(int.Parse(patient_data[0]), int.Parse(patient_data[1]), int.Parse(patient_data[2]), int.Parse(patient_data[3]), processing_time_first_dose, processing_time_second_dose, gap);
