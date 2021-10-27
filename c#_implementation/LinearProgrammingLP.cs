@@ -54,8 +54,8 @@ namespace implementation
             add_constraint_interval_vaccines(solver, problem, t, jobs);
             add_constraint_no_two_patients_at_the_same_time(solver, problem, t, z, samehospitals, jobs, max_h, max_t);
 
-            Console.WriteLine("Number of variables = " + solver.NumVariables());
-            Console.WriteLine("Number of constraints = " + solver.NumConstraints());
+            //Console.WriteLine("Number of variables = " + solver.NumVariables());
+            //Console.WriteLine("Number of constraints = " + solver.NumConstraints());
 
             // Create the objective function, minimizing the number of hospitals.
             //solver.Maximize(sameHospitalsSum);
@@ -71,7 +71,7 @@ namespace implementation
             objective.SetMaximization();
             solver.SetTimeLimit(5000);
             solver.Solve();
-            //Console.WriteLine("Solution:");
+            ////Console.WriteLine("Solution:");
 
 
             int[] hospital_numbers = new int[max_j];
@@ -115,14 +115,14 @@ namespace implementation
                 }
             }
 
-            /*Console.WriteLine(sol);
+            /*//Console.WriteLine(sol);
 
 
 
 
 
-            Console.WriteLine("Objective value = " + solver.Objective().Value());
-            Console.WriteLine("mat z:");
+            //Console.WriteLine("Objective value = " + solver.Objective().Value());
+            //Console.WriteLine("mat z:");
             int[,] resulting_matrix_z = new int[max_j, max_j];
             foreach (var variable in solver.variables())
             {
@@ -136,26 +136,26 @@ namespace implementation
             {
                 if (i % max_j == 0)
                 {
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 }
-                Console.Write(resulting_matrix_z[i / max_j, i % max_j] + " ");
+                //Console.Write(resulting_matrix_z[i / max_j, i % max_j] + " ");
 
             }
-            Console.WriteLine();
+            //Console.WriteLine();
 
-            Console.WriteLine();*/
-            Console.WriteLine("mat t:");
+            //Console.WriteLine();*/
+            //Console.WriteLine("mat t:");
             foreach (var variable in solver.variables())
             {
                 string[] data = variable.Name().Split(' ');
                 if (data[0][0] == 't')
                 {
-                    Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
+                    //Console.WriteLine(variable.Name() + ": " + variable.SolutionValue());
                 }
 
             }
 
-            Console.WriteLine("mat samehospitals:");
+            //Console.WriteLine("mat samehospitals:");
             double[,] resulting_matrix_sh = new double[max_j, max_j];
             foreach (var variable in solver.variables())
             {
@@ -169,14 +169,14 @@ namespace implementation
             {
                 if (i % max_j == 0)
                 {
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 }
-                Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
+                //Console.Write(resulting_matrix_sh[i / max_j, i % max_j] + " ");
 
             }
-            Console.WriteLine();
+            //Console.WriteLine();
             return curent_max;
-            //Console.WriteLine("same hospital sum: " + sameHospitalsSum.SolutionValue());
+            ////Console.WriteLine("same hospital sum: " + sameHospitalsSum.SolutionValue());
         }
         static private int calculate_upperbound_time(OfflineProblem problem)
         {

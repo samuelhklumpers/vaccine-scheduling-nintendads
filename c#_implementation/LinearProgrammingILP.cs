@@ -50,16 +50,15 @@ namespace implementation
 
                 if (variable == null)
                 {
-                    Console.WriteLine("No variable with name: " + variable_string);
+                    //Console.WriteLine("No variable with name: " + variable_string);
                     continue;
                 }
 
                 solver.Add(variable == value);
             }
 
-
-            Console.WriteLine("Number of variables = " + solver.NumVariables());
-            Console.WriteLine("Number of constraints = " + solver.NumConstraints());
+            //Console.WriteLine("Number of variables = " + solver.NumVariables());
+            //Console.WriteLine("Number of constraints = " + solver.NumConstraints());
 
             // Create the objective function, minimizing the number of hospitals by maximizing the number of equal hospitals among the different jobs.
             Objective objective = solver.Objective();

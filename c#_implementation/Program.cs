@@ -15,7 +15,7 @@ namespace implementation
         {
             if (args.Count() == 0)
             {
-                Console.WriteLine("hi");
+                RatioOnline(new VeryGreedyOnline(), new string[] { "10", "10", "1234" });
             }
             else if (args.Count() >= 3)
             {
@@ -44,6 +44,7 @@ namespace implementation
                     switch (args[0])
                     {
                         case "benchmark": BenchmarkOffline(solver, extra); break;
+                        case "series": BenchmarkOffline2(solver, extra); break;
                         case "test": TestOffline(solver); break;
                         case "case": RunCaseOffline(solver, extra); break;
                     }
@@ -56,7 +57,7 @@ namespace implementation
                     {
                         case "greedy": solver = new GreedyOnline(); break;
                         case "forward": solver = new ForwardMinimizeOnline(); break;
-                        case "verygreedy": solver = new VeryGreedyOnline(); break;
+                        case "lexi": solver = new VeryGreedyOnline(); break;
                         default: throw new Exception($"invalid solver name: {args[2]}");
                     }
 
@@ -65,6 +66,7 @@ namespace implementation
                         case "compete": CompeteOnline(solver, extra); break;
                         case "test": TestOnline(solver); break;
                         case "case": RunCaseOnline(solver, extra); break;
+                        case "ratio": RatioOnline(solver, extra); break;
                     }
                 }
             }
@@ -86,6 +88,17 @@ namespace implementation
             var res = new Benchmarker(false, false).BenchmarkAll(new IOfflineSolver[] { solver }, timeout);
 
             Console.WriteLine(res.ToString());
+        }
+
+
+        static void BenchmarkOffline2(IOfflineSolver solver, string[] args)
+        {
+            double timeout = double.Parse(args[0]);
+            int tries = int.Parse(args[1]);
+            int seed = int.Parse(args[2]);
+
+            var res = Benchmarker.BenchmarkSeries(solver, timeout, tries, seed);
+            Console.WriteLine(res);
         }
 
         static void TestOffline(IOfflineSolver solver)
@@ -112,9 +125,20 @@ namespace implementation
             new OfflineValidator(problem.CountN()).validate(opt);
             new OnlineValidator(problem).validate(alg);
 
-            Console.WriteLine($"alg: {alg.machines}");
-            Console.WriteLine($"opt: {opt.machines}");
-            Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+            //Console.WriteLine($"alg: {alg.machines}");
+            //Console.WriteLine($"opt: {opt.machines}");
+            //Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
+            Console.WriteLine((double)alg.machines / opt.machines);
+        }
+
+        static void RatioOnline(IOnlineSolver solver, string[] args)
+        {
+            var runs = int.Parse(args[0]);
+            var size = int.Parse(args[1]);
+            var seed = int.Parse(args[2]);
+
+            var (avg, worst) = Benchmarker.RandomRatioOnline(solver, runs, size, seed);
+            Console.WriteLine(avg + " " + worst);
         }
 
         static void AdversaryOnline()
@@ -148,6 +172,9 @@ namespace implementation
             var testFile = args[0];
             var problem = ParseOnlineProblem(testFile);
             var sol = solver.solve(problem);
+
+
+
             Console.WriteLine(sol.machines);
         }
 

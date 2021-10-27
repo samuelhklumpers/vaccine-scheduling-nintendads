@@ -2,12 +2,24 @@ import json
 import os
 import subprocess
 import time
+import traceback
+import random
 
 
 def main():
-    run_all()
-    #latex()
-    input()
+    skip = False
+    
+    if not skip:
+        # online_random_ratio("lexi")
+
+        labels = jload("online_labels.json")
+        
+        for label, fn in labels.items():
+            fn = os.path.join("online", fn)
+            fn = os.path.abspath(fn)
+            online_test_ratio("lexi", fn, label)
+        
+        input()
 
 
 def latex():
@@ -52,7 +64,7 @@ def latex():
     print("\\end{tabular}")
 
 
-def run_all():
+def offline_test_time():
     offline = "offline"
     json_file = offline + ".json"
 
@@ -101,6 +113,99 @@ def run_one(solver, test, offline):
     return dt
 
 
+def offline_random_time(solver, seed=None, timeout=1.0, tries=10):
+    exe = "../bin/Debug/net5.0/c#_implementation.exe"
+
+    if seed is None:
+        seed = random.randint(-1 << 30, 1 << 30)
+
+    try:
+        out = subprocess.check_output([exe, "series", "offline", solver, str(timeout), str(tries), str(seed)])
+    except:
+        out = None
+
+    out = json.loads(out)
+
+    filename = "offline_random.json"
+    try:
+        data = jload(filename)
+    except:
+        data = {}
+
+    tries = str(tries)
+    seed = str(seed)
+    
+    point = data.setdefault(solver, {}).setdefault(tries, {})
+    point[seed] = out
+    
+    jdump(filename, data)
+
+
+def online_random_ratio(solver, seed=None, size=10, runs=20):
+    exe = "../bin/Debug/net5.0/c#_implementation.exe"
+
+    if seed is None:
+        seed = random.randint(-1 << 30, 1 << 30)
+
+    try:
+        out = subprocess.check_output([exe, "ratio", "online", solver, str(runs), str(size), str(seed)])
+    except:
+        traceback.print_exc()
+        out = None
+
+    print(out)
+
+    if out is not None:
+        avg, worst = out.split()
+        avg = float(avg)
+        worst = float(worst)
+        out = (avg, worst)
+
+    ratio_file = "online_random.json"
+    try:
+        data = jload(ratio_file)
+    except:
+        data = {}
+
+    runs = str(runs)
+    size = str(size)
+    seed = str(seed)
+    
+    point = data.setdefault(solver, {}).setdefault(runs, {}).setdefault(size, {})
+    point[seed] = out
+    
+    jdump(ratio_file, data)
+    
+
+def online_test_ratio(solver, testFile, label):
+    exe = "../bin/Debug/net5.0/c#_implementation.exe"
+
+    try:
+        print(" ".join([exe, "compete", "online", solver, testFile]))
+        out = subprocess.check_output(
+            [exe, "compete", "online", solver, testFile],
+            timeout=60
+        )
+    except:
+        out = None
+
+    print(out)
+        
+    if out is not None:
+        out = float(out)
+
+    ratio_file = "online_test.json"
+    try:
+        data = jload(ratio_file)
+    except:
+        data = {}
+    
+    point = data.setdefault(solver, {})
+    point[label] = out
+    
+    jdump(ratio_file, data)
+    
+
 def read_file(fn):
     with open(fn, mode="r", encoding="utf-8") as f:
         return f.read()
@@ -132,16 +237,14 @@ def alpha_label(i):
     return ret
 
 
-def label():
+def label(which):
     labels = {}
 
-    for i, fn in enumerate(os.listdir("offline")):
+    for i, fn in enumerate(os.listdir(which)):
         lab = alpha_label(i)
         labels[lab] = fn
     
-    data = jload("offline.json")
-    data.setdefault("labels", labels)
-    jdump("offline.json", data)
+    jdump(which + "_labels.json", labels)
 
 
 if __name__ == "__main__":
