@@ -16,9 +16,11 @@ def offline_random_line(fn, runs, seed):
     plt.xlabel("$n$")
     plt.ylabel("$t$ (s)")
 
-    plt.legend()
-    
+    plt.tight_layout()
+
+    plt.legend() 
     plt.show()
+    
 
 
 def offline_test_scatter(fn):
@@ -77,8 +79,38 @@ def offline_test_scatter(fn):
     
 
     
-def online_random_line(fn):
-    ...
+def online_random_line(fn, runs=10, seed=123):
+    data = jload(fn)
+    
+    seed = str(seed)
+
+    fig = plt.figure()
+    for solver, subdata in data.items():
+        y = []
+        x = []
+
+        points = subdata[str(runs)]
+
+        for size, samples in points.items():
+            if seed in samples:
+                sample = samples[seed]
+
+                if sample is not None:
+                    y += [sample[0]]
+                    x += [size]
+
+        x = np.array(x)
+        y = np.array(y)
+
+        plt.plot(x, y, label=solver)
+
+    plt.xlabel("$n$")
+    plt.ylabel("$t$ (s)")
+
+    plt.tight_layout()
+
+    plt.legend() 
+    plt.show()
 
 
 def online_test_scatter(fn):
@@ -125,9 +157,9 @@ def online_test_scatter(fn):
 
 
 def main():
-    offline_random_line("series.json", 10, 765292910)
-    offline_test_scatter("offline-180s.json")
-    # online_random_line("offline-180s.json")
+    #offline_random_line("offline_random2.json", 10, 123)
+    #offline_test_scatter("offline-180s.json")
+    #online_random_line("online_random.json")
     online_test_scatter("online_test.json")
 
 

@@ -7,24 +7,32 @@ import random
 
 
 def main():
-    skip = True
+    """
+    for solver in ["ilp", "sat", "bf"]:
+        offline_random_time("bf", 123, timeout=1.0)
+    """
 
-    offline_test_time()
-    online_random_ratio("forward")
-    online_random_ratio("lexi")
+    """
 
-    if not skip:
-        # online_random_ratio("lexi")
+    for solver in ["lexi", "forward"]:
+        for size in range(5, 12):
+            online_random_ratio(solver, seed=123, size=size, runs=10)
+            # seed is fixed, but the updated seed is reused, so runs=10 has a point
+    """
 
-        labels = jload("online_labels.json")
-        
-        for label, fn in labels.items():
-            fn = os.path.join("online", fn)
-            fn = os.path.abspath(fn)
-            online_test_ratio("lexi", fn, label)
-        
-    input()
 
+    """
+    labels = jload("online_labels.json")
+    
+    for label, fn in labels.items():
+        fn = os.path.join("online", fn)
+        fn = os.path.abspath(fn)
+        online_test_ratio("forward", fn, label)
+    """
+
+    #latex_online()
+
+    online_label_table()
 
 def latex():
     def row(vs):
@@ -38,7 +46,7 @@ def latex():
         else:
             return "-"
 
-    data = jload("offline.json")
+    data = jload("online_test.json")
 
     x = data["solvers"]
     y = list(data["labels"].keys())
@@ -67,6 +75,60 @@ def latex():
         print("\\hline")
     print("\\end{tabular}")
 
+
+def latex_online():
+    def row(vs):
+        return " & ".join(vs) + "\\\\"
+
+    def formatter(v):
+        if isinstance(v, float):
+            return f"{v:.2f}"
+        elif isinstance(v, str):
+            return v
+        else:
+            return "-"
+
+    data = jload("online_test.json")
+
+    x = list(data.keys())
+    y = data[x[0]].keys()
+
+    xn = len(x)
+
+    fmt = "c" + xn * "|c"
+
+    print("\\begin{tabular}{" + fmt + "}")
+    print(row([""] + x))
+
+    for lab in y:
+        vals = [lab] + [data[i].get(lab, None) for i in x]
+        out = [formatter(val) for val in vals]
+
+        print("\\hline")
+        print(row(out))     
+    print("\\end{tabular}")
+
+def online_label_table():
+    def row(vs):
+        return " & ".join(vs) + "\\\\"
+
+    def formatter(v):
+        if isinstance(v, float):
+            return f"{v:.2f}"
+        elif isinstance(v, str):
+            return v
+        else:
+            return "-"
+        
+    data = jload("online_labels.json")
+    
+    print("\\begin{tabular}{r|r}")
+    print("\\hline")
+    for k, v in data.items():
+        print(row([k, v]))
+        print("\\hline")
+    print("\\end{tabular}")
+    
 
 def offline_test_time():
     offline = "offline"
@@ -130,7 +192,7 @@ def offline_random_time(solver, seed=None, timeout=1.0, tries=10): # tries=10
 
     out = json.loads(out)
 
-    filename = "offline_random.json"
+    filename = "offline_random2.json"
     try:
         data = jload(filename)
     except:
@@ -152,7 +214,7 @@ def online_random_ratio(solver, seed=None, size=10, runs=20):
         seed = random.randint(-1 << 30, 1 << 30)
 
     try:
-        out = subprocess.check_output([exe, "ratio", "online", solver, str(runs), str(size), str(seed)])
+        out = subprocess.check_output([exe, "ratio", "online", solver, str(runs), str(size), str(seed)], timeout=60)
     except:
         traceback.print_exc()
         out = None
@@ -188,7 +250,8 @@ def online_test_ratio(solver, testFile, label):
         print(" ".join([exe, "compete", "online", solver, testFile]))
         out = subprocess.check_output(
             [exe, "compete", "online", solver, testFile],
-            timeout=60
+            timeout=60,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
     except:
         out = None
