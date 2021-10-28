@@ -15,7 +15,14 @@ namespace implementation
         {
             if (args.Count() == 0)
             {
-                RatioOnline(new VeryGreedyOnline(), new string[] { "10", "10", "1234" });
+                //RatioOnline(new VeryGreedyOnline(), new string[] { "10", "10", "1234" });
+                //OfflineProblem prob = ParseOfflineProblem("./tests/offline/1.txt");
+                //GreedyOffline greed = new GreedyOffline();
+                //BFSBnBOffline bfs = new BFSBnBOffline();
+                //Solution sol = bfs.solve(prob);
+                //OfflineValidator val = new OfflineValidator(prob);
+                //Console.WriteLine(sol);
+                //BenchmarkOffline2(new BFSBnBOffline(), new string[] {"1.0","10","696969"} ); 
             }
             else if (args.Count() >= 3)
             {
@@ -38,6 +45,7 @@ namespace implementation
                         case "sat": solver = new IntSatSolver(); break;
                         case "bf": solver = new RecursiveBruteforce(); break;
                         case "ilp": solver = new BranchAndBoundSolverOffline(); break;
+                        case "bnb": solver = new BFSBnBOffline(); break;
                         default: throw new Exception($"invalid solver name: {args[2]}");
                     }
 
@@ -97,7 +105,7 @@ namespace implementation
             int tries = int.Parse(args[1]);
             int seed = int.Parse(args[2]);
 
-            var res = Benchmarker.BenchmarkSeries(solver, timeout, tries, seed);
+            var res = Benchmarker.BenchmarkSeries2(solver, timeout, tries, seed);
             Console.WriteLine(res);
         }
 

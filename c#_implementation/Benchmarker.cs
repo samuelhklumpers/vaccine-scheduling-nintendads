@@ -132,6 +132,43 @@ namespace implementation
             return ret;
         }
 
+        public static string BenchmarkSeries2(IOfflineSolver solver, double timeout, int tries, int seed)
+        {
+            var trouble = new TroubleMaker(seed);
+            var timer = new Stopwatch();
+            var times = new List<double>();
+
+            int n = 1;
+            while (true)
+            {
+
+                timer.Start();
+                for (int i = 0; i < tries; ++i)
+                {
+                    var p = trouble.RandomProblemPreset(n);
+                    solver.solve(p);
+                }
+                timer.Stop();
+
+                double dt = timer.Elapsed.TotalSeconds / tries;
+                times.Add((double) n);
+                times.Add(dt);
+                timer.Reset();
+
+                if (dt > timeout)
+                {
+                    break;
+                }
+
+                ++n;
+            }
+
+            var ret = String.Join(", ", times.Select<double, string>(x => x.ToString()));
+            ret = "[" + ret + "]";
+
+            return ret;
+        }
+
 
         public static (double, double) RandomRatioOnline(IOnlineSolver solver, int runs, int size, int seed)
         {

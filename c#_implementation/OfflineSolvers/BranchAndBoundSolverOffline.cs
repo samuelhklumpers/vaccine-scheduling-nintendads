@@ -16,7 +16,7 @@ namespace implementation
             //partial_solution["t0"] = 4;
             //(bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
 
-            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 100000);
+            (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 300000);
             //return sol;
 
 

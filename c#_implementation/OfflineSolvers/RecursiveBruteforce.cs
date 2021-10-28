@@ -21,6 +21,7 @@ namespace implementation
     {
         public Solution solve(OfflineProblem problem)
         {
+            if (problem.patients.Count < 1) { return new Solution(0, new List<Doses>()); }
             Stack<Doses2D> regs = new Stack<Doses2D>();
             List<Hospital> hospitals = new List<Hospital>();
             hospitals.Add(new Hospital(hospitals.Count));

@@ -7,8 +7,12 @@ import random
 
 
 def main():
-    skip = False
-    
+    skip = True
+
+    offline_test_time()
+    online_random_ratio("forward")
+    online_random_ratio("lexi")
+
     if not skip:
         # online_random_ratio("lexi")
 
@@ -19,7 +23,7 @@ def main():
             fn = os.path.abspath(fn)
             online_test_ratio("lexi", fn, label)
         
-        input()
+    input()
 
 
 def latex():
@@ -98,7 +102,7 @@ def run_one(solver, test, offline):
     p = subprocess.Popen([exe, "case", offline, solver, test])
     
     try:
-        p.wait(60)
+        p.wait(300)
         retcode = p.poll()
     except:
         p.kill()
@@ -113,7 +117,7 @@ def run_one(solver, test, offline):
     return dt
 
 
-def offline_random_time(solver, seed=None, timeout=1.0, tries=10):
+def offline_random_time(solver, seed=None, timeout=1.0, tries=10): # tries=10
     exe = "../bin/Debug/net5.0/c#_implementation.exe"
 
     if seed is None:

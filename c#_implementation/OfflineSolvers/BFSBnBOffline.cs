@@ -11,6 +11,7 @@ namespace implementation
         
         public Solution solve(OfflineProblem problem)
         {
+            if (problem.patients.Count < 1) { return new Solution(0, new List<Doses>()); }
             // Obtain lower and upper bounds with Pigeonhole and Greedy
             (int lower, int upper, Solution sol) = boundsOrSolve(problem, new Dictionary<string, double>());
             if (sol is not null && sol.machines <= lower) { return sol; }
@@ -46,8 +47,8 @@ namespace implementation
             partials.Enqueue(ps);
             while (partials.Count > 0) // todo finish queue (and if solved already, dont enqueue new partial solutions) and bound all solutions.
             {
-                (solved, ps, sol) = BFSolve(problem, partials, lower, upper, solution_found);
-                if (solved && sol is null && ps.hospitals.Count() <= upper)  /// <= because of the if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } line
+                (solved, ps, _) = BFSolve(problem, partials, lower, upper, solution_found);
+                if (solved /*&& sol is null */&& ps.hospitals.Count() <= upper)  /// <= because of the if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } line
                 {
                     solution_found = true;
                     best_ps = ps;
@@ -55,13 +56,13 @@ namespace implementation
                 }
             }
 
-            if (sol is not null) { return sol; }
-            else 
-            {
+            //if (sol is not null) { return sol; }
+            //else 
+            //{
                 // Results are still ordered by ascending availability, put them back in input order
                 List<Doses2D> res = PutBack(idPatients, best_ps.regs);
                 return new Solution2D(best_ps.hospitals.Count, res);
-            }
+            //}
         }
 
         private (bool, PartialSolution, Solution) BFSolve(OfflineProblem problem, Queue<PartialSolution> partials, int lower, int upper, bool solution_found)
@@ -71,9 +72,9 @@ namespace implementation
 
             if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } // basically if upper == lower, stop
 
-            (bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
-            if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
-            else if (!feasible && !someSolution) { return (false, null, null); }
+            //(bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
+            //if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
+            //else if (!feasible && !someSolution) { return (false, null, null); }
 
             Patient p = ps.patients.Dequeue();
 
@@ -149,8 +150,8 @@ namespace implementation
             int lower = Bounds.PigeonHole(problem);
             GreedyOffline greedy = new GreedyOffline();
             Solution sol = greedy.solve(problem);
-            OfflineValidator val = new OfflineValidator(problem);
-            val.validate(sol);
+            //OfflineValidator val = new OfflineValidator(problem);
+            //val.validate(sol);
             return (lower, sol.machines);
         }
 
@@ -158,7 +159,16 @@ namespace implementation
         {
             (bool feasible, bool someSolution, int? upperboundHospitals, Solution sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
             (int lower, int upper) = calcBounds(problem);
-            if (sol is not null && sol.machines <= upper) { return (sol.machines, sol.machines, sol); }
+            if (sol is not null)
+            {
+                if (sol.machines <= upper) { return (sol.machines, sol.machines, sol); }
+                else 
+                {
+                    upper = Math.Min(sol.machines, upper);
+                    return (lower, upper, null);
+                }
+
+            }
             else if (!feasible && !someSolution) { return (0, 0, null); }
             else { return (lower, upper, null); }
         }
