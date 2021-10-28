@@ -14,26 +14,31 @@ namespace implementation
             // done to first see if an optimal solution can be found in reasonable time before starting to branch a lot. but with a lot of branching it needs to be faster.
             Dictionary<string, double> partial_solution = new Dictionary<string, double>();
             //partial_solution["t0"] = 4;
-            //(bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
+            //(bool feasibleNoSolution, bool optimalSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
 
+<<<<<<< HEAD
             (bool feasibleNoSolution, bool someSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 300000);
+=======
+            (bool feasibleNoSolution, bool optimalSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 10);
+>>>>>>> 24fa59667f55997a0fb737629df6c538899f48bd
             //return sol;
 
 
 
-            if (sol != null)
+            if (feasibleNoSolution == false && optimalSolution)
             {
+                Console.WriteLine("Optimal solution");
                 return sol;
             }
 
-            else if (feasibleNoSolution == false && someSolution == false)
+            else if (feasibleNoSolution == true && optimalSolution == true)
             {
                 //stop branching as it is infeasible
                 Console.WriteLine("infeasible");
                 return sol;
             }
 
-            else if (feasibleNoSolution && someSolution == false)
+            else if (feasibleNoSolution && optimalSolution == false)
             {
                 //do greedy for upperbound cuz no solution was found but it is feasible
                 Console.WriteLine("no solution");

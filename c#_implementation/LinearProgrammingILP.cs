@@ -77,14 +77,14 @@ namespace implementation
 
             //Decide the status of the ILP after the timelimit is done. Then we can see whether a solution has been found and whether it is optimal.
             bool feasibleNoSolution = false;
-            bool someSolution = false;
+            bool optimalSolution = false;
             int? upperboundHospitals = null;
             Solution sol = null;
 
 
             if (status == Solver.ResultStatus.OPTIMAL)
             {
-                someSolution = true;
+                optimalSolution = true;
                 (int upperbound, Solution solution) = calculate_upperbound_and_solution_ilp(solver, problem, max_j, max_h);
                 sol = solution;
                 upperboundHospitals = upperbound;
@@ -93,14 +93,14 @@ namespace implementation
             else if (status == Solver.ResultStatus.NOT_SOLVED)
             {
                 feasibleNoSolution = true;
-                someSolution = false;
+                optimalSolution = false;
 
             }
 
             else if (status == Solver.ResultStatus.FEASIBLE)
             {
                 feasibleNoSolution = false;
-                someSolution = true;
+                optimalSolution = false;
                 (int upperbound, Solution solution) = calculate_upperbound_and_solution_ilp(solver, problem, max_j, max_h);
                 sol = solution;
                 upperboundHospitals = upperbound;
@@ -108,11 +108,11 @@ namespace implementation
 
             else
             {
-                feasibleNoSolution = false;
-                someSolution = false;
+                feasibleNoSolution = true;
+                optimalSolution = true;
             }
 
-            return (feasibleNoSolution, someSolution, upperboundHospitals, sol);
+            return (feasibleNoSolution, optimalSolution, upperboundHospitals, sol);
 
         }
         //Creates the solution with assigned hospitals from the solved ILP
