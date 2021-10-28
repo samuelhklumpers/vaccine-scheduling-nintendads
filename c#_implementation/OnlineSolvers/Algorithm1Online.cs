@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class ForwardMinimizeOnline : IOnlineSolver
+    class Algorithm1 : IOnlineSolver
     {
         public Solution2D Step(Solution2D sol, Patient p, Parameters problem)
         {

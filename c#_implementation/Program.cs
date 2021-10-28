@@ -64,7 +64,7 @@ namespace implementation
                     switch (args[2])
                     {
                         case "greedy": solver = new GreedyOnline(); break;
-                        case "forward": solver = new ForwardMinimizeOnline(); break;
+                        case "forward": solver = new Algorithm1(); break;
                         case "lexi": solver = new VeryGreedyOnline(); break;
                         default: throw new Exception($"invalid solver name: {args[2]}");
                     }
@@ -358,7 +358,7 @@ namespace implementation
             var solvers = new List<IOnlineSolver>(new IOnlineSolver[] {
                 new GreedyOnline(),
                 new VeryGreedyOnline(),
-                new ForwardMinimizeOnline()
+                new Algorithm1()
             });
 
             Benchmarker.RandomTestOnline(solvers.ToArray(), 10, 10, true);
