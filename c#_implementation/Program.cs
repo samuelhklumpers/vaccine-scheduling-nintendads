@@ -72,7 +72,7 @@ namespace implementation
                     switch (args[0])
                     {
                         case "compete": CompeteOnline(solver, extra); break;
-                        case "test": TestOnline(solver); break;
+                        case "test": TestOnline(solver, extra); break;
                         case "case": RunCaseOnline(solver, extra); break;
                         case "ratio": RatioOnline(solver, extra); break;
                     }
@@ -174,9 +174,13 @@ namespace implementation
             Console.WriteLine($"ratio: {(double)alg.machines / opt.machines}");
         }
 
-        static void TestOnline(IOnlineSolver solver)
+        static void TestOnline(IOnlineSolver solver, string[] args)
         {
+            var testFile = args[0];
+            var problem = ParseOnlineProblem(testFile);
 
+            var alg = solver.solve(problem);
+            Console.WriteLine(alg.To2D(problem));
         }
 
         static void RunCaseOnline(IOnlineSolver solver, string[] args)
