@@ -53,7 +53,7 @@ namespace implementation
                     {
                         case "benchmark": BenchmarkOffline(solver, extra); break;
                         case "series": BenchmarkOffline2(solver, extra); break;
-                        case "test": TestOffline(solver); break;
+                        case "test": TestOffline(solver, extra); break;
                         case "case": RunCaseOffline(solver, extra); break;
                     }
                 }
@@ -109,9 +109,13 @@ namespace implementation
             Console.WriteLine(res);
         }
 
-        static void TestOffline(IOfflineSolver solver)
+        static void TestOffline(IOfflineSolver solver, string[] args)
         {
+            var testFile = args[0];
+            var problem = ParseOfflineProblem(testFile);
 
+            var alg = solver.solve(problem);
+            Console.WriteLine(alg.To2D(problem));
         }
 
         static void RunCaseOffline(IOfflineSolver solver, string[] args)
@@ -207,7 +211,7 @@ namespace implementation
                 new IntSatSolver(),
                 new BranchAndBoundSolverOffline()
             });
-          
+
             var res = new Benchmarker(false, false).BenchmarkAll(solvers.ToArray(), 60.0);
             Console.WriteLine(res.ToString());
         }
@@ -264,7 +268,7 @@ namespace implementation
 
             Console.WriteLine($"passed {dt}s");
         }*/
-      
+
         static void Validate()
         {
             // validator test
@@ -339,7 +343,7 @@ namespace implementation
             Console.WriteLine("\nSolution:");
             Console.WriteLine(solution.ToString());
         }
-        
+
         /*static private void test_online_solver(Type solver_type, string problem_file)
         {
             IOnlineSolver solver = Activator.CreateInstance(solver_type) as IOnlineSolver;
