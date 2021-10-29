@@ -3,45 +3,10 @@ using System.Collections.Generic;
 
 namespace implementation
 {
-    class ForwardMinimizeOnline : IOnlineSolver
+    class Algorithm1 : IOnlineSolver
     {
-
-        // FIXED L ISSUE.
-        // FIXED + P1 ISSUE
-        // ADDED SORTEDLIST to prevent "Sort".
-        // CHANGED IT from Dose2D to Int. (should keep track of p1 / p2 though!)
-        // FIXED D ISSUE.
-        // FIXED P1,P2 ISSUE IN ASSIGNSCORESROW.
-
-        // ADDED THE OPTION TO PUT ONLY 1 JAB IN A NEW HOSPITAL (before, he had to put both in).
-        //   This is finnicky, as he does not care to e.g. put both jabs in H0, or both in H1.
-        //   the only reason he puts them in 0, is because he checks hospitals in order {0,1,2,3..}
-        //   and only picks a new best option based on >, not on >=. So.. bit finnicky, but should work.
-
-        // after extensive testing of a specific case (back when he didn't add new hospital),
-        //  it gave flawless answers until now.
-
-        // This will definitely give run-time errors on large cases. It is already kinda slow now.
-        // since... it has to consider ALL options, and makes a list the length of t_max for every h...
-        // yeah, that takes some time.
-
-        // I'm about to make it worse. Let's make this an= TRUE ONLINE ALG!
-
-
-
-        // TODO: Optimize, check, test, comment.
-        // Check = DONE DONE
-        // Test = 1 case DONE, ......
-        // Comment = mostly DONE.
-        // Optimize = a bit DONE ......
-        // Add the option to put only ONE in new hospital?
-
         public Solution2D Step(Solution2D sol, Patient p, Parameters problem)
         {
-            // everything goes in here!
-
-            bool writeline = false;
-
             
             // a list containing all (current) assignments.
             // points from START_TIME to P1 or P2.
@@ -52,16 +17,14 @@ namespace implementation
             foreach(Doses2D d in sol.hospitals)
             {
                 h_max = Math.Max(d.h1, d.h2);
-                while(assignments.Count <= h_max) // <= because h_max is an index.
+                while(assignments.Count <= h_max) // "<=" because h_max is an index.
                     assignments.Add(new SortedList<int, int>());
                 assignments[d.h1][d.t1] = problem.p1;
                 assignments[d.h2][d.t2] = problem.p2;
             }
 
             assignments.Add(new SortedList<int, int>()); // add a new hospital, such that the alg can place some there, if needed!
-
             h_max = assignments.Count; // the amount of hospitals used, +1 (a possible new one)
-
 
             // this way we can actually place them in a new one.
             // if this is not used, we delete it at the end again. The next patient will add one for themselves again.
@@ -72,28 +35,14 @@ namespace implementation
                 if(a.t2 + problem.p2 > max_ass)
                     max_ass = a.t2 + problem.p2;
             int max_pat = 0; // max of new assignment.
-
-            // EXAMPLE: e.g. d1 = 4. Then 4 + p1 = 2 = 6. This is first place a new one can come.
-            // add g, add x, and then, that is first time. L however cannot be <1, AND must be >= p2.
-            // so the last place you can put J2 = NOT the last place in L!! It is + L - p2!!
             max_pat = p.d1 + problem.g + p.x + p.L;
             
-            // foreach(Doses2D d in sol.hospitals)
-            //     Console.Write(d.t1 + "," + d.t2 + "; ");
-            // Console.WriteLine("Pat: " + max_pat);
-
             int t_max = Math.Max(max_ass, max_pat); // t_max is the maximum of both.
-            if(writeline)
-                Console.WriteLine("T_max: " + t_max);
-
 
             // default first. Then, overwrite one row, and write it back after?
             bool[,] scoresP1 = new bool[h_max,t_max + 1]; // if t_max = 13, that means i = 13. Means 14 elements!
             bool[,] scoresP2 = new bool[h_max,t_max + 1];
             // bytes would have worked too. 1 bool uses as much memory as 1 byte.
-
-            if(writeline)
-                Console.WriteLine("H_max: {0}", h_max);
 
             // start with every row default instantiated.
             for (int h = 0; h < h_max; h++)
@@ -102,26 +51,7 @@ namespace implementation
                 assignScoresRow(ref scoresP2, assignments, h, problem.p2);
             }
 
-
-            // FROM HERE,  THIS PART REMAINS UNCHANGED
-
-
-
-            // Everything works. Except... it still puts it in a new one when not needed to!
-            // Okay, I get it! It should consider all options until h_max - 1. Then, when they cannot fit
-            // both in an old one, we should consider all new ones. Not as easy at it sounds, without repeating yourself.
-            // 1. We copy paste the loop. Once for all until h_max-1, next until h_max, ONLY if none found.
-            //    we do a lot of extra work. Double loop is a lot of extra space.
-            // 2. We make the optimal extra loopS. Lots of extra space...
-
-
-
-            // now, go over all possible combinations of p1,p2.
-            // check if they can be placed anyway.
-
-            // OLD: assign him default the first possible place in a new hospital.
-            // only when no assignment could be done, will this remain, and thus be placed.
-            // Doses2D best_dose = new Doses2D(p.r1, h_max, p.r1 + problem.p1 + problem.g + p.x, h_max);
+            // This is not the most beautiful code.
 
             // first consider all the options within the existing hospitals - h_max - 1
             List<Doses2D> possibleComb = new List<Doses2D>();
@@ -182,10 +112,6 @@ namespace implementation
                     best_dose = new Doses2D(d.t1, d.h1, d.t2, d.h2);
                 }
 
-                if(writeline)
-                    Console.WriteLine("Succesful pair found: {0} at h {1}, {2} at h {3}: SCORE = {4}..", d.t1, d.h1, d.t2, d.h2, new_score);
-
-
                 // now throw them out again (the 'backward' or 'undo' phase), and re-calculate the rows back to old.
                 assignments[d.h1].Remove(d.t1);
                 assignments[d.h2].Remove(d.t2);
@@ -220,6 +146,7 @@ namespace implementation
             return new_sol;
         }
 
+        // given a placed assignment, calculates the new score
         public double calculateScore(bool[,] scores)
         {
             double v = 0;
@@ -234,6 +161,8 @@ namespace implementation
             return v;
         }
 
+        // given an assigmnent, makes the necessary preparations and calculations in order to calculate the new score.
+        // it fills the rows with TRUE if a p1 or p2 can start there.
         public void assignScoresRow(ref bool[,] scores, List<SortedList<int, int>> assignments, int h, int p) // the scores to fill, what row to fill, and the p1/p2.
         {
             int t;
@@ -247,6 +176,7 @@ namespace implementation
             }
 
             // If you want to completely overwrite, make sure to overwrite ALL values = write 0's too!
+            // so first write everything to false
             for (t = 0; t < scores.GetLength(1); t++)
                 scores[h,t] = false;
 

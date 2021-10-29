@@ -44,6 +44,32 @@ namespace implementation
             return currSol;
         }
 
+        public Solution2D validateOnline(IOnlineSolver solver)
+        {
+            OfflineProblem currProb = new OfflineProblem(problem.p1, problem.p2, problem.g, 0, new List<Patient>());
+
+            Solution2D currSol = new Solution2D(0, new List<Doses2D>());
+            var parameters = problem.parameters;
+
+            foreach (Patient patient in problem.patients)
+            {
+                var prevSol = currSol;
+
+                currSol = solver.Step(currSol, patient, parameters);
+                currProb.nPatients++;
+                currProb.patients.Add(patient);
+
+                new OfflineValidator(currProb).validate(currSol, false);
+
+                Debug.Assert(prevSol.IsSubset(currSol));
+            }
+
+            new OfflineValidator(problem.CountN()).validate(currSol, false); // redundant but this eases my paranoia that maybe currProb != problem.CountN()
+            solver.Reset();
+
+            return currSol;
+        }
+
         public void validate(Solution sol)
         {
             new OfflineValidator(this.problem.CountN()).validate(sol, false);

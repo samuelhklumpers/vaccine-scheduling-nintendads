@@ -9,6 +9,7 @@ namespace implementation
     {
         public Solution solve(OfflineProblem problem)
         {
+            if (problem.patients.Count < 1) { return new Solution(0, new List<Doses>()); }
             List<Doses2D> regs = new List<Doses2D>();
             List<Hospital> hospitals = new List<Hospital>();
             hospitals.Add(new Hospital(hospitals.Count));

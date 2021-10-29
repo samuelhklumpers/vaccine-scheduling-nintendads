@@ -1,0 +1,21 @@
+resultaten te genereren
+    1. offline
+        a. runtime op testcases alle solvers
+            (done voor ilp)
+        b. avg runtime op random cases vs num patients alle solvers
+
+    2. online
+        a. ratio op testcases alle solvers (behalve greedy want die crasht)
+        b. avg ratios op random cases
+            [ optioneel vs een parameter, maar misschien hangt het niet af van num patients, dan hoeft dat niet ]
+
+
+ILP/offline results:
+    1. tijd per testcase, voor de grotere testcases wat langer laten runnen. misschien max 5 min? (ook max aanpassen in ilp dan) dat we daar meer info over hebben of het kan.
+    2. voor aantal verschillende groten van testcases het aantal variabelen en constraints. 
+    3. plot als in de slides, kan die pakken ook --> als we met meerdere algoritmen doen, zie hieronder, dan losse niet nodig.
+
+Overall results:
+    1. dacht aan zo'n plot met testcases, en aantal ziekenhuizen en 1 met testcases tijd en dan van verschillende algoritmen erin zodat je ze makkelijk kan vergelijken (lijkt dan wel op die laatste presentatie miss, weet niet hoe erg dat is?)
+        --> dit geeft dan wel chille compacte representatie denk ik. Kunnen we de grote tabellen met tijden in appendix houden maar plots voor in paper. Als het te veel in 1 plot wordt kan het ook apart voor offline/online en dan 1 met beste van beide voor die vergelijking.
+

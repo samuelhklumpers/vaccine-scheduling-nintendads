@@ -11,7 +11,8 @@ namespace implementation
         
         public Solution solve(OfflineProblem problem)
         {
-            // Obtain lower and upper bounds with Pigeonhole and Greedy
+            if (problem.patients.Count < 1) { return new Solution(0, new List<Doses>()); }
+            // Obtain lower and upper bounds with Pigeonhole and Greedy/ILP
             (int lower, int upper, Solution sol) = boundsOrSolve(problem, new Dictionary<string, double>());
             if (sol is not null && sol.machines <= lower) { return sol; }
 
@@ -44,7 +45,7 @@ namespace implementation
             PartialSolution ps = new PartialSolution(hospitals, regs, patients);
             PartialSolution best_ps = ps;
             partials.Enqueue(ps);
-            while (partials.Count > 0) // todo finish queue (and if solved already, dont enqueue new partial solutions) and bound all solutions.
+            while (partials.Count > 0)
             {
                 (solved, ps, sol) = BFSolve(problem, partials, lower, upper, solution_found);
                 if (solved && sol is null && ps.hospitals.Count() <= upper)  /// <= because of the if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } line
@@ -69,11 +70,14 @@ namespace implementation
             // Dequeue the latest partial and with it the current patient
             PartialSolution ps = partials.Dequeue();
 
-            if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); } // basically if upper == lower, stop
+            // If a solution has been found and this partial solution uses the same or greater amount of hospitals as the found solution, cull it too.
+            if (solution_found && ps.hospitals.Count >= upper) { return (false, null, null); }
 
-            (bool feasible, bool someSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 10); // Tenth of a second
-            if (sol is not null && sol.machines <= lower) { return (true, null, sol); }
-            else if (!feasible && !someSolution) { return (false, null, null); }
+            // Every partial solution, check if the ILP can find an optimal solution. If so, return it.
+            // Otherwise use it to check feasibility. If this partial solution isn't feasible, bound the branch.
+            (bool feasible, bool optimalSolution, int? _, Solution sol) = LinearProgrammingILP.Solve(problem, ps.ToILP(), 100); // Tenth of a second
+            if (sol is not null && (sol.machines <= lower || optimalSolution)) { return (true, null, sol); }
+            else if (!feasible && !optimalSolution) { return (false, null, null); }
 
             Patient p = ps.patients.Dequeue();
 
@@ -147,19 +151,30 @@ namespace implementation
         {
             // Lower pigeonhole, for higher literally just run greedy on it and take its machine count
             int lower = Bounds.PigeonHole(problem);
-            GreedyOffline greedy = new GreedyOffline();
-            Solution sol = greedy.solve(problem);
-            OfflineValidator val = new OfflineValidator(problem);
-            val.validate(sol);
-            return (lower, sol.machines);
+            int upper = new GreedyOffline().solve(problem).machines;
+            return (lower, upper);
         }
 
         private (int, int, Solution) boundsOrSolve(OfflineProblem problem, Dictionary<string, double> partialString)
         {
-            (bool feasible, bool someSolution, int? upperboundHospitals, Solution sol) = LinearProgrammingILP.Solve(problem, partialString, 500); // Half a second
+            // Run the ILP for half a second. (NB: initalisation takes the lion's share of the time)
+            // Use the ILP to see if an optimal solution can be found within that time. If yes, steal all credit and return that instead
+            // Additionally, run PigeonHole and Greedy for two other easily calculable bounds.
+            // If the solution the ILP returns isn't optimal, use Greedy or the ILP's solution to return an upper bound.
+            // So long the ILP deems the problem feasible, return the PigeonHole and Greedy bounds. Otherwise, return a failstate.
+            (bool feasible, bool optimalSolution, int? upperboundHospitals, Solution sol) = LinearProgrammingILP.Solve(problem, partialString, 500);
             (int lower, int upper) = calcBounds(problem);
-            if (sol is not null && sol.machines <= upper) { return (sol.machines, sol.machines, sol); }
-            else if (!feasible && !someSolution) { return (0, 0, null); }
+            if (sol is not null)
+            {
+                if (optimalSolution || sol.machines <= upper) { return (sol.machines, sol.machines, sol); }
+                else 
+                {
+                    upper = Math.Min(sol.machines, upper);
+                    return (lower, upper, null);
+                }
+
+            }
+            else if (!feasible && !optimalSolution) { return (0, 0, null); }
             else { return (lower, upper, null); }
         }
 
