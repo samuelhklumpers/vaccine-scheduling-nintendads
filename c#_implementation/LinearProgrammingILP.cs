@@ -299,4 +299,28 @@ namespace implementation
             }
         }
     }
+    public class Job
+    {
+        public Patient patient;
+        public int vaccine;
+        public int id;
+
+
+
+        public Job(Patient patient, int vaccine, int id)
+        {
+            this.patient = patient;
+            this.vaccine = vaccine;
+            this.id = id;
+        }
+
+
+        public override string ToString()
+        {
+            string part1 = "Patient: " + this.patient.ToString() + " ";
+            string part2 = "Vaccine: " + this.vaccine + " ";
+            string part3 = "ID: " + this.id + " ";
+            return part1 + part2 + part3;
+        }
+    }
 }
