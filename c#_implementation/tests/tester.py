@@ -32,7 +32,11 @@ def main():
 
     #latex_online()
 
-    online_label_table()
+    #online_label_table()
+
+    #offline_test_time()
+
+    online_testcases_machines()
 
 def latex():
     def row(vs):
@@ -241,7 +245,42 @@ def online_random_ratio(solver, seed=None, size=10, runs=20):
     point[seed] = out
     
     jdump(ratio_file, data)
+
+def online_testcases_machines():
+    exe = "../bin/Debug/net5.0/c#_implementation.exe"
+
+    online = "online-machines"
+    json_file = online + ".json"
+
+    data = jload(json_file)
+
+    for solver in data["solvers"]:
+        print("solver", solver)
+        
+        runs = data["runs"].setdefault(solver, {})
+        
+        for label, fn in data["labels"].items():
+            print("case", fn)
+
+            if label in runs:
+                continue
+
+            fn = os.path.join(online, fn)
+            fn = os.path.abspath(fn)
+
+            try:
+                out = subprocess.check_output([exe, "case", "online", solver, fn], timeout=60)
+            except:
+                traceback.print_exc()
+                out = None
+
+            if out is not None:
+                out = float(out)
+            print(out)
+            runs[label] = out
     
+            jdump(json_file, data) 
+
 
 def online_test_ratio(solver, testFile, label):
     exe = "../bin/Debug/net5.0/c#_implementation.exe"
