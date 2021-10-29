@@ -14,6 +14,8 @@ namespace implementation
         public OnlineValidator(OnlineProblem problem)
         {
             this.problem = problem;
+            this.solution = null;
+            this.offline = null;
         }
 
         public Solution2D validateOnline(IOnlineSolver solver, OnlineProblem problem)
@@ -74,7 +76,7 @@ namespace implementation
         }
 
     }
-        class OfflineValidator
+    class OfflineValidator
     {
         public OfflineProblem problem;
 
@@ -148,13 +150,13 @@ namespace implementation
                     e.RemoveFirst();
                     --curr;
                 }
-              
+
                 if (curr > max)
                 {
                     max = curr;
                 }
             }
-          
+
             Debug.Assert(max == sol.machines);
         }
 
