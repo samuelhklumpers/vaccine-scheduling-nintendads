@@ -16,14 +16,13 @@ namespace implementation
             //partial_solution["t0"] = 4;
             //(bool feasibleNoSolution, bool optimalSolution, int? upperboundHospitals, Solution? sol) = IntegerLinearProgramming.Solve(problem, partial_solution, 10000);
 
-            (bool feasibleNoSolution, bool optimalSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 300000);
+            (bool feasibleNoSolution, bool optimalSolution, int? upperboundHospitals, Solution? sol) = LinearProgrammingILP.Solve(problem, partial_solution, 30758400);
             //return sol;
 
 
 
             if (feasibleNoSolution == false && optimalSolution)
             {
-                Console.WriteLine("Optimal solution");
                 return sol;
             }
 
@@ -38,11 +37,6 @@ namespace implementation
             {
                 //do greedy for upperbound cuz no solution was found but it is feasible
                 Console.WriteLine("no solution");
-
-                GreedyOffline greedy = new GreedyOffline();
-                Solution greedy_sol = greedy.solve(problem);
-
-                Console.WriteLine("upperbound greedy " + greedy_sol.machines);
                 return sol;
             }
 
@@ -50,13 +44,7 @@ namespace implementation
             {
                 //branch with upperbound given by upperboundHospitals or with min of upperbound en greedy --> check of greedy beter of niet, solution was found but not an optimal one
                 Console.WriteLine("non optimal ");
-                Console.WriteLine("upperbound " + upperboundHospitals);
-
-                GreedyOffline greedy = new GreedyOffline();
-                Solution greedy_sol = greedy.solve(problem);
-
-                Console.WriteLine("upperbound greedy " + greedy_sol.machines);
-
+                Console.WriteLine("upperbound: " + upperboundHospitals);
                 return sol;
             }
         }
