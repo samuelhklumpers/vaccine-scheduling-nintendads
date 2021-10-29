@@ -4,4 +4,4 @@ Then run using: c#_implementation.exe test offline ilp "..\data\offline\random_5
 
 ilp can be substituted by sat, bnb or bf to use other solutions.
 
-To run the online solution use the following command: dotnet run -- test online greedy "../c#_implementation/tests/online/3-4.txt"
+To run the online solution use the following command: c#_implementation.exe test online greedy "../c#_implementation/tests/online/3-4.txt"
